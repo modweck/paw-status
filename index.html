@@ -2,571 +2,712 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>PawStatus — Find a Groomer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>PawStatus</title>
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     :root {
-      --bg: #faf8f4; --card: #fff; --border: #ede9e0;
-      --accent: #f5c842; --dark: #1a1512; --text: #2d2820;
-      --muted: #9a8f80; --success: #2ecc71; --warning: #f39c12;
-      --radius: 20px; --shadow: 0 2px 16px rgba(0,0,0,0.07);
+      --bg: #f7f5f0; --card: #fff; --border: #ebe6dc;
+      --accent: #f5c842; --dark: #171310; --text: #1e1a16;
+      --muted: #9e9080; --success: #27ae60; --warning: #e67e22;
+      --danger: #e74c3c; --radius: 18px; --shadow: 0 1px 12px rgba(0,0,0,0.06);
+      --max: 430px;
     }
-    body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; min-height: 100vh; }
+    html, body { height: 100%; overflow: hidden; }
+    body {
+      background: #111;
+      display: flex; justify-content: center;
+      font-family: 'DM Sans', sans-serif;
+      color: var(--text);
+    }
+
+    /* APP SHELL */
+    #app {
+      width: 100%; max-width: var(--max);
+      height: 100vh; height: 100dvh;
+      background: var(--bg);
+      display: flex; flex-direction: column;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* STATUS BAR SIMULATION */
+    .status-bar {
+      background: var(--dark);
+      padding: 12px 20px 0;
+      display: flex; align-items: center; justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .status-time { font-size: 15px; font-weight: 600; color: #fff; }
+    .status-icons { display: flex; gap: 6px; align-items: center; color: #fff; font-size: 13px; }
 
     /* HEADER */
-    .header { background: var(--dark); padding: 14px 20px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
-    .logo { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 800; color: var(--accent); }
+    .app-header {
+      background: var(--dark);
+      padding: 10px 20px 14px;
+      display: flex; align-items: center; justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .logo { font-family: 'Syne', sans-serif; font-size: 24px; font-weight: 800; color: var(--accent); letter-spacing: -0.5px; }
     .logo span { color: #fff; }
-    .nav-tabs { display: flex; gap: 4px; }
-    .nav-tab { padding: 7px 14px; border-radius: 999px; font-size: 13px; font-weight: 500; color: #888; cursor: pointer; transition: all 0.15s; border: none; background: none; }
-    .nav-tab.active { background: rgba(245,200,66,0.15); color: var(--accent); }
+    .header-right { display: flex; gap: 10px; align-items: center; }
+    .icon-btn { width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,0.08); border: none; color: #fff; font-size: 16px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
 
-    .screen { display: none; }
+    /* SCROLLABLE CONTENT */
+    .screen { display: none; flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
     .screen.active { display: block; }
+    .screen::-webkit-scrollbar { display: none; }
 
     /* ══ SEARCH SCREEN ══ */
-    .search-hero { background: var(--dark); padding: 28px 20px 24px; color: #fff; }
-    .search-hero h1 { font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 800; line-height: 1.2; margin-bottom: 6px; }
-    .search-hero h1 span { color: var(--accent); }
-    .search-hero p { font-size: 14px; color: #aaa; margin-bottom: 24px; }
-    .search-form { display: flex; flex-direction: column; gap: 10px; }
-    .form-label { font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: #777; margin-bottom: 5px; }
-    .location-wrap { position: relative; }
-    .location-input { width: 100%; background: rgba(255,255,255,0.08); border: 1.5px solid rgba(255,255,255,0.12); border-radius: 14px; padding: 0 16px 0 46px; height: 52px; font-family: 'DM Sans', sans-serif; font-size: 15px; color: #fff; outline: none; transition: border-color 0.2s; }
-    .location-input::placeholder { color: #555; }
-    .location-input:focus { border-color: var(--accent); }
-    .input-icon { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); font-size: 17px; pointer-events: none; }
-    .my-location-btn { width: 100%; margin-top: 7px; background: rgba(245,200,66,0.1); border: 1.5px solid rgba(245,200,66,0.25); border-radius: 12px; padding: 12px 16px; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 600; color: var(--accent); cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
-    .dropdown-wrap { position: relative; }
-    .dropdown-wrap select { width: 100%; background: rgba(255,255,255,0.08); border: 1.5px solid rgba(255,255,255,0.12); border-radius: 14px; padding: 0 44px 0 46px; height: 52px; font-family: 'DM Sans', sans-serif; font-size: 15px; color: #fff; outline: none; appearance: none; cursor: pointer; transition: border-color 0.2s; }
-    .dropdown-wrap select:focus { border-color: var(--accent); }
-    .dropdown-wrap select option { background: #1a1512; color: #fff; }
-    .dropdown-wrap select optgroup { color: #aaa; }
-    .dropdown-arrow { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); font-size: 12px; color: #555; pointer-events: none; }
+    .search-top { background: var(--dark); padding: 0 20px 20px; }
+    .hero-text { padding-bottom: 18px; }
+    .hero-text h1 { font-family: 'Syne', sans-serif; font-size: 26px; font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 4px; }
+    .hero-text h1 em { color: var(--accent); font-style: normal; }
+    .hero-text p { font-size: 13px; color: #777; }
 
-    /* SIZE SELECTOR */
-    .size-selector { display: none; }
-    .size-selector.visible { display: block; }
-    .size-row { display: flex; gap: 8px; margin-top: 5px; }
-    .size-btn { flex: 1; padding: 10px 8px; border-radius: 12px; border: 1.5px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.06); color: #ccc; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; text-align: center; transition: all 0.15s; }
-    .size-btn.active { border-color: var(--accent); background: rgba(245,200,66,0.15); color: var(--accent); }
+    /* SEARCH CARD */
+    .search-card {
+      background: var(--card);
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+    }
+    .search-row {
+      display: flex; align-items: center;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+      gap: 12px;
+      cursor: pointer;
+      position: relative;
+    }
+    .search-row:last-child { border-bottom: none; }
+    .sr-icon { font-size: 18px; flex-shrink: 0; width: 24px; text-align: center; }
+    .sr-content { flex: 1; min-width: 0; }
+    .sr-label { font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); margin-bottom: 3px; }
+    .sr-value { font-size: 15px; font-weight: 500; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .sr-value.placeholder { color: #bbb; font-weight: 400; }
+    .sr-arrow { color: #ccc; font-size: 12px; flex-shrink: 0; }
 
-    .form-divider { display: flex; align-items: center; gap: 10px; margin: 2px 0; }
-    .form-divider hr { flex: 1; border: none; border-top: 1px solid rgba(255,255,255,0.07); }
-    .form-divider span { font-size: 11px; color: #444; }
+    /* SIZE PILLS — shown inline after breed pick for variable breeds */
+    .size-inline { display: none; padding: 10px 16px 14px; border-bottom: 1px solid var(--border); }
+    .size-inline.visible { display: block; }
+    .size-inline-label { font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+    .size-pills { display: flex; gap: 8px; }
+    .size-pill { flex: 1; padding: 9px 4px; border-radius: 10px; border: 1.5px solid var(--border); background: var(--bg); font-size: 13px; font-weight: 600; color: var(--muted); text-align: center; cursor: pointer; transition: all 0.15s; }
+    .size-pill.active { border-color: var(--accent); background: rgba(245,200,66,0.12); color: var(--dark); }
 
-    .find-btn { width: 100%; background: var(--accent); color: var(--dark); border: none; border-radius: 14px; padding: 16px; font-family: 'DM Sans', sans-serif; font-size: 17px; font-weight: 700; cursor: pointer; margin-top: 6px; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.15s; }
-    .find-btn:disabled { background: #2a2a2a; color: #555; cursor: not-allowed; }
+    .find-btn {
+      margin: 16px 20px 0;
+      width: calc(100% - 40px);
+      background: var(--accent); color: var(--dark); border: none;
+      border-radius: 14px; padding: 16px;
+      font-family: 'DM Sans', sans-serif; font-size: 16px; font-weight: 700;
+      cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
+      transition: all 0.15s;
+    }
+    .find-btn:disabled { background: #2a2520; color: #555; cursor: not-allowed; }
+    .find-btn:not(:disabled):active { transform: scale(0.98); }
 
-    .quick-picks { padding: 20px 20px 0; background: var(--dark); padding-bottom: 24px; }
-    .quick-picks p { font-size: 12px; color: #555; margin-bottom: 10px; }
-    .quick-row { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; padding-bottom: 4px; }
-    .quick-row::-webkit-scrollbar { display: none; }
-    .quick-chip { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 999px; padding: 7px 14px; font-size: 13px; color: #bbb; cursor: pointer; white-space: nowrap; flex-shrink: 0; transition: all 0.15s; }
-    .quick-chip:active { border-color: var(--accent); color: var(--accent); }
+    /* QUICK CHIPS */
+    .quick-section { padding: 18px 20px 0; }
+    .section-label { font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
+    .chip-scroll { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
+    .chip-scroll::-webkit-scrollbar { display: none; }
+    .quick-chip { background: var(--card); border: 1px solid var(--border); border-radius: 999px; padding: 8px 14px; font-size: 13px; color: var(--text); cursor: pointer; white-space: nowrap; flex-shrink: 0; font-weight: 500; box-shadow: var(--shadow); transition: all 0.15s; }
+    .quick-chip:active { background: var(--accent); border-color: var(--accent); color: var(--dark); transform: scale(0.96); }
 
-    /* BREED GUIDE CARDS ON SEARCH */
-    .breed-guides { padding: 20px 20px 80px; }
-    .section-heading { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 800; margin-bottom: 14px; }
-    .guide-scroll { display: flex; gap: 12px; overflow-x: auto; scrollbar-width: none; padding-bottom: 4px; }
-    .guide-scroll::-webkit-scrollbar { display: none; }
-    .guide-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 16px; min-width: 200px; max-width: 200px; cursor: pointer; box-shadow: var(--shadow); flex-shrink: 0; transition: transform 0.15s; }
-    .guide-card:active { transform: scale(0.97); }
-    .guide-card .gc-emoji { font-size: 36px; margin-bottom: 10px; }
-    .guide-card .gc-breed { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 800; margin-bottom: 4px; }
-    .guide-card .gc-freq { font-size: 12px; color: var(--muted); margin-bottom: 8px; }
-    .guide-card .gc-tag { display: inline-block; background: rgba(245,200,66,0.15); color: #8a6d00; font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 999px; }
+    /* GUIDE CARDS — compact horizontal scroll */
+    .guide-section { padding: 18px 20px 20px; }
+    .guide-row { display: flex; gap: 10px; overflow-x: auto; scrollbar-width: none; padding-bottom: 4px; }
+    .guide-row::-webkit-scrollbar { display: none; }
+    .guide-card {
+      background: var(--card); border: 1px solid var(--border); border-radius: 14px;
+      padding: 12px; min-width: 130px; max-width: 130px; flex-shrink: 0;
+      cursor: pointer; box-shadow: var(--shadow); transition: transform 0.15s;
+    }
+    .guide-card:active { transform: scale(0.96); }
+    .gc-emoji { font-size: 28px; margin-bottom: 7px; }
+    .gc-breed { font-weight: 700; font-size: 13px; margin-bottom: 2px; }
+    .gc-freq { font-size: 11px; color: var(--muted); margin-bottom: 6px; }
+    .gc-tag { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 999px; }
+    .gc-tag.high { background: rgba(231,76,60,0.1); color: #c0392b; }
+    .gc-tag.medium { background: rgba(230,126,34,0.1); color: #d35400; }
+    .gc-tag.low { background: rgba(39,174,96,0.1); color: #1e8449; }
+
+    /* ══ PICKER SHEETS ══ */
+    .picker-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.5); z-index: 300; opacity: 0; pointer-events: none; transition: opacity 0.25s; }
+    .picker-overlay.open { opacity: 1; pointer-events: all; }
+    .picker-sheet {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      background: var(--card); border-radius: 24px 24px 0 0;
+      max-height: 80%; display: flex; flex-direction: column;
+      transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.32,0.72,0,1);
+      z-index: 301;
+    }
+    .picker-sheet.open { transform: translateY(0); }
+    .picker-handle { width: 36px; height: 4px; background: var(--border); border-radius: 2px; margin: 12px auto 0; flex-shrink: 0; }
+    .picker-header { padding: 14px 20px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+    .picker-title { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 800; }
+    .picker-done { background: var(--accent); color: var(--dark); border: none; border-radius: 999px; padding: 7px 16px; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 700; cursor: pointer; }
+    .picker-search { padding: 10px 16px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+    .picker-search input { width: 100%; background: var(--bg); border: none; outline: none; border-radius: 10px; padding: 10px 14px; font-family: 'DM Sans', sans-serif; font-size: 15px; color: var(--text); }
+    .picker-list { overflow-y: auto; flex: 1; }
+    .picker-list::-webkit-scrollbar { display: none; }
+    .picker-group-label { padding: 10px 20px 4px; font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); }
+    .picker-item { display: flex; align-items: center; padding: 14px 20px; border-bottom: 1px solid var(--border); cursor: pointer; gap: 12px; transition: background 0.1s; }
+    .picker-item:active { background: var(--bg); }
+    .picker-item.selected { background: rgba(245,200,66,0.08); }
+    .picker-item .pi-emoji { font-size: 22px; flex-shrink: 0; }
+    .picker-item .pi-info { flex: 1; }
+    .picker-item .pi-name { font-size: 15px; font-weight: 600; }
+    .picker-item .pi-sub { font-size: 12px; color: var(--muted); margin-top: 1px; }
+    .picker-item .pi-check { font-size: 18px; color: var(--accent); flex-shrink: 0; }
 
     /* ══ RESULTS SCREEN ══ */
-    .results-header { background: var(--dark); padding: 14px 20px; display: flex; align-items: center; gap: 12px; }
-    .back-btn { background: rgba(255,255,255,0.1); border: none; color: #fff; width: 36px; height: 36px; border-radius: 50%; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-    .results-header-info h2 { font-family: 'Syne', sans-serif; font-size: 17px; font-weight: 800; color: #fff; line-height: 1.2; }
-    .results-header-info p { font-size: 12px; color: #aaa; }
-    .filters-wrap { padding: 12px 20px 0; background: var(--dark); }
-    .filters-scroll { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 12px; scrollbar-width: none; }
-    .filters-scroll::-webkit-scrollbar { display: none; }
-    .filter-chip { padding: 7px 14px; border-radius: 999px; font-size: 13px; font-weight: 500; white-space: nowrap; cursor: pointer; flex-shrink: 0; border: 1.5px solid rgba(255,255,255,0.15); color: #ccc; background: rgba(255,255,255,0.05); transition: all 0.15s; }
-    .filter-chip.active { background: var(--accent); color: var(--dark); border-color: var(--accent); font-weight: 600; }
-    .sort-bar { padding: 12px 20px; }
-    .results-count { font-size: 13px; color: var(--muted); }
-    .results-count strong { color: var(--text); font-weight: 600; }
-    .groomers-list { padding: 0 20px 100px; }
+    .results-nav {
+      background: var(--dark); padding: 12px 20px 0;
+      display: flex; align-items: center; gap: 12px; flex-shrink: 0;
+    }
+    .back-btn { background: rgba(255,255,255,0.1); border: none; color: #fff; width: 34px; height: 34px; border-radius: 50%; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .results-title-wrap { flex: 1; min-width: 0; }
+    .results-title-wrap h2 { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 800; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .results-title-wrap p { font-size: 12px; color: #888; }
+    .filter-scroll-wrap { background: var(--dark); padding: 10px 20px 12px; }
+    .filter-row { display: flex; gap: 7px; overflow-x: auto; scrollbar-width: none; }
+    .filter-row::-webkit-scrollbar { display: none; }
+    .fchip { padding: 6px 13px; border-radius: 999px; font-size: 12px; font-weight: 600; white-space: nowrap; cursor: pointer; flex-shrink: 0; border: 1.5px solid rgba(255,255,255,0.15); color: #aaa; background: rgba(255,255,255,0.05); transition: all 0.15s; }
+    .fchip.active { background: var(--accent); color: var(--dark); border-color: var(--accent); }
+    .results-meta { padding: 10px 20px; font-size: 13px; color: var(--muted); }
+    .results-meta strong { color: var(--text); font-weight: 600; }
+    .cards-wrap { padding: 0 16px 100px; }
 
     /* GROOMER CARD */
-    .groomer-card { background: var(--card); border-radius: var(--radius); margin-bottom: 14px; overflow: hidden; box-shadow: var(--shadow); border: 1px solid var(--border); cursor: pointer; transition: transform 0.15s; }
-    .groomer-card:active { transform: scale(0.98); }
-    .card-image { width: 100%; height: 145px; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; }
-    .salon-emoji-bg { font-size: 60px; opacity: 0.22; }
-    .card-image-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.55) 0%, transparent 55%); }
-    .card-badges { position: absolute; top: 12px; left: 12px; display: flex; gap: 6px; flex-wrap: wrap; }
-    .badge { padding: 4px 10px; border-radius: 999px; font-size: 11px; font-weight: 600; }
-    .badge-available { background: var(--success); color: #fff; }
-    .badge-limited { background: var(--warning); color: #fff; }
-    .badge-full { background: #e74c3c; color: #fff; }
-    .badge-specialty { background: rgba(255,255,255,0.92); color: var(--dark); }
-    .avail-bottom { position: absolute; bottom: 12px; left: 12px; }
-    .avail-slots { display: flex; gap: 5px; margin-top: 5px; flex-wrap: wrap; }
-    .slot-pill { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.25); color: #fff; padding: 3px 9px; border-radius: 999px; font-size: 12px; font-weight: 500; }
-    .slot-pill.open { background: rgba(46,204,113,0.35); border-color: rgba(46,204,113,0.5); }
-    .breed-price-banner { background: var(--accent); padding: 11px 16px; display: flex; align-items: center; justify-content: space-between; }
-    .bpb-service { font-size: 13px; font-weight: 700; color: var(--dark); }
-    .bpb-time { font-size: 12px; color: rgba(26,21,18,0.55); margin-top: 1px; }
-    .bpb-price { font-family: 'Syne', sans-serif; font-size: 24px; font-weight: 800; color: var(--dark); }
-    .card-body { padding: 14px 16px 16px; }
-    .card-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 6px; }
-    .salon-name { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 700; }
-    .rating { display: flex; align-items: center; gap: 4px; font-size: 14px; font-weight: 600; }
-    .rating span { color: var(--muted); font-size: 12px; font-weight: 400; }
-    .card-meta { display: flex; gap: 14px; font-size: 13px; color: var(--muted); margin-bottom: 12px; }
-    .all-prices-toggle { font-size: 13px; color: var(--muted); cursor: pointer; margin-bottom: 10px; display: flex; align-items: center; gap: 5px; }
-    .all-prices-grid { display: none; grid-template-columns: repeat(2,1fr); gap: 7px; margin-bottom: 14px; }
-    .all-prices-grid.open { display: grid; }
-    .price-item { background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 9px 12px; }
-    .price-item.match-svc { border-color: var(--accent); background: rgba(245,200,66,0.07); }
-    .pi-name { font-size: 12px; color: var(--muted); margin-bottom: 2px; }
-    .pi-price { font-weight: 700; font-size: 15px; }
-    .pi-match-tag { font-size: 10px; color: #7a5c00; font-weight: 600; background: rgba(245,200,66,0.3); padding: 1px 6px; border-radius: 999px; display: inline-block; margin-top: 3px; }
-    .book-btn { width: 100%; background: var(--dark); color: #fff; border: none; border-radius: 12px; padding: 14px; font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 600; cursor: pointer; }
-    .book-btn.full { background: #e0dbd0; color: var(--muted); cursor: not-allowed; }
+    .g-card { background: var(--card); border-radius: var(--radius); margin-bottom: 12px; overflow: hidden; box-shadow: var(--shadow); border: 1px solid var(--border); cursor: pointer; transition: transform 0.15s; }
+    .g-card:active { transform: scale(0.98); }
+    .g-card-img { height: 130px; position: relative; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+    .g-card-img .bg-emoji { font-size: 56px; opacity: 0.2; }
+    .g-card-img-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.6) 0%, transparent 60%); }
+    .g-badges { position: absolute; top: 10px; left: 10px; display: flex; gap: 5px; flex-wrap: wrap; }
+    .g-badge { padding: 3px 9px; border-radius: 999px; font-size: 10px; font-weight: 700; }
+    .g-badge-avail { background: var(--success); color: #fff; }
+    .g-badge-ltd { background: var(--warning); color: #fff; }
+    .g-badge-full { background: var(--danger); color: #fff; }
+    .g-badge-spec { background: rgba(255,255,255,0.92); color: var(--dark); }
+    .g-slots-row { position: absolute; bottom: 10px; left: 10px; display: flex; gap: 5px; }
+    .g-slot { background: rgba(39,174,96,0.35); border: 1px solid rgba(39,174,96,0.5); color: #fff; padding: 3px 8px; border-radius: 999px; font-size: 11px; font-weight: 500; }
+    .g-price-bar { background: var(--accent); padding: 9px 14px; display: flex; align-items: center; justify-content: space-between; }
+    .g-price-bar .gpb-left { font-size: 12px; font-weight: 600; color: var(--dark); }
+    .g-price-bar .gpb-time { font-size: 11px; color: rgba(26,21,18,0.5); margin-top: 1px; }
+    .g-price-bar .gpb-price { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 800; color: var(--dark); }
+    .g-body { padding: 12px 14px 14px; }
+    .g-body-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 5px; }
+    .g-name { font-family: 'Syne', sans-serif; font-size: 17px; font-weight: 800; }
+    .g-rating { font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 3px; }
+    .g-rating span { color: var(--muted); font-size: 11px; font-weight: 400; }
+    .g-meta { font-size: 12px; color: var(--muted); margin-bottom: 10px; display: flex; gap: 12px; }
+    .prices-toggle { font-size: 12px; color: var(--muted); cursor: pointer; margin-bottom: 8px; display: flex; align-items: center; gap: 4px; }
+    .prices-grid { display: none; grid-template-columns: repeat(2,1fr); gap: 6px; margin-bottom: 12px; }
+    .prices-grid.open { display: grid; }
+    .pg-item { background: var(--bg); border: 1px solid var(--border); border-radius: 9px; padding: 8px 10px; }
+    .pg-item.match { border-color: var(--accent); background: rgba(245,200,66,0.06); }
+    .pg-name { font-size: 11px; color: var(--muted); margin-bottom: 2px; }
+    .pg-price { font-weight: 700; font-size: 14px; }
+    .pg-match-tag { font-size: 9px; font-weight: 700; color: #7a5c00; background: rgba(245,200,66,0.3); padding: 1px 5px; border-radius: 999px; display: inline-block; margin-top: 2px; }
+    .g-book-btn { width: 100%; background: var(--dark); color: #fff; border: none; border-radius: 11px; padding: 13px; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 600; cursor: pointer; }
+    .g-book-btn.full { background: #e8e3d8; color: var(--muted); cursor: not-allowed; }
+
+    /* ══ BOOKING SHEET ══ */
+    .sheet-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.5); z-index: 400; opacity: 0; pointer-events: none; transition: opacity 0.25s; }
+    .sheet-overlay.open { opacity: 1; pointer-events: all; }
+    .booking-sheet {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      background: var(--card); border-radius: 24px 24px 0 0;
+      max-height: 92%; display: flex; flex-direction: column;
+      transform: translateY(100%); transition: transform 0.35s cubic-bezier(0.32,0.72,0,1);
+      z-index: 401;
+    }
+    .booking-sheet.open { transform: translateY(0); }
+    .bs-handle { width: 36px; height: 4px; background: var(--border); border-radius: 2px; margin: 12px auto 0; flex-shrink: 0; }
+    .bs-header { padding: 16px 18px 0; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+    .bs-title { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 800; }
+    .bs-close { width: 30px; height: 30px; border-radius: 50%; background: var(--bg); border: none; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+    .bs-scroll { flex: 1; overflow-y: auto; padding-bottom: 20px; }
+    .bs-scroll::-webkit-scrollbar { display: none; }
+    .bs-section { padding: 16px 18px 0; }
+    .bs-section-title { font-size: 10px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
+    .price-hero { background: rgba(245,200,66,0.1); border: 1.5px solid var(--accent); border-radius: 14px; padding: 13px 14px; display: flex; align-items: center; justify-content: space-between; }
+    .ph-label { font-size: 11px; color: var(--muted); margin-bottom: 2px; }
+    .ph-service { font-size: 15px; font-weight: 700; }
+    .ph-price { font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 800; }
+    .ph-time { font-size: 11px; color: var(--muted); text-align: right; margin-top: 2px; }
+    .addon-list { display: flex; flex-direction: column; gap: 7px; }
+    .addon-row { display: flex; align-items: center; justify-content: space-between; background: var(--bg); border: 1.5px solid var(--border); border-radius: 12px; padding: 11px 12px; cursor: pointer; transition: all 0.15s; }
+    .addon-row.on { border-color: var(--accent); background: rgba(245,200,66,0.06); }
+    .addon-row:active { transform: scale(0.98); }
+    .ar-left { display: flex; align-items: center; gap: 9px; }
+    .ar-icon { font-size: 19px; width: 26px; text-align: center; }
+    .ar-name { font-weight: 600; font-size: 13px; margin-bottom: 1px; }
+    .ar-desc { font-size: 11px; color: var(--muted); }
+    .ar-right { display: flex; align-items: center; gap: 8px; }
+    .ar-price { font-weight: 700; font-size: 13px; }
+    .ar-check { width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 11px; flex-shrink: 0; transition: all 0.15s; }
+    .addon-row.on .ar-check { background: var(--accent); border-color: var(--accent); }
+    .total-pill { background: var(--dark); border-radius: 12px; padding: 12px 14px; margin-top: 12px; display: flex; align-items: center; justify-content: space-between; }
+    .tp-label { font-size: 12px; color: #aaa; }
+    .tp-sub { font-size: 11px; color: #666; margin-top: 1px; }
+    .tp-amount { font-family: 'Syne', sans-serif; font-size: 24px; font-weight: 800; color: var(--accent); }
+    .day-row { display: flex; gap: 7px; overflow-x: auto; scrollbar-width: none; margin-bottom: 12px; }
+    .day-row::-webkit-scrollbar { display: none; }
+    .day-chip { padding: 7px 13px; border-radius: 999px; border: 1.5px solid var(--border); font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap; flex-shrink: 0; transition: all 0.15s; }
+    .day-chip.active { background: var(--dark); color: #fff; border-color: var(--dark); }
+    .slot-hint { font-size: 11px; color: var(--muted); font-style: italic; margin-bottom: 10px; }
+    .time-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 7px; }
+    .time-cell { border: 1.5px solid var(--border); border-radius: 11px; padding: 11px 6px; text-align: center; cursor: pointer; transition: all 0.15s; }
+    .time-cell.active { border-color: var(--accent); background: rgba(245,200,66,0.1); }
+    .time-cell:active { transform: scale(0.96); }
+    .tc-time { font-size: 13px; font-weight: 600; }
+    .tc-label { font-size: 10px; color: var(--success); margin-top: 2px; }
+    .bs-footer { padding: 12px 18px; border-top: 1px solid var(--border); flex-shrink: 0; }
+    .book-now-btn { width: 100%; background: var(--accent); color: var(--dark); border: none; border-radius: 13px; padding: 15px; font-family: 'DM Sans', sans-serif; font-size: 16px; font-weight: 700; cursor: pointer; transition: all 0.15s; }
+    .book-now-btn:disabled { background: var(--border); color: var(--muted); cursor: not-allowed; }
+    .book-now-btn:not(:disabled):active { transform: scale(0.98); }
+
+    /* CONFIRM SCREEN */
+    .confirm-body { text-align: center; padding: 36px 22px; }
+    .confirm-icon { font-size: 64px; margin-bottom: 14px; }
+    .confirm-body h2 { font-family: 'Syne', sans-serif; font-size: 26px; font-weight: 800; margin-bottom: 7px; }
+    .confirm-body p { font-size: 14px; color: var(--muted); margin-bottom: 22px; line-height: 1.6; }
+    .confirm-rows { background: var(--bg); border-radius: 14px; padding: 14px; margin-bottom: 18px; text-align: left; }
+    .cr { display: flex; justify-content: space-between; font-size: 13px; padding: 6px 0; border-bottom: 1px solid var(--border); }
+    .cr:last-child { border-bottom: none; }
+    .cr .cl { color: var(--muted); }
+    .cr .cv { font-weight: 600; }
+    .notif-box { background: rgba(39,174,96,0.1); border: 1px solid rgba(39,174,96,0.3); border-radius: 12px; padding: 12px; font-size: 13px; color: #1a7a40; display: flex; gap: 9px; align-items: flex-start; text-align: left; margin-bottom: 18px; }
 
     /* ══ PROFILE SCREEN ══ */
-    .profile-screen { padding: 24px 20px 100px; }
-    .profile-hero { background: var(--dark); margin: -24px -20px 24px; padding: 28px 20px 24px; color: #fff; }
-    .profile-hero h2 { font-family: 'Syne', sans-serif; font-size: 24px; font-weight: 800; margin-bottom: 4px; }
-    .profile-hero p { font-size: 14px; color: #aaa; }
-    .dog-profile-card { background: var(--card); border-radius: var(--radius); padding: 20px; border: 1px solid var(--border); box-shadow: var(--shadow); margin-bottom: 16px; }
-    .dog-avatar-row { display: flex; align-items: center; gap: 16px; margin-bottom: 20px; }
-    .dog-avatar { width: 72px; height: 72px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), #ff6b35); display: flex; align-items: center; justify-content: center; font-size: 36px; flex-shrink: 0; cursor: pointer; position: relative; overflow: hidden; }
-    .dog-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
-    .dog-avatar-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; font-size: 18px; opacity: 0; transition: opacity 0.2s; border-radius: 50%; }
-    .dog-avatar:hover .dog-avatar-overlay { opacity: 1; }
-    .dog-name-big { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 800; }
-    .dog-breed-tag { font-size: 13px; color: var(--muted); margin-top: 2px; }
-    .profile-field { margin-bottom: 14px; }
-    .profile-field label { font-size: 11px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; color: var(--muted); display: block; margin-bottom: 6px; }
-    .profile-field input, .profile-field select, .profile-field textarea { width: 100%; background: var(--bg); border: 1.5px solid var(--border); border-radius: 12px; padding: 12px 14px; font-family: 'DM Sans', sans-serif; font-size: 15px; color: var(--text); outline: none; transition: border-color 0.2s; }
-    .profile-field input:focus, .profile-field select:focus, .profile-field textarea:focus { border-color: var(--accent); }
-    .profile-field textarea { resize: none; height: 80px; }
-    .profile-size-row { display: flex; gap: 8px; }
-    .profile-size-btn { flex: 1; padding: 11px 8px; border-radius: 12px; border: 1.5px solid var(--border); background: var(--bg); font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 600; color: var(--muted); cursor: pointer; text-align: center; transition: all 0.15s; }
-    .profile-size-btn.active { border-color: var(--accent); background: rgba(245,200,66,0.1); color: var(--dark); }
-    .save-profile-btn { width: 100%; background: var(--accent); color: var(--dark); border: none; border-radius: 14px; padding: 16px; font-family: 'DM Sans', sans-serif; font-size: 16px; font-weight: 700; cursor: pointer; margin-top: 8px; }
+    .profile-top { background: var(--dark); padding: 16px 20px 20px; }
+    .profile-top h2 { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 800; color: #fff; margin-bottom: 3px; }
+    .profile-top p { font-size: 13px; color: #777; }
+    .profile-body { padding: 16px 16px 100px; display: flex; flex-direction: column; gap: 12px; }
 
-    .groom-history { background: var(--card); border-radius: var(--radius); padding: 20px; border: 1px solid var(--border); box-shadow: var(--shadow); margin-bottom: 16px; }
-    .groom-history h3 { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 800; margin-bottom: 14px; }
-    .history-item { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
-    .history-item:last-child { border-bottom: none; }
-    .history-icon { width: 40px; height: 40px; border-radius: 10px; background: var(--bg); display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
-    .history-info { flex: 1; }
-    .history-salon { font-weight: 600; font-size: 14px; }
-    .history-detail { font-size: 12px; color: var(--muted); margin-top: 2px; }
-    .history-price { font-weight: 700; font-size: 14px; }
+    .rebook-card { background: linear-gradient(135deg, var(--accent), #ffb300); border-radius: var(--radius); padding: 14px 16px; display: flex; align-items: center; gap: 12px; cursor: pointer; }
+    .rebook-card .rc-icon { font-size: 28px; }
+    .rebook-card h4 { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 800; color: var(--dark); margin-bottom: 1px; }
+    .rebook-card p { font-size: 12px; color: rgba(26,21,18,0.6); }
+    .rebook-card .rc-arrow { font-size: 18px; color: var(--dark); margin-left: auto; }
 
-    .rebook-banner { background: linear-gradient(135deg, var(--accent), #ffb700); border-radius: 16px; padding: 16px; display: flex; align-items: center; gap: 14px; margin-bottom: 16px; cursor: pointer; }
-    .rebook-banner .rb-icon { font-size: 32px; }
-    .rebook-banner h4 { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 800; color: var(--dark); margin-bottom: 2px; }
-    .rebook-banner p { font-size: 13px; color: rgba(26,21,18,0.65); }
-    .rebook-banner .rb-arrow { font-size: 20px; color: var(--dark); margin-left: auto; }
+    .pcard { background: var(--card); border-radius: var(--radius); padding: 16px; border: 1px solid var(--border); box-shadow: var(--shadow); }
+    .pcard h3 { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 800; margin-bottom: 14px; }
+    .dog-avatar-row { display: flex; align-items: center; gap: 14px; margin-bottom: 18px; }
+    .dog-avatar { width: 64px; height: 64px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), #ff6b35); display: flex; align-items: center; justify-content: center; font-size: 30px; flex-shrink: 0; cursor: pointer; position: relative; overflow: hidden; }
+    .dog-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .dog-avatar-edit { position: absolute; inset: 0; background: rgba(0,0,0,0.35); display: flex; align-items: center; justify-content: center; font-size: 16px; opacity: 0; transition: 0.2s; border-radius: 50%; }
+    .dog-avatar:hover .dog-avatar-edit { opacity: 1; }
+    .dog-name-big { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 800; }
+    .dog-sub { font-size: 13px; color: var(--muted); margin-top: 2px; }
+    .pfield { margin-bottom: 12px; }
+    .pfield label { font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); display: block; margin-bottom: 6px; }
+    .pfield input, .pfield select, .pfield textarea { width: 100%; background: var(--bg); border: 1.5px solid var(--border); border-radius: 11px; padding: 11px 13px; font-family: 'DM Sans', sans-serif; font-size: 15px; color: var(--text); outline: none; transition: border-color 0.2s; }
+    .pfield input:focus, .pfield select:focus, .pfield textarea:focus { border-color: var(--accent); }
+    .pfield textarea { resize: none; height: 76px; }
+    .psize-row { display: flex; gap: 8px; }
+    .psize-btn { flex: 1; padding: 10px; border-radius: 10px; border: 1.5px solid var(--border); background: var(--bg); font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 600; color: var(--muted); cursor: pointer; text-align: center; transition: all 0.15s; }
+    .psize-btn.active { border-color: var(--accent); background: rgba(245,200,66,0.1); color: var(--dark); }
+    .save-btn { width: 100%; background: var(--accent); color: var(--dark); border: none; border-radius: 12px; padding: 14px; font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 700; cursor: pointer; margin-top: 6px; }
+
+    .history-list { display: flex; flex-direction: column; }
+    .history-row { display: flex; align-items: center; gap: 10px; padding: 11px 0; border-bottom: 1px solid var(--border); }
+    .history-row:last-child { border-bottom: none; }
+    .hr-icon { width: 38px; height: 38px; border-radius: 10px; background: var(--bg); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+    .hr-info { flex: 1; }
+    .hr-salon { font-weight: 600; font-size: 13px; }
+    .hr-detail { font-size: 11px; color: var(--muted); margin-top: 1px; }
+    .hr-price { font-weight: 700; font-size: 13px; }
 
     /* ══ GUIDE SCREEN ══ */
-    .guide-screen { padding-bottom: 100px; }
-    .guide-hero { background: var(--dark); padding: 24px 20px; color: #fff; }
-    .guide-hero h2 { font-family: 'Syne', sans-serif; font-size: 24px; font-weight: 800; margin-bottom: 4px; }
-    .guide-hero p { font-size: 14px; color: #aaa; }
-    .guide-back { background: rgba(255,255,255,0.1); border: none; color: #fff; padding: 8px 14px; border-radius: 999px; font-size: 13px; cursor: pointer; margin-bottom: 14px; display: inline-flex; align-items: center; gap: 6px; font-family: 'DM Sans', sans-serif; }
-    .guide-content { padding: 20px; }
-    .guide-stat-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-bottom: 20px; }
-    .guide-stat { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 14px 12px; text-align: center; }
-    .guide-stat .gs-val { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 800; color: var(--dark); margin-bottom: 2px; }
-    .guide-stat .gs-label { font-size: 11px; color: var(--muted); }
-    .guide-section { margin-bottom: 20px; }
-    .guide-section h3 { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 800; margin-bottom: 10px; }
-    .guide-tip { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 13px 14px; margin-bottom: 8px; display: flex; gap: 10px; font-size: 14px; line-height: 1.5; }
-    .guide-tip-icon { font-size: 18px; flex-shrink: 0; }
-    .cut-style-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 10px; }
-    .cut-style-card { background: var(--card); border: 1.5px solid var(--border); border-radius: 14px; padding: 14px; text-align: center; cursor: pointer; transition: all 0.15s; }
-    .cut-style-card:active { transform: scale(0.97); }
-    .cut-style-card.selected { border-color: var(--accent); background: rgba(245,200,66,0.07); }
-    .cut-emoji { font-size: 36px; margin-bottom: 8px; }
-    .cut-name { font-weight: 700; font-size: 14px; margin-bottom: 3px; }
-    .cut-desc { font-size: 12px; color: var(--muted); line-height: 1.4; }
-
-    /* ══ SHEET ══ */
-    .sheet-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 200; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
-    .sheet-overlay.open { opacity: 1; pointer-events: all; }
-    .sheet { position: fixed; bottom: 0; left: 0; right: 0; background: var(--card); border-radius: 24px 24px 0 0; z-index: 201; max-height: 92vh; overflow-y: auto; transform: translateY(100%); transition: transform 0.35s cubic-bezier(0.32,0.72,0,1); padding-bottom: 40px; }
-    .sheet.open { transform: translateY(0); }
-    .sheet-handle { width: 40px; height: 4px; background: var(--border); border-radius: 2px; margin: 14px auto 0; }
-    .sheet-header { padding: 20px 20px 0; display: flex; align-items: center; justify-content: space-between; }
-    .sheet-title { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 800; }
-    .close-btn { width: 32px; height: 32px; border-radius: 50%; background: var(--bg); border: none; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-    .sheet-section { padding: 18px 20px 0; }
-    .sheet-section-title { font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); margin-bottom: 12px; }
-    .breed-price-card { background: rgba(245,200,66,0.1); border: 1.5px solid var(--accent); border-radius: 14px; padding: 14px 16px; margin-bottom: 0; display: flex; align-items: center; justify-content: space-between; }
-    .bpc-label { font-size: 12px; color: var(--muted); margin-bottom: 2px; }
-    .bpc-breed { font-size: 16px; font-weight: 700; }
-    .bpc-price { font-family: 'Syne', sans-serif; font-size: 30px; font-weight: 800; }
-    .bpc-time { font-size: 12px; color: var(--muted); text-align: right; margin-top: 2px; }
-    .addon-list { display: flex; flex-direction: column; gap: 8px; }
-    .addon-row { display: flex; align-items: center; justify-content: space-between; background: var(--bg); border: 1.5px solid var(--border); border-radius: 12px; padding: 12px 14px; cursor: pointer; transition: all 0.15s; }
-    .addon-row.selected { border-color: var(--accent); background: rgba(245,200,66,0.07); }
-    .addon-left { display: flex; align-items: center; gap: 10px; }
-    .addon-icon { font-size: 20px; width: 28px; text-align: center; }
-    .addon-name { font-weight: 600; font-size: 14px; margin-bottom: 1px; }
-    .addon-desc { font-size: 12px; color: var(--muted); }
-    .addon-right { display: flex; align-items: center; gap: 10px; }
-    .addon-price { font-weight: 700; font-size: 14px; white-space: nowrap; }
-    .addon-check { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 12px; transition: all 0.15s; flex-shrink: 0; }
-    .addon-row.selected .addon-check { background: var(--accent); border-color: var(--accent); }
-    .total-bar { background: var(--dark); border-radius: 14px; padding: 14px 16px; margin-top: 14px; display: flex; align-items: center; justify-content: space-between; }
-    .total-label { font-size: 13px; color: #aaa; }
-    .total-items { font-size: 12px; color: #777; margin-top: 2px; }
-    .total-amount { font-family: 'Syne', sans-serif; font-size: 26px; font-weight: 800; color: var(--accent); }
-    .day-tabs { display: flex; gap: 8px; margin-bottom: 14px; overflow-x: auto; scrollbar-width: none; }
-    .day-tabs::-webkit-scrollbar { display: none; }
-    .day-tab { padding: 8px 16px; border-radius: 999px; border: 1.5px solid var(--border); font-size: 13px; font-weight: 500; cursor: pointer; white-space: nowrap; transition: all 0.15s; flex-shrink: 0; }
-    .day-tab.active { background: var(--dark); color: #fff; border-color: var(--dark); }
-    .time-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; }
-    .time-slot { border: 1.5px solid var(--border); border-radius: 12px; padding: 12px 8px; text-align: center; cursor: pointer; transition: all 0.15s; }
-    .time-slot.available:hover { border-color: var(--accent); }
-    .time-slot.selected { border-color: var(--accent); background: rgba(245,200,66,0.12); }
-    .t-time { font-size: 14px; font-weight: 600; }
-    .t-label { font-size: 11px; color: var(--success); margin-top: 2px; }
-    .confirm-btn { margin: 20px 20px 0; width: calc(100% - 40px); background: var(--accent); color: var(--dark); border: none; border-radius: 14px; padding: 16px; font-family: 'DM Sans', sans-serif; font-size: 16px; font-weight: 700; cursor: pointer; }
-    .confirm-btn:disabled { background: var(--border); color: var(--muted); cursor: not-allowed; }
-    .confirm-screen { text-align: center; padding: 40px 24px; }
-    .confirm-icon { font-size: 64px; margin-bottom: 16px; }
-    .confirm-screen h2 { font-family: 'Syne', sans-serif; font-size: 26px; font-weight: 800; margin-bottom: 8px; }
-    .confirm-screen p { font-size: 15px; color: var(--muted); margin-bottom: 24px; line-height: 1.6; }
-    .confirm-detail { background: var(--bg); border-radius: 14px; padding: 16px; margin-bottom: 20px; text-align: left; }
-    .confirm-row { display: flex; justify-content: space-between; font-size: 14px; padding: 7px 0; border-bottom: 1px solid var(--border); }
-    .confirm-row:last-child { border-bottom: none; }
-    .confirm-row .lbl { color: var(--muted); }
-    .confirm-row .val { font-weight: 600; }
-    .notif-note { background: rgba(46,204,113,0.1); border: 1px solid rgba(46,204,113,0.3); border-radius: 12px; padding: 14px; font-size: 13px; color: #1a7a40; display: flex; gap: 10px; align-items: flex-start; text-align: left; margin-bottom: 20px; }
+    .guide-screen-top { background: var(--dark); padding: 14px 20px 20px; }
+    .guide-back { background: rgba(255,255,255,0.1); border: none; color: #fff; padding: 7px 13px; border-radius: 999px; font-size: 12px; cursor: pointer; margin-bottom: 12px; display: inline-flex; align-items: center; gap: 5px; font-family: 'DM Sans', sans-serif; font-weight: 600; }
+    .guide-screen-top h2 { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 800; color: #fff; margin-bottom: 3px; }
+    .guide-screen-top p { font-size: 13px; color: #777; }
+    .guide-body { padding: 16px 16px 100px; }
+    .stats-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-bottom: 16px; }
+    .stat-box { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 12px 10px; text-align: center; }
+    .stat-val { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 800; color: var(--dark); margin-bottom: 2px; }
+    .stat-lbl { font-size: 10px; color: var(--muted); }
+    .gsection { margin-bottom: 18px; }
+    .gsection h3 { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 800; margin-bottom: 9px; }
+    .gtip { background: var(--card); border: 1px solid var(--border); border-radius: 11px; padding: 11px 13px; margin-bottom: 7px; font-size: 13px; line-height: 1.5; display: flex; gap: 9px; }
+    .cut-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 9px; }
+    .cut-card { background: var(--card); border: 1.5px solid var(--border); border-radius: 13px; padding: 13px; text-align: center; cursor: pointer; transition: all 0.15s; }
+    .cut-card:active { transform: scale(0.96); border-color: var(--accent); }
+    .cut-card.sel { border-color: var(--accent); background: rgba(245,200,66,0.07); }
+    .cc-emoji { font-size: 30px; margin-bottom: 7px; }
+    .cc-name { font-weight: 700; font-size: 13px; margin-bottom: 3px; }
+    .cc-desc { font-size: 11px; color: var(--muted); line-height: 1.4; }
+    .find-from-guide { width: 100%; background: var(--accent); color: var(--dark); border: none; border-radius: 13px; padding: 15px; font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 700; cursor: pointer; margin-top: 18px; }
 
     /* BOTTOM NAV */
-    .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--card); border-top: 1px solid var(--border); display: flex; z-index: 99; padding-bottom: env(safe-area-inset-bottom); }
-    .bottom-nav-btn { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 10px 0; cursor: pointer; border: none; background: none; gap: 3px; transition: all 0.15s; }
-    .bottom-nav-btn .bn-icon { font-size: 22px; }
-    .bottom-nav-btn .bn-label { font-size: 10px; font-weight: 600; color: var(--muted); }
-    .bottom-nav-btn.active .bn-label { color: var(--accent); }
-    .bottom-nav-btn.active .bn-icon { filter: drop-shadow(0 0 4px rgba(245,200,66,0.5)); }
+    .bottom-nav { background: var(--card); border-top: 1px solid var(--border); display: flex; flex-shrink: 0; padding-bottom: env(safe-area-inset-bottom,8px); }
+    .bn-btn { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 9px 0; cursor: pointer; border: none; background: none; gap: 2px; }
+    .bn-icon { font-size: 22px; }
+    .bn-label { font-size: 10px; font-weight: 600; color: var(--muted); }
+    .bn-btn.active .bn-label { color: var(--accent); }
   </style>
 </head>
 <body>
+<div id="app">
 
-<div class="header">
-  <div class="logo">Paw<span>Status</span></div>
-</div>
+  <!-- STATUS BAR -->
+  <div class="status-bar">
+    <div class="status-time" id="statusTime">9:41</div>
+    <div class="status-icons">
+      <span>●●●</span><span>WiFi</span><span>🔋</span>
+    </div>
+  </div>
 
-<!-- ══ SCREEN: SEARCH ══ -->
-<div class="screen active" id="screen-search">
-  <div class="search-hero">
-    <h1>Book a groomer<br>your dog will <span>love</span></h1>
-    <p>Real prices by breed. Live availability. Pickup alerts.</p>
-    <div class="search-form">
-      <div>
-        <div class="form-label">📍 Your location</div>
-        <div class="location-wrap">
-          <span class="input-icon">📍</span>
-          <input class="location-input" type="text" id="locationInput" placeholder="Enter your address..." />
-        </div>
-        <button class="my-location-btn" onclick="useMyLocation()">
-          <span>🎯</span><span id="locationBtnText">Use my current location</span>
-        </button>
+  <!-- HEADER -->
+  <div class="app-header">
+    <div class="logo">Paw<span>Status</span></div>
+    <div class="header-right">
+      <button class="icon-btn">🔔</button>
+    </div>
+  </div>
+
+  <!-- ══ SCREEN: SEARCH ══ -->
+  <div class="screen active" id="screen-search">
+    <div class="search-top">
+      <div class="hero-text">
+        <h1>Find a groomer<br>your dog will <em>love</em></h1>
+        <p>Real prices by breed · Live slots · Pickup alerts</p>
       </div>
-      <div class="form-divider"><hr/><span>then</span><hr/></div>
-      <div>
-        <div class="form-label">🐕 Breed</div>
-        <div class="dropdown-wrap">
-          <span class="input-icon">🐕</span>
-          <select id="breedSelect" onchange="onBreedChange()">
-            <option value="">Select breed...</option>
-            <optgroup label="Small breeds">
-              <option value="chihuahua">Chihuahua</option>
-              <option value="yorkie">Yorkie</option>
-              <option value="maltese">Maltese</option>
-              <option value="frenchbulldog">French Bulldog</option>
-              <option value="mini_schnauzer">Mini Schnauzer</option>
-              <option value="shihtzhu">Shih Tzu</option>
-            </optgroup>
-            <optgroup label="Medium breeds">
-              <option value="cockapoo">Cockapoo</option>
-              <option value="cavapoo">Cavapoo</option>
-              <option value="pomsky">Pomsky</option>
-              <option value="poodle">Poodle (size varies)</option>
-            </optgroup>
-            <optgroup label="Large breeds">
-              <option value="goldendoodle">Goldendoodle (size varies)</option>
-              <option value="labrador">Labrador</option>
-              <option value="goldenretriever">Golden Retriever</option>
-              <option value="husky">Husky</option>
-              <option value="bernedoodle">Bernedoodle</option>
-              <option value="boxer">Boxer</option>
-            </optgroup>
-          </select>
-          <span class="dropdown-arrow">▾</span>
+
+      <!-- SEARCH CARD -->
+      <div class="search-card">
+        <!-- LOCATION -->
+        <div class="search-row" onclick="useMyLocation()">
+          <div class="sr-icon">📍</div>
+          <div class="sr-content">
+            <div class="sr-label">Location</div>
+            <div class="sr-value placeholder" id="locationDisplay">Tap to use your location</div>
+          </div>
+          <div class="sr-arrow">›</div>
         </div>
-        <!-- SIZE SELECTOR for variable-size breeds -->
-        <div class="size-selector" id="sizeSelector">
-          <div class="form-label" style="margin-top:10px">Dog size</div>
-          <div class="size-row">
-            <button class="size-btn" onclick="selectSize('small',this)">Small</button>
-            <button class="size-btn active" onclick="selectSize('medium',this)">Medium</button>
-            <button class="size-btn" onclick="selectSize('large',this)">Large</button>
+        <!-- BREED -->
+        <div class="search-row" onclick="openPicker('breed')">
+          <div class="sr-icon">🐕</div>
+          <div class="sr-content">
+            <div class="sr-label">Breed</div>
+            <div class="sr-value placeholder" id="breedDisplay">Select your dog's breed</div>
+          </div>
+          <div class="sr-arrow">›</div>
+        </div>
+        <!-- SIZE (shown only for variable-size breeds) -->
+        <div class="size-inline" id="sizeInline">
+          <div class="size-inline-label">Dog size</div>
+          <div class="size-pills">
+            <div class="size-pill" onclick="pickSize('small',this)">Small</div>
+            <div class="size-pill active" onclick="pickSize('medium',this)">Medium</div>
+            <div class="size-pill" onclick="pickSize('large',this)">Large</div>
           </div>
         </div>
-      </div>
-      <div>
-        <div class="form-label">✂️ Service</div>
-        <div class="dropdown-wrap">
-          <span class="input-icon">✂️</span>
-          <select id="serviceSelect" onchange="checkForm()">
-            <option value="">Select service...</option>
-            <optgroup label="Full services">
-              <option value="full_groom">Full Groom — bath, cut, dry, brush</option>
-              <option value="puppy_first">Puppy's First Groom</option>
-              <option value="senior_groom">Senior Dog Groom (gentle)</option>
-            </optgroup>
-            <optgroup label="Bath services">
-              <option value="bath_brush">Bath + Brush Out</option>
-              <option value="bath_nail">Bath + Nail Trim</option>
-              <option value="bath_only">Bath Only</option>
-              <option value="deshed_bath">De-shed Bath + Blow Out</option>
-              <option value="flea_bath">Flea & Tick Treatment Bath</option>
-            </optgroup>
-            <optgroup label="Quick services">
-              <option value="nail_only">Nail Trim Only</option>
-              <option value="nail_dremel">Nail Dremel (grind smooth)</option>
-              <option value="ear_clean">Ear Cleaning Only</option>
-              <option value="teeth_clean">Teeth Brushing Only</option>
-              <option value="dematting">De-matting Treatment</option>
-            </optgroup>
-          </select>
-          <span class="dropdown-arrow">▾</span>
+        <!-- SERVICE -->
+        <div class="search-row" onclick="openPicker('service')">
+          <div class="sr-icon">✂️</div>
+          <div class="sr-content">
+            <div class="sr-label">Service</div>
+            <div class="sr-value placeholder" id="serviceDisplay">Select a service</div>
+          </div>
+          <div class="sr-arrow">›</div>
         </div>
       </div>
+
       <button class="find-btn" id="findBtn" disabled onclick="findGroomers()">
         Find Groomers 🐾
       </button>
     </div>
-  </div>
 
-  <div class="quick-picks">
-    <p>Popular searches</p>
-    <div class="quick-row">
-      <div class="quick-chip" onclick="quickPick('goldendoodle','full_groom','medium')">🐩 Goldendoodle full groom</div>
-      <div class="quick-chip" onclick="quickPick('frenchbulldog','bath_nail',null)">🐾 Frenchie bath + nails</div>
-      <div class="quick-chip" onclick="quickPick('yorkie','full_groom',null)">🐕 Yorkie full groom</div>
-      <div class="quick-chip" onclick="quickPick('husky','deshed_bath',null)">🐺 Husky de-shed</div>
-      <div class="quick-chip" onclick="quickPick('labrador','bath_brush',null)">🦮 Lab bath + brush</div>
-    </div>
-  </div>
-
-  <!-- BREED GUIDES -->
-  <div class="breed-guides">
-    <div class="section-heading">Grooming guides by breed</div>
-    <div class="guide-scroll" id="guideScroll"></div>
-  </div>
-</div>
-
-<!-- ══ SCREEN: RESULTS ══ -->
-<div class="screen" id="screen-results">
-  <div class="results-header">
-    <button class="back-btn" onclick="goToScreen('search')">←</button>
-    <div class="results-header-info">
-      <h2 id="resultsTitle">Groomers near you</h2>
-      <p id="resultsSubtitle"></p>
-    </div>
-  </div>
-  <div class="filters-wrap">
-    <div class="filters-scroll" id="filtersRow">
-      <div class="filter-chip active" data-filter="all">All</div>
-      <div class="filter-chip" data-filter="available">Available Today</div>
-      <div class="filter-chip" data-filter="specialist">Specialists</div>
-      <div class="filter-chip" data-filter="budget">Lowest Price</div>
-      <div class="filter-chip" data-filter="nearby">Nearest</div>
-      <div class="filter-chip" data-filter="rated">Top Rated</div>
-    </div>
-  </div>
-  <div class="sort-bar"><div class="results-count"><strong id="resultCount">4</strong> groomers near you</div></div>
-  <div class="groomers-list" id="groomersList"></div>
-</div>
-
-<!-- ══ SCREEN: PROFILE ══ -->
-<div class="screen" id="screen-profile">
-  <div class="profile-screen">
-    <div class="profile-hero">
-      <h2>Your dog's profile</h2>
-      <p>Save info so groomers know your pup before they arrive.</p>
-    </div>
-
-    <!-- REBOOK REMINDER -->
-    <div class="rebook-banner" onclick="goToScreen('search')">
-      <div class="rb-icon">🔔</div>
-      <div>
-        <h4 id="rebookTitle">Time for a groom!</h4>
-        <p id="rebookSub">Max's last groom was 6 weeks ago</p>
+    <!-- QUICK CHIPS -->
+    <div class="quick-section">
+      <div class="section-label">Popular</div>
+      <div class="chip-scroll">
+        <div class="quick-chip" onclick="quickPick('goldendoodle','full_groom','medium')">🐩 Doodle full groom</div>
+        <div class="quick-chip" onclick="quickPick('frenchbulldog','bath_nail',null)">🐾 Frenchie bath + nails</div>
+        <div class="quick-chip" onclick="quickPick('yorkie','full_groom',null)">🐕 Yorkie full groom</div>
+        <div class="quick-chip" onclick="quickPick('husky','deshed_bath',null)">🐺 Husky de-shed</div>
+        <div class="quick-chip" onclick="quickPick('labrador','bath_brush',null)">🦮 Lab bath + brush</div>
+        <div class="quick-chip" onclick="quickPick('poodle','full_groom','small')">🐩 Poodle full groom</div>
+        <div class="quick-chip" onclick="quickPick('chihuahua','nail_only',null)">🐾 Chihuahua nails</div>
       </div>
-      <div class="rb-arrow">→</div>
     </div>
 
-    <!-- DOG PROFILE CARD -->
-    <div class="dog-profile-card">
-      <div class="dog-avatar-row">
-        <div class="dog-avatar" onclick="triggerPhotoUpload()">
-          <span id="dogAvatarEmoji">🐶</span>
-          <div class="dog-avatar-overlay">📷</div>
-        </div>
+    <!-- BREED GUIDES — compact cards -->
+    <div class="guide-section">
+      <div class="section-label">Grooming guides</div>
+      <div class="guide-row" id="guideRow"></div>
+    </div>
+  </div>
+
+  <!-- ══ SCREEN: RESULTS ══ -->
+  <div class="screen" id="screen-results">
+    <div class="results-nav">
+      <button class="back-btn" onclick="goToScreen('search')">←</button>
+      <div class="results-title-wrap">
+        <h2 id="resultsTitle">Groomers</h2>
+        <p id="resultsSubtitle"></p>
+      </div>
+    </div>
+    <div class="filter-scroll-wrap">
+      <div class="filter-row" id="filterRow">
+        <div class="fchip active" data-f="all">All</div>
+        <div class="fchip" data-f="available">Available Today</div>
+        <div class="fchip" data-f="specialist">Specialists</div>
+        <div class="fchip" data-f="budget">Lowest Price</div>
+        <div class="fchip" data-f="nearby">Nearest</div>
+        <div class="fchip" data-f="rated">Top Rated</div>
+      </div>
+    </div>
+    <div class="results-meta"><strong id="resultCount">4</strong> groomers near you</div>
+    <div class="cards-wrap" id="cardsWrap"></div>
+  </div>
+
+  <!-- ══ SCREEN: PROFILE ══ -->
+  <div class="screen" id="screen-profile">
+    <div class="profile-top">
+      <h2>My Dog</h2>
+      <p>Profile, history & reminders</p>
+    </div>
+    <div class="profile-body">
+
+      <div class="rebook-card" onclick="goToScreen('search')">
+        <div class="rc-icon">🔔</div>
         <div>
-          <div class="dog-name-big" id="dogNameDisplay">Your Dog</div>
-          <div class="dog-breed-tag" id="dogBreedDisplay">Add your dog's info below</div>
+          <h4 id="rebookTitle">Time for a groom!</h4>
+          <p id="rebookSub">Last groom was 6 weeks ago</p>
         </div>
+        <div class="rc-arrow">→</div>
       </div>
-      <input type="file" id="photoInput" accept="image/*" style="display:none" onchange="handlePhotoUpload(event)" />
 
-      <div class="profile-field">
-        <label>Dog's name</label>
-        <input type="text" id="dogName" placeholder="e.g. Max" oninput="updateDogDisplay()" />
-      </div>
-      <div class="profile-field">
-        <label>Breed</label>
-        <select id="dogBreed" onchange="updateDogDisplay()">
-          <option value="">Select breed...</option>
-          <option value="chihuahua">Chihuahua</option>
-          <option value="yorkie">Yorkie</option>
-          <option value="maltese">Maltese</option>
-          <option value="frenchbulldog">French Bulldog</option>
-          <option value="mini_schnauzer">Mini Schnauzer</option>
-          <option value="shihtzhu">Shih Tzu</option>
-          <option value="cockapoo">Cockapoo</option>
-          <option value="cavapoo">Cavapoo</option>
-          <option value="poodle">Poodle</option>
-          <option value="goldendoodle">Goldendoodle</option>
-          <option value="labrador">Labrador</option>
-          <option value="goldenretriever">Golden Retriever</option>
-          <option value="husky">Husky</option>
-          <option value="bernedoodle">Bernedoodle</option>
-          <option value="boxer">Boxer</option>
-        </select>
-      </div>
-      <div class="profile-field">
-        <label>Size</label>
-        <div class="profile-size-row">
-          <button class="profile-size-btn" onclick="setProfileSize('small',this)">Small</button>
-          <button class="profile-size-btn active" onclick="setProfileSize('medium',this)">Medium</button>
-          <button class="profile-size-btn" onclick="setProfileSize('large',this)">Large</button>
+      <div class="pcard">
+        <div class="dog-avatar-row">
+          <div class="dog-avatar" onclick="document.getElementById('photoInput').click()">
+            <span id="dogAvatarEmoji">🐶</span>
+            <div class="dog-avatar-edit">📷</div>
+          </div>
+          <div>
+            <div class="dog-name-big" id="dogNameBig">Your Dog</div>
+            <div class="dog-sub" id="dogSubText">Add info below</div>
+          </div>
         </div>
-      </div>
-      <div class="profile-field">
-        <label>Age</label>
-        <select id="dogAge">
-          <option value="">Select age...</option>
-          <option value="puppy">Puppy (under 1 year)</option>
-          <option value="young">Young (1–3 years)</option>
-          <option value="adult">Adult (3–8 years)</option>
-          <option value="senior">Senior (8+ years)</option>
-        </select>
-      </div>
-      <div class="profile-field">
-        <label>Notes for groomer</label>
-        <textarea id="groomerNotes" placeholder="e.g. Anxious around other dogs. Hates blow dryer. Loves treats. Has a sensitive spot on left ear."></textarea>
-      </div>
-      <button class="save-profile-btn" onclick="saveProfile()">Save profile ✓</button>
-    </div>
+        <input type="file" id="photoInput" accept="image/*" style="display:none" onchange="handlePhoto(event)" />
 
-    <!-- GROOM HISTORY -->
-    <div class="groom-history">
-      <h3>📋 Groom history</h3>
-      <div id="groomHistoryList"></div>
+        <div class="pfield">
+          <label>Dog's name</label>
+          <input type="text" id="dogName" placeholder="e.g. Max" oninput="updateDogPreview()" />
+        </div>
+        <div class="pfield">
+          <label>Breed</label>
+          <select id="dogBreed" onchange="updateDogPreview()">
+            <option value="">Select breed...</option>
+            <option value="chihuahua">Chihuahua</option>
+            <option value="yorkie">Yorkie</option>
+            <option value="maltese">Maltese</option>
+            <option value="frenchbulldog">French Bulldog</option>
+            <option value="mini_schnauzer">Mini Schnauzer</option>
+            <option value="shihtzhu">Shih Tzu</option>
+            <option value="bichon">Bichon Frisé</option>
+            <option value="cavachon">Cavachon</option>
+            <option value="dachshund">Dachshund</option>
+            <option value="cockapoo">Cockapoo</option>
+            <option value="cavapoo">Cavapoo</option>
+            <option value="cocker_spaniel">Cocker Spaniel</option>
+            <option value="pomsky">Pomsky</option>
+            <option value="poodle">Poodle</option>
+            <option value="goldendoodle">Goldendoodle</option>
+            <option value="labrador">Labrador</option>
+            <option value="goldenretriever">Golden Retriever</option>
+            <option value="border_collie">Border Collie</option>
+            <option value="aussie">Australian Shepherd</option>
+            <option value="husky">Husky</option>
+            <option value="german_shepherd">German Shepherd</option>
+            <option value="bernedoodle">Bernedoodle</option>
+            <option value="boxer">Boxer</option>
+            <option value="doberman">Doberman</option>
+            <option value="shiba">Shiba Inu</option>
+            <option value="corgi">Corgi</option>
+          </select>
+        </div>
+        <div class="pfield">
+          <label>Size</label>
+          <div class="psize-row">
+            <button class="psize-btn" onclick="setPSize('small',this)">Small</button>
+            <button class="psize-btn active" onclick="setPSize('medium',this)">Medium</button>
+            <button class="psize-btn" onclick="setPSize('large',this)">Large</button>
+          </div>
+        </div>
+        <div class="pfield">
+          <label>Age</label>
+          <select id="dogAge">
+            <option value="">Select age...</option>
+            <option value="puppy">Puppy (under 1 yr)</option>
+            <option value="young">Young (1–3 yrs)</option>
+            <option value="adult">Adult (3–8 yrs)</option>
+            <option value="senior">Senior (8+ yrs)</option>
+          </select>
+        </div>
+        <div class="pfield">
+          <label>Notes for groomer</label>
+          <textarea id="groomerNotes" placeholder="e.g. Anxious around other dogs. Hates blow dryer. Loves treats."></textarea>
+        </div>
+        <button class="save-btn" onclick="saveProfile()">Save profile ✓</button>
+      </div>
+
+      <div class="pcard">
+        <h3>📋 Groom history</h3>
+        <div class="history-list" id="historyList"></div>
+      </div>
     </div>
   </div>
-</div>
 
-<!-- ══ SCREEN: BREED GUIDE ══ -->
-<div class="screen" id="screen-guide">
-  <div class="guide-screen">
-    <div class="guide-hero">
+  <!-- ══ SCREEN: GUIDE ══ -->
+  <div class="screen" id="screen-guide">
+    <div class="guide-screen-top">
       <button class="guide-back" onclick="goToScreen('search')">← Back</button>
-      <h2 id="guideBreedTitle">Breed Guide</h2>
-      <p id="guideBreedSub">Everything you need to know</p>
+      <h2 id="guideTitle">Breed Guide</h2>
+      <p id="guideSub">Grooming tips & cut styles</p>
     </div>
-    <div class="guide-content" id="guideContent"></div>
+    <div class="guide-body" id="guideBody"></div>
   </div>
-</div>
 
-<!-- SHEET -->
-<div class="sheet-overlay" id="overlay" onclick="closeSheet()"></div>
-<div class="sheet" id="sheet"><div id="sheetContent"></div></div>
+  <!-- BREED PICKER SHEET -->
+  <div class="picker-overlay" id="breedPickerOverlay" onclick="closePicker('breed')"></div>
+  <div class="picker-sheet" id="breedPickerSheet">
+    <div class="picker-handle"></div>
+    <div class="picker-header">
+      <div class="picker-title">Select Breed</div>
+      <button class="picker-done" onclick="closePicker('breed')">Done</button>
+    </div>
+    <div class="picker-search"><input type="text" placeholder="Search breed..." id="breedSearchInput" oninput="filterBreedPicker()" /></div>
+    <div class="picker-list" id="breedPickerList"></div>
+  </div>
 
-<!-- BOTTOM NAV -->
-<div class="bottom-nav">
-  <button class="bottom-nav-btn active" id="nav-search" onclick="switchNav('search')">
-    <span class="bn-icon">🔍</span><span class="bn-label">Find</span>
-  </button>
-  <button class="bottom-nav-btn" id="nav-profile" onclick="switchNav('profile')">
-    <span class="bn-icon">🐾</span><span class="bn-label">My Dog</span>
-  </button>
-</div>
+  <!-- SERVICE PICKER SHEET -->
+  <div class="picker-overlay" id="servicePickerOverlay" onclick="closePicker('service')"></div>
+  <div class="picker-sheet" id="servicePickerSheet">
+    <div class="picker-handle"></div>
+    <div class="picker-header">
+      <div class="picker-title">Select Service</div>
+      <button class="picker-done" onclick="closePicker('service')">Done</button>
+    </div>
+    <div class="picker-list" id="servicePickerList"></div>
+  </div>
+
+  <!-- BOOKING SHEET -->
+  <div class="sheet-overlay" id="sheetOverlay" onclick="closeSheet()"></div>
+  <div class="booking-sheet" id="bookingSheet">
+    <div class="bs-handle"></div>
+    <div class="bs-header">
+      <div class="bs-title" id="bsTitle"></div>
+      <button class="bs-close" onclick="closeSheet()">✕</button>
+    </div>
+    <div class="bs-scroll" id="bsScroll"></div>
+    <div class="bs-footer">
+      <button class="book-now-btn" id="bookNowBtn" disabled onclick="confirmBooking()">Select a time to book</button>
+    </div>
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <div class="bottom-nav">
+    <button class="bn-btn active" id="nav-search" onclick="switchNav('search')">
+      <span class="bn-icon">🔍</span><span class="bn-label">Find</span>
+    </button>
+    <button class="bn-btn" id="nav-profile" onclick="switchNav('profile')">
+      <span class="bn-icon">🐾</span><span class="bn-label">My Dog</span>
+    </button>
+  </div>
+
+</div><!-- /app -->
 
 <script>
-// ── BREED DATA ────────────────────────────────────────────────────────────────
+// ── DATA ──────────────────────────────────────────────────────────────────────
 const breedData = {
-  chihuahua:       { name:'Chihuahua',       emoji:'🐾', groomTime:45,  variableSize:false },
-  yorkie:          { name:'Yorkie',           emoji:'🐕', groomTime:75,  variableSize:false },
-  maltese:         { name:'Maltese',          emoji:'🐶', groomTime:75,  variableSize:false },
-  frenchbulldog:   { name:'French Bulldog',   emoji:'🐾', groomTime:60,  variableSize:false },
-  mini_schnauzer:  { name:'Mini Schnauzer',   emoji:'🐶', groomTime:80,  variableSize:false },
-  shihtzhu:        { name:'Shih Tzu',         emoji:'🐶', groomTime:90,  variableSize:false },
-  cockapoo:        { name:'Cockapoo',         emoji:'🐕', groomTime:100, variableSize:false },
-  cavapoo:         { name:'Cavapoo',          emoji:'🐕', groomTime:90,  variableSize:false },
-  pomsky:          { name:'Pomsky',           emoji:'🐺', groomTime:120, variableSize:false },
-  poodle:          { name:'Poodle',           emoji:'🐩', groomTime:120, variableSize:true  },
-  goldendoodle:    { name:'Goldendoodle',     emoji:'🐩', groomTime:150, variableSize:true  },
-  labrador:        { name:'Labrador',         emoji:'🦮', groomTime:90,  variableSize:false },
-  goldenretriever: { name:'Golden Retriever', emoji:'🦮', groomTime:120, variableSize:false },
-  husky:           { name:'Husky',            emoji:'🐺', groomTime:180, variableSize:false },
-  bernedoodle:     { name:'Bernedoodle',      emoji:'🐩', groomTime:180, variableSize:true  },
-  boxer:           { name:'Boxer',            emoji:'🦮', groomTime:90,  variableSize:false },
+  chihuahua:       {name:'Chihuahua',          emoji:'🐾', groomTime:45,  variableSize:false},
+  yorkie:          {name:'Yorkie',              emoji:'🐕', groomTime:75,  variableSize:false},
+  maltese:         {name:'Maltese',             emoji:'🐶', groomTime:75,  variableSize:false},
+  frenchbulldog:   {name:'French Bulldog',      emoji:'🐾', groomTime:60,  variableSize:false},
+  mini_schnauzer:  {name:'Mini Schnauzer',      emoji:'🐶', groomTime:80,  variableSize:false},
+  shihtzhu:        {name:'Shih Tzu',            emoji:'🐶', groomTime:90,  variableSize:false},
+  bichon:          {name:'Bichon Frisé',        emoji:'🐶', groomTime:75,  variableSize:false},
+  cavachon:        {name:'Cavachon',            emoji:'🐶', groomTime:80,  variableSize:false},
+  dachshund:       {name:'Dachshund',           emoji:'🌭', groomTime:60,  variableSize:false},
+  cockapoo:        {name:'Cockapoo',            emoji:'🐕', groomTime:100, variableSize:false},
+  cavapoo:         {name:'Cavapoo',             emoji:'🐕', groomTime:90,  variableSize:false},
+  cocker_spaniel:  {name:'Cocker Spaniel',      emoji:'🐕', groomTime:110, variableSize:false},
+  pomsky:          {name:'Pomsky',              emoji:'🐺', groomTime:120, variableSize:false},
+  poodle:          {name:'Poodle',              emoji:'🐩', groomTime:120, variableSize:true},
+  goldendoodle:    {name:'Goldendoodle',        emoji:'🐩', groomTime:150, variableSize:true},
+  labrador:        {name:'Labrador',            emoji:'🦮', groomTime:90,  variableSize:false},
+  goldenretriever: {name:'Golden Retriever',    emoji:'🦮', groomTime:120, variableSize:false},
+  border_collie:   {name:'Border Collie',       emoji:'🐕', groomTime:120, variableSize:false},
+  aussie:          {name:'Australian Shepherd', emoji:'🐕', groomTime:135, variableSize:false},
+  husky:           {name:'Husky',               emoji:'🐺', groomTime:180, variableSize:false},
+  german_shepherd: {name:'German Shepherd',     emoji:'🐺', groomTime:120, variableSize:false},
+  bernedoodle:     {name:'Bernedoodle',         emoji:'🐩', groomTime:180, variableSize:true},
+  boxer:           {name:'Boxer',               emoji:'🦮', groomTime:90,  variableSize:false},
+  doberman:        {name:'Doberman',            emoji:'🐕', groomTime:75,  variableSize:false},
+  shiba:           {name:'Shiba Inu',           emoji:'🦊', groomTime:90,  variableSize:false},
+  corgi:           {name:'Corgi',               emoji:'🐕', groomTime:90,  variableSize:false},
 };
 
-// Size multipliers on base price
-const sizeMultiplier = { small: 0.8, medium: 1.0, large: 1.25 };
-const sizeTimeAdd = { small: -20, medium: 0, large: 30 };
+const breedGroups = [
+  {label:'Small breeds', ids:['chihuahua','yorkie','maltese','frenchbulldog','mini_schnauzer','shihtzhu','bichon','cavachon','dachshund']},
+  {label:'Medium breeds', ids:['cockapoo','cavapoo','cocker_spaniel','pomsky','poodle','corgi','shiba','doberman']},
+  {label:'Large breeds', ids:['goldendoodle','labrador','goldenretriever','border_collie','aussie','husky','german_shepherd','bernedoodle','boxer']},
+];
 
-// Service data — multiplier on base full-groom price, time adjustment
-const serviceData = {
-  full_groom:   { name:'Full Groom',              mult:1.0,  timeAdd:0,   icon:'✂️' },
-  puppy_first:  { name:"Puppy's First Groom",     mult:0.9,  timeAdd:-10, icon:'🐣' },
-  senior_groom: { name:'Senior Dog Groom',        mult:1.0,  timeAdd:20,  icon:'👴' },
-  bath_brush:   { name:'Bath + Brush Out',        mult:0.65, timeAdd:-20, icon:'🛁' },
-  bath_nail:    { name:'Bath + Nail Trim',        mult:0.6,  timeAdd:-15, icon:'💅' },
-  bath_only:    { name:'Bath Only',               mult:0.5,  timeAdd:-30, icon:'🚿' },
-  deshed_bath:  { name:'De-shed Bath + Blow Out', mult:0.75, timeAdd:10,  icon:'🪮' },
-  flea_bath:    { name:'Flea & Tick Bath',        mult:0.7,  timeAdd:0,   icon:'🌿' },
-  nail_only:    { name:'Nail Trim Only',          mult:0.18, timeAdd:-60, icon:'💅' },
-  nail_dremel:  { name:'Nail Dremel',             mult:0.22, timeAdd:-55, icon:'🔧' },
-  ear_clean:    { name:'Ear Cleaning Only',       mult:0.15, timeAdd:-65, icon:'👂' },
-  teeth_clean:  { name:'Teeth Brushing Only',     mult:0.18, timeAdd:-65, icon:'🦷' },
-  dematting:    { name:'De-matting Treatment',    mult:0.55, timeAdd:20,  icon:'🪮' },
-};
+const serviceGroups = [
+  {label:'Full services', items:[
+    {id:'full_groom',  name:'Full Groom',              desc:'Bath, cut, dry, brush, finish',   icon:'✂️', mult:1.0,  timeAdd:0  },
+    {id:'puppy_first', name:"Puppy's First Groom",     desc:'Gentle intro for young pups',     icon:'🐣', mult:0.9,  timeAdd:-10},
+    {id:'senior_groom',name:'Senior Dog Groom',        desc:'Slow & gentle for older dogs',    icon:'👴', mult:1.05, timeAdd:20 },
+  ]},
+  {label:'Bath services', items:[
+    {id:'bath_brush',  name:'Bath + Brush Out',        desc:'Deep bath with full brush-out',   icon:'🛁', mult:0.65, timeAdd:-20},
+    {id:'bath_nail',   name:'Bath + Nail Trim',        desc:'Bath plus nail clip & file',      icon:'💅', mult:0.6,  timeAdd:-15},
+    {id:'bath_only',   name:'Bath Only',               desc:'Shampoo, condition & dry',        icon:'🚿', mult:0.5,  timeAdd:-30},
+    {id:'deshed_bath', name:'De-shed Bath + Blow Out', desc:'High-velocity undercoat removal', icon:'🪮', mult:0.75, timeAdd:10 },
+    {id:'flea_bath',   name:'Flea & Tick Bath',        desc:'Medicated treatment shampoo',     icon:'🌿', mult:0.7,  timeAdd:0  },
+  ]},
+  {label:'Quick services', items:[
+    {id:'nail_only',   name:'Nail Trim Only',          desc:'Clip all nails, file smooth',     icon:'💅', mult:0.18, timeAdd:-65},
+    {id:'nail_dremel', name:'Nail Dremel',             desc:'Grind nails smooth, no sharp edges',icon:'🔧',mult:0.22,timeAdd:-60},
+    {id:'ear_clean',   name:'Ear Cleaning Only',       desc:'Gentle flush & dry',              icon:'👂', mult:0.15, timeAdd:-65},
+    {id:'teeth_clean', name:'Teeth Brushing Only',     desc:'Enzymatic toothpaste clean',      icon:'🦷', mult:0.18, timeAdd:-65},
+    {id:'dematting',   name:'De-matting Treatment',    desc:'Careful mat removal session',     icon:'🪮', mult:0.55, timeAdd:20 },
+  ]},
+];
 
-// Base full-groom prices (medium size, per groomer per breed)
+// Flatten services for lookup
+const serviceData = {};
+serviceGroups.forEach(g=>g.items.forEach(s=>serviceData[s.id]=s));
+
+const sizeMultiplier = {small:0.8, medium:1.0, large:1.25};
+const sizeTimeAdd    = {small:-20, medium:0,   large:30};
+
 const basePricing = {
-  1: { chihuahua:55,yorkie:75,maltese:75,frenchbulldog:70,mini_schnauzer:80,shihtzhu:80,cockapoo:95,cavapoo:90,pomsky:105,poodle:110,goldendoodle:120,labrador:95,goldenretriever:110,husky:140,bernedoodle:145,boxer:90 },
-  2: { chihuahua:45,yorkie:65,maltese:65,frenchbulldog:60,mini_schnauzer:70,shihtzhu:70,cockapoo:80,cavapoo:78,pomsky:90,poodle:90,goldendoodle:95,labrador:80,goldenretriever:90,husky:120,bernedoodle:120,boxer:80 },
-  3: { chihuahua:50,yorkie:70,maltese:68,frenchbulldog:65,mini_schnauzer:75,shihtzhu:75,cockapoo:88,cavapoo:84,pomsky:100,poodle:100,goldendoodle:110,labrador:90,goldenretriever:105,husky:130,bernedoodle:135,boxer:95 },
-  4: { chihuahua:40,yorkie:60,maltese:58,frenchbulldog:55,mini_schnauzer:62,shihtzhu:65,cockapoo:72,cavapoo:68,pomsky:82,poodle:80,goldendoodle:85,labrador:75,goldenretriever:85,husky:110,bernedoodle:115,boxer:75 },
+  1:{chihuahua:55,yorkie:75,maltese:75,frenchbulldog:70,mini_schnauzer:80,shihtzhu:80,bichon:72,cavachon:75,dachshund:65,cockapoo:95,cavapoo:90,cocker_spaniel:100,pomsky:105,poodle:110,goldendoodle:120,labrador:95,goldenretriever:110,border_collie:105,aussie:115,husky:140,german_shepherd:120,bernedoodle:145,boxer:90,doberman:75,shiba:90,corgi:90},
+  2:{chihuahua:45,yorkie:65,maltese:65,frenchbulldog:60,mini_schnauzer:70,shihtzhu:70,bichon:62,cavachon:65,dachshund:55,cockapoo:80,cavapoo:78,cocker_spaniel:85,pomsky:90,poodle:90,goldendoodle:95,labrador:80,goldenretriever:90,border_collie:88,aussie:98,husky:120,german_shepherd:100,bernedoodle:120,boxer:80,doberman:65,shiba:78,corgi:78},
+  3:{chihuahua:50,yorkie:70,maltese:68,frenchbulldog:65,mini_schnauzer:75,shihtzhu:75,bichon:68,cavachon:70,dachshund:60,cockapoo:88,cavapoo:84,cocker_spaniel:92,pomsky:100,poodle:100,goldendoodle:110,labrador:90,goldenretriever:105,border_collie:98,aussie:108,husky:130,german_shepherd:110,bernedoodle:135,boxer:95,doberman:70,shiba:85,corgi:85},
+  4:{chihuahua:40,yorkie:60,maltese:58,frenchbulldog:55,mini_schnauzer:62,shihtzhu:65,bichon:58,cavachon:62,dachshund:50,cockapoo:72,cavapoo:68,cocker_spaniel:76,pomsky:82,poodle:80,goldendoodle:85,labrador:75,goldenretriever:85,border_collie:80,aussie:90,husky:110,german_shepherd:90,bernedoodle:115,boxer:75,doberman:58,shiba:72,corgi:72},
 };
 
 const specialtyBreeds = {
-  1:['goldendoodle','poodle','cockapoo','bernedoodle','cavapoo'],
-  2:['frenchbulldog','shihtzhu','maltese','chihuahua','mini_schnauzer'],
-  3:['labrador','husky','goldenretriever','bernedoodle','boxer','pomsky'],
-  4:['yorkie','shihtzhu','maltese','chihuahua','cavapoo','mini_schnauzer'],
+  1:['goldendoodle','poodle','cockapoo','bernedoodle','cavapoo','bichon','maltese'],
+  2:['frenchbulldog','shihtzhu','maltese','chihuahua','mini_schnauzer','yorkie','cavachon'],
+  3:['labrador','husky','goldenretriever','bernedoodle','boxer','pomsky','german_shepherd','aussie','border_collie'],
+  4:['yorkie','shihtzhu','cavapoo','mini_schnauzer','chihuahua','dachshund','corgi','shiba'],
 };
 
 const groomers = [
@@ -576,529 +717,490 @@ const groomers = [
   {id:4,name:"Puppy Tale Lodge",address:"515 E 72nd St",distance:1.1,rating:4.6,reviews:98, emoji:"🐶",gradient:"linear-gradient(135deg,#1a2a3a,#2a4a6a)"},
 ];
 
-// ── BREED GUIDES DATA ─────────────────────────────────────────────────────────
 const breedGuides = {
-  goldendoodle: {
-    freq:'Every 6–8 weeks', coat:'Wavy / Curly', difficulty:'High',
-    tips:['Brush 3–4x per week to prevent matting — especially around ears and legs','Ask for a "puppy cut" or "teddy bear cut" to keep coat manageable','Book early — Doodles are the most in-demand breed at every salon','Avoid shaving too short in winter; their coat provides insulation'],
-    cuts:[
-      {name:'Teddy Bear Cut',emoji:'🧸',desc:'Round face, fluffy body, medium length. The most popular Doodle cut.'},
-      {name:'Puppy Cut',emoji:'🐣',desc:'Uniform short length all over. Easy to maintain, great for summer.'},
-      {name:'Lion Cut',emoji:'🦁',desc:'Short body, full mane around face. Dramatic and distinctive.'},
-      {name:'Kennel Cut',emoji:'✂️',desc:'Very short all over. Practical for active dogs or hot weather.'},
-    ]
-  },
-  yorkie: {
-    freq:'Every 4–6 weeks', coat:'Silky / Fine', difficulty:'Medium',
-    tips:['Yorkies have hair (not fur) — it grows continuously like human hair','Daily brushing prevents tangles in longer styles','The "puppy cut" keeps them looking tidy with minimal brushing','Ear hair grows inside the canal — ask groomer to pluck it'],
-    cuts:[
-      {name:'Puppy Cut',emoji:'🐣',desc:'Short, uniform trim. Low maintenance and adorable.'},
-      {name:'Show Cut',emoji:'🏆',desc:'Long, flowing coat parted down the middle. High maintenance.'},
-      {name:'Schnauzer Cut',emoji:'✂️',desc:'Short body, longer beard and eyebrows. Very dapper.'},
-      {name:'Westie Cut',emoji:'🐶',desc:'Rounded head, shorter body. Classic terrier look.'},
-    ]
-  },
-  frenchbulldog: {
-    freq:'Every 8–12 weeks', coat:'Short / Smooth', difficulty:'Low',
-    tips:['French Bulldogs are low-maintenance coat-wise — baths and nail trims are the priority','Clean facial folds weekly with a damp cloth to prevent infections','Their nails grow fast — trim every 3–4 weeks','Sensitive skin — ask for hypoallergenic shampoo'],
-    cuts:[
-      {name:'Bath + Nail',emoji:'🛁',desc:'Most Frenchies just need a good bath and nail trim. No cut needed.'},
-      {name:'Full Groom',emoji:'✂️',desc:'Bath, blow dry, nail trim, ear clean, and tidy up.'},
-    ]
-  },
-  husky: {
-    freq:'Every 8–12 weeks', coat:'Double coat / Heavy shed', difficulty:'High',
-    tips:['NEVER shave a Husky — their double coat regulates temperature both ways','De-shed treatments 2x per year (spring and fall) are essential','Blow-out sessions remove undercoat without cutting','Brush 2–3x per week during shedding season'],
-    cuts:[
-      {name:'De-shed Blow Out',emoji:'🪮',desc:'High-velocity dryer removes loose undercoat. No cutting.'},
-      {name:'Bath + Brush',emoji:'🛁',desc:'Deep clean with thorough brush-out. Essential maintenance.'},
-      {name:'Tidy Up',emoji:'✂️',desc:'Minor trimming around paws and sanitary areas only.'},
-    ]
-  },
-  poodle: {
-    freq:'Every 4–6 weeks', coat:'Curly / Non-shedding', difficulty:'High',
-    tips:['Poodle coats mat extremely fast — never skip brushing','Book every 4–6 weeks or coat becomes unmanageable','The "puppy clip" works great for non-show dogs','Ear hair grows into the canal — groomer should pluck monthly'],
-    cuts:[
-      {name:'Puppy Clip',emoji:'🐣',desc:'Even length all over with rounded pom on top. Classic and clean.'},
-      {name:'Continental Clip',emoji:'👑',desc:'The iconic show-poodle look. Dramatic shaved patches with poms.'},
-      {name:'Teddy Bear',emoji:'🧸',desc:'Fluffy and rounded face. Very popular for Miniature Poodles.'},
-      {name:'Sporting Clip',emoji:'🏃',desc:'Short all over with a longer topknot. Practical and smart-looking.'},
-    ]
-  },
-  labrador: {
-    freq:'Every 8–12 weeks', coat:'Short / Double coat', difficulty:'Low',
-    tips:['Labs shed year-round — de-shed baths significantly reduce indoor shedding','Their short coat only needs bathing and nail trims','High-velocity dryers remove loose undercoat effectively','Check ears after water activities — Labs are prone to ear infections'],
-    cuts:[
-      {name:'Bath + De-shed',emoji:'🪮',desc:'Deep bath with blow-out to remove loose undercoat. Best for Labs.'},
-      {name:'Bath + Nail',emoji:'💅',desc:'Standard maintenance. Quick and affordable.'},
-      {name:'Full Groom',emoji:'✂️',desc:'Complete treatment including ear clean and all finishing touches.'},
-    ]
-  },
+  goldendoodle:{freq:'6–8 wks',coat:'Wavy/Curly',difficulty:'High',tips:['Brush 3–4x per week to prevent matting around ears and legs','Ask for a teddy bear or puppy cut to keep coat manageable','Book early — Doodles are the most in-demand breed at every salon','Never skip brushing between grooms or the coat mats badly'],cuts:[{name:'Teddy Bear',emoji:'🧸',desc:'Round face, fluffy body, medium length. Most popular Doodle cut.'},{name:'Puppy Cut',emoji:'🐣',desc:'Uniform short length all over. Easy to maintain.'},{name:'Lion Cut',emoji:'🦁',desc:'Short body, full mane around face. Very dramatic.'},{name:'Kennel Cut',emoji:'✂️',desc:'Very short all over. Great for summer or active dogs.'}]},
+  yorkie:      {freq:'4–6 wks',coat:'Silky/Fine',difficulty:'Medium',tips:['Yorkies have hair not fur — it grows continuously like human hair','Daily brushing prevents tangles in longer styles','Ear hair grows inside the canal — ask groomer to pluck it monthly','The puppy cut keeps them tidy with minimal brushing at home'],cuts:[{name:'Puppy Cut',emoji:'🐣',desc:'Short, uniform trim. Low maintenance and adorable.'},{name:'Show Cut',emoji:'🏆',desc:'Long flowing coat parted down the middle. High maintenance.'},{name:'Schnauzer Cut',emoji:'✂️',desc:'Short body, longer beard and eyebrows. Very dapper.'}]},
+  frenchbulldog:{freq:'8–12 wks',coat:'Short/Smooth',difficulty:'Low',tips:['Frenchies are low-maintenance coat-wise — baths and nail trims are priority','Clean facial folds weekly with a damp cloth to prevent infection','Their nails grow fast — trim every 3–4 weeks','Sensitive skin — ask for hypoallergenic shampoo'],cuts:[{name:'Bath + Nail',emoji:'🛁',desc:'Most Frenchies just need a good bath and nail trim.'},{name:'Full Groom',emoji:'✂️',desc:'Bath, blow dry, nail trim, ear clean and finishing touches.'}]},
+  husky:       {freq:'8–12 wks',coat:'Double coat',difficulty:'High',tips:['NEVER shave a Husky — their double coat regulates temperature both ways','De-shed treatments 2x per year are essential','Blow-out sessions remove undercoat without any cutting','Brush 2–3x per week during heavy shedding season'],cuts:[{name:'De-shed Blow Out',emoji:'🪮',desc:'High-velocity dryer removes loose undercoat. No cutting needed.'},{name:'Bath + Brush',emoji:'🛁',desc:'Deep clean with thorough brush-out. Core maintenance.'}]},
+  poodle:      {freq:'4–6 wks',coat:'Curly/Non-shed',difficulty:'High',tips:['Poodle coats mat extremely fast — never skip brushing','Book every 4–6 weeks or the coat becomes unmanageable','Ear hair grows into the canal — groomer should pluck monthly','The puppy clip works great for non-show Poodles'],cuts:[{name:'Puppy Clip',emoji:'🐣',desc:'Even length all over with rounded pom on top.'},{name:'Continental',emoji:'👑',desc:'The iconic show-poodle look. Dramatic shaved patches with poms.'},{name:'Teddy Bear',emoji:'🧸',desc:'Fluffy and rounded face. Very popular for Miniature Poodles.'},{name:'Sporting Clip',emoji:'🏃',desc:'Short all over with a longer topknot.'}]},
+  labrador:    {freq:'8–12 wks',coat:'Short/Double',difficulty:'Low',tips:['Labs shed year-round — de-shed baths reduce indoor shedding dramatically','Their short coat only needs bathing and nail trims','High-velocity dryers remove loose undercoat effectively','Check ears after water activities — Labs are prone to ear infections'],cuts:[{name:'De-shed Bath',emoji:'🪮',desc:'Deep bath with blow-out to remove loose undercoat.'},{name:'Bath + Nail',emoji:'💅',desc:'Standard maintenance. Quick and affordable.'}]},
+  corgi:       {freq:'6–8 wks',coat:'Double coat',difficulty:'Medium',tips:['Corgis shed heavily — de-shed treatments significantly help','Brush 2–3x per week during shedding season','Their thick undercoat needs regular blow-outs','Check between paw pads regularly for debris'],cuts:[{name:'Natural Trim',emoji:'✂️',desc:'Light tidy-up keeping the natural look.'},{name:'De-shed Bath',emoji:'🪮',desc:'Blow-out to remove loose undercoat. Essential for Corgis.'}]},
+  shiba:       {freq:'6–8 wks',coat:'Double coat',difficulty:'Medium',tips:['Shiba Inus are famously clean dogs but still need regular grooming','They blow their coat 2x per year — heavy shedding seasons','Never shave a Shiba — their double coat protects against heat and cold','De-shed blow-outs are the most important treatment'],cuts:[{name:'Natural Trim',emoji:'✂️',desc:'Minimal trimming to keep the natural Shiba look.'},{name:'De-shed Blow Out',emoji:'🪮',desc:'Essential during shedding season.'}]},
 };
 
 // Add-ons
 function getAddons(groomTime) {
   const big = groomTime >= 120;
   return [
-    {id:'nail',    icon:'💅',name:'Nail Trim',         desc:'Clip + file all nails',        price:15},
-    {id:'teeth',   icon:'🦷',name:'Teeth Brushing',    desc:'Enzymatic toothpaste clean',   price:20},
-    {id:'ears',    icon:'👂',name:'Ear Cleaning',      desc:'Gentle flush + wipe',          price:15},
-    {id:'deshed',  icon:'🪮',name:'De-shed Treatment', desc:'Removes loose undercoat',      price:big?45:30},
-    {id:'blueberry',icon:'🫐',name:'Blueberry Facial', desc:'Brightens coat around face',   price:20},
-    {id:'pawbalm', icon:'🐾',name:'Paw Balm',          desc:'Moisturizes dry paws',         price:15},
-    {id:'cologne', icon:'🌸',name:'Cologne / Spritz',  desc:'Finishing scent spray',        price:10},
-    {id:'bow',     icon:'🎀',name:'Bow or Bandana',    desc:'Cute finishing touch',         price:5 },
+    {id:'nail',      icon:'💅',name:'Nail Trim',         desc:'Clip + file all nails',       price:15},
+    {id:'teeth',     icon:'🦷',name:'Teeth Brushing',    desc:'Enzymatic toothpaste clean',  price:20},
+    {id:'ears',      icon:'👂',name:'Ear Cleaning',      desc:'Gentle flush + wipe',         price:15},
+    {id:'deshed',    icon:'🪮',name:'De-shed Treatment', desc:'Removes loose undercoat',     price:big?45:30},
+    {id:'blueberry', icon:'🫐',name:'Blueberry Facial',  desc:'Brightens coat around face',  price:20},
+    {id:'pawbalm',   icon:'🐾',name:'Paw Balm',          desc:'Moisturizes dry paws',        price:15},
+    {id:'cologne',   icon:'🌸',name:'Cologne / Spritz',  desc:'Finishing scent spray',       price:10},
+    {id:'bow',       icon:'🎀',name:'Bow or Bandana',    desc:'Cute finishing touch',        price:5 },
   ];
 }
 
-function getServicePrice(gid, bid, sid, size) {
+function getSvcPrice(gid, bid, sid, size) {
   const base = basePricing[gid][bid] || 0;
   const svc = serviceData[sid];
-  const szMult = (breedData[bid]?.variableSize && size) ? sizeMultiplier[size] : 1.0;
-  return Math.round(base * svc.mult * szMult);
+  const sm = (breedData[bid]?.variableSize && size) ? sizeMultiplier[size] : 1.0;
+  return Math.round(base * svc.mult * sm);
 }
 
-function getServiceTime(bid, sid, size) {
+function getSvcTime(bid, sid, size) {
   const base = breedData[bid]?.groomTime || 60;
-  const svcAdd = serviceData[sid]?.timeAdd || 0;
-  const szAdd = (breedData[bid]?.variableSize && size) ? sizeTimeAdd[size] : 0;
-  return Math.max(15, base + svcAdd + szAdd);
+  const sa = serviceData[sid]?.timeAdd || 0;
+  const ta = (breedData[bid]?.variableSize && size) ? sizeTimeAdd[size] : 0;
+  return Math.max(15, base + sa + ta);
 }
 
-// Slot cache
 const slotCache = {};
-function getSlots(gid, bid, sid, size, dayIndex) {
-  const key = `${gid}-${bid}-${sid}-${size}-${dayIndex}`;
-  if (!slotCache[key]) {
-    const t = getServiceTime(bid, sid, size);
-    const interval = t + 15;
+function getSlots(gid, bid, sid, size, dayIdx) {
+  const k = `${gid}-${bid}-${sid}-${size}-${dayIdx}`;
+  if (!slotCache[k]) {
+    const t = getSvcTime(bid, sid, size);
     const slots = [];
-    for (let m = 9*60; m + t <= 19*60; m += interval) {
+    for (let m = 9*60; m + t <= 19*60; m += t+15) {
       const h = Math.floor(m/60), min = m%60;
       slots.push(`${h>12?h-12:h}:${min===0?'00':min} ${h>=12?'PM':'AM'}`);
     }
-    const rate = [0.5,0.3,0.2,0.4,0.25][dayIndex%5];
-    slotCache[key] = slots.filter(()=>Math.random()>rate);
+    const rate = [0.5,0.3,0.2,0.4,0.25][dayIdx%5];
+    slotCache[k] = slots.filter(()=>Math.random()>rate);
   }
-  return slotCache[key];
+  return slotCache[k];
 }
 
 // ── STATE ─────────────────────────────────────────────────────────────────────
-let selectedBreedId = null;
-let selectedServiceId = null;
-let selectedSize = 'medium';
+let selBreedId = null, selSvcId = null, selSize = 'medium';
+let selGroomer = null, selDay = 'Today', selDayIdx = 0, selTime = null;
+let selAddons = new Set(), sheetMode = 'booking';
+let locationSet = false;
 let activeFilter = 'all';
-let selectedGroomer = null;
-let selectedDay = 'Today';
-let selectedDayIndex = 0;
-let selectedTime = null;
-let selectedAddons = new Set();
-let sheetMode = 'booking';
 const DAYS = ['Today','Tomorrow','Wed','Thu','Fri'];
-
-// Profile state
-let dogProfile = { name:'Max', breed:'goldendoodle', size:'medium', age:'adult', notes:'', photo:null };
 let groomHistory = [
-  { salon:'Groomingdales', service:'Full Groom', date:'Feb 12, 2026', price:120 },
-  { salon:'Doggy Stylez',  service:'Bath + Nail', date:'Dec 28, 2025', price:78 },
+  {salon:'Groomingdales',service:'Full Groom',date:'Feb 12, 2026',price:120},
+  {salon:'Doggy Stylez', service:'Bath + Nail',date:'Dec 28, 2025',price:78},
 ];
 
-// ── SEARCH SCREEN ─────────────────────────────────────────────────────────────
-function onBreedChange() {
-  selectedBreedId = document.getElementById('breedSelect').value;
-  const bd = breedData[selectedBreedId];
-  const sel = document.getElementById('sizeSelector');
-  if (bd && bd.variableSize) sel.classList.add('visible');
-  else sel.classList.remove('visible');
-  checkForm();
+// ── CLOCK ─────────────────────────────────────────────────────────────────────
+function updateClock() {
+  const now = new Date();
+  const h = now.getHours(), m = now.getMinutes();
+  document.getElementById('statusTime').textContent = `${h>12?h-12:h}:${m<10?'0'+m:m} ${h>=12?'PM':'AM'}`;
 }
+updateClock(); setInterval(updateClock, 1000);
 
-function selectSize(size, btn) {
-  selectedSize = size;
-  document.querySelectorAll('.size-btn').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  checkForm();
-}
-
-function checkForm() {
-  selectedBreedId = document.getElementById('breedSelect').value;
-  selectedServiceId = document.getElementById('serviceSelect').value;
-  const hasLoc = document.getElementById('locationInput').value.trim();
-  document.getElementById('findBtn').disabled = !(selectedBreedId && selectedServiceId && hasLoc);
-}
-
-document.getElementById('locationInput').addEventListener('input', checkForm);
-document.getElementById('serviceSelect').addEventListener('change', checkForm);
-
+// ── LOCATION ──────────────────────────────────────────────────────────────────
 function useMyLocation() {
-  const btn = document.getElementById('locationBtnText');
-  btn.textContent = '📡 Getting location...';
-  const set = (txt) => { document.getElementById('locationInput').value = txt; btn.textContent = '✅ Location set!'; checkForm(); };
-  if (navigator.geolocation) navigator.geolocation.getCurrentPosition(()=>set('Upper East Side, NYC'), ()=>set('Upper East Side, NYC'));
+  const el = document.getElementById('locationDisplay');
+  el.textContent = '📡 Getting location...';
+  el.classList.remove('placeholder');
+  const set = (txt) => { el.textContent = txt; locationSet = true; checkForm(); };
+  if (navigator.geolocation) navigator.geolocation.getCurrentPosition(()=>set('Upper East Side, NYC'),()=>set('Upper East Side, NYC'));
   else set('Upper East Side, NYC');
 }
 
+// ── PICKERS ───────────────────────────────────────────────────────────────────
+function openPicker(type) {
+  if (type==='breed') {
+    renderBreedPicker('');
+    document.getElementById('breedPickerOverlay').classList.add('open');
+    document.getElementById('breedPickerSheet').classList.add('open');
+    setTimeout(()=>document.getElementById('breedSearchInput').focus(), 350);
+  } else {
+    renderServicePicker();
+    document.getElementById('servicePickerOverlay').classList.add('open');
+    document.getElementById('servicePickerSheet').classList.add('open');
+  }
+}
+
+function closePicker(type) {
+  document.getElementById(`${type}PickerOverlay`).classList.remove('open');
+  document.getElementById(`${type}PickerSheet`).classList.remove('open');
+}
+
+function renderBreedPicker(filter) {
+  const q = filter.toLowerCase();
+  const html = breedGroups.map(g => {
+    const items = g.ids.filter(id => !q || breedData[id].name.toLowerCase().includes(q));
+    if (!items.length) return '';
+    return `<div class="picker-group-label">${g.label}</div>` +
+      items.map(id => {
+        const bd = breedData[id];
+        return `<div class="picker-item ${selBreedId===id?'selected':''}" onclick="pickBreed('${id}')">
+          <div class="pi-emoji">${bd.emoji}</div>
+          <div class="pi-info"><div class="pi-name">${bd.name}</div><div class="pi-sub">~${bd.groomTime} min full groom${bd.variableSize?' · size varies':''}</div></div>
+          ${selBreedId===id?'<div class="pi-check">✓</div>':''}
+        </div>`;
+      }).join('');
+  }).join('');
+  document.getElementById('breedPickerList').innerHTML = html || '<div style="padding:20px;text-align:center;color:var(--muted)">No breeds found</div>';
+}
+
+function filterBreedPicker() {
+  renderBreedPicker(document.getElementById('breedSearchInput').value);
+}
+
+function pickBreed(id) {
+  selBreedId = id;
+  const bd = breedData[id];
+  const el = document.getElementById('breedDisplay');
+  el.textContent = `${bd.emoji} ${bd.name}${bd.variableSize?' (size varies)':''}`;
+  el.classList.remove('placeholder');
+  document.getElementById('sizeInline').classList.toggle('visible', bd.variableSize);
+  checkForm();
+  closePicker('breed');
+}
+
+function pickSize(size, btn) {
+  selSize = size;
+  document.querySelectorAll('.size-pill').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function renderServicePicker() {
+  const html = serviceGroups.map(g =>
+    `<div class="picker-group-label">${g.label}</div>` +
+    g.items.map(s => `
+      <div class="picker-item ${selSvcId===s.id?'selected':''}" onclick="pickService('${s.id}')">
+        <div class="pi-emoji">${s.icon}</div>
+        <div class="pi-info"><div class="pi-name">${s.name}</div><div class="pi-sub">${s.desc}</div></div>
+        ${selSvcId===s.id?'<div class="pi-check">✓</div>':''}
+      </div>`).join('')
+  ).join('');
+  document.getElementById('servicePickerList').innerHTML = html;
+}
+
+function pickService(id) {
+  selSvcId = id;
+  const s = serviceData[id];
+  const el = document.getElementById('serviceDisplay');
+  el.textContent = `${s.icon} ${s.name}`;
+  el.classList.remove('placeholder');
+  checkForm();
+  closePicker('service');
+}
+
+function checkForm() {
+  document.getElementById('findBtn').disabled = !(selBreedId && selSvcId && locationSet);
+}
+
 function quickPick(bid, sid, size) {
-  document.getElementById('breedSelect').value = bid;
-  document.getElementById('serviceSelect').value = sid;
-  document.getElementById('locationInput').value = 'Upper East Side, NYC';
-  selectedBreedId = bid; selectedServiceId = sid;
-  if (size) { selectedSize = size; document.querySelectorAll('.size-btn').forEach(b=>b.classList.toggle('active',b.textContent.toLowerCase()===size)); }
+  selBreedId = bid; selSvcId = sid;
+  if (size) selSize = size;
   const bd = breedData[bid];
-  document.getElementById('sizeSelector').classList.toggle('visible', bd?.variableSize||false);
+  const s = serviceData[sid];
+  const bEl = document.getElementById('breedDisplay');
+  bEl.textContent = `${bd.emoji} ${bd.name}`;
+  bEl.classList.remove('placeholder');
+  const sEl = document.getElementById('serviceDisplay');
+  sEl.textContent = `${s.icon} ${s.name}`;
+  sEl.classList.remove('placeholder');
+  const lEl = document.getElementById('locationDisplay');
+  lEl.textContent = 'Upper East Side, NYC';
+  lEl.classList.remove('placeholder');
+  locationSet = true;
+  document.getElementById('sizeInline').classList.toggle('visible', bd.variableSize);
   checkForm();
   setTimeout(findGroomers, 80);
 }
 
+// ── FIND GROOMERS ─────────────────────────────────────────────────────────────
 function findGroomers() {
-  selectedBreedId = document.getElementById('breedSelect').value;
-  selectedServiceId = document.getElementById('serviceSelect').value;
-  const breed = breedData[selectedBreedId];
-  const svc = serviceData[selectedServiceId];
-  const sizeLabel = breed.variableSize ? ` (${selectedSize})` : '';
-  document.getElementById('resultsTitle').textContent = `${breed.emoji} ${breed.name}${sizeLabel} · ${svc.name}`;
-  const loc = document.getElementById('locationInput').value || 'your area';
-  document.getElementById('resultsSubtitle').textContent = `📍 ${loc}`;
+  const bd = breedData[selBreedId];
+  const s = serviceData[selSvcId];
+  const szLbl = bd.variableSize ? ` (${selSize})` : '';
+  document.getElementById('resultsTitle').textContent = `${bd.emoji} ${bd.name}${szLbl}`;
+  document.getElementById('resultsSubtitle').textContent = `${s.icon} ${s.name} · Upper East Side`;
   activeFilter = 'all';
-  document.querySelectorAll('.filter-chip').forEach(c=>c.classList.toggle('active',c.dataset.filter==='all'));
+  document.querySelectorAll('.fchip').forEach(c=>c.classList.toggle('active',c.dataset.f==='all'));
   renderCards();
   goToScreen('results');
 }
 
-// ── BREED GUIDES ─────────────────────────────────────────────────────────────
-function renderGuideScroll() {
-  const breeds = ['goldendoodle','yorkie','frenchbulldog','husky','poodle','labrador'];
-  document.getElementById('guideScroll').innerHTML = breeds.map(bid => {
-    const bd = breedData[bid];
-    const g = breedGuides[bid];
-    return `
-      <div class="guide-card" onclick="openBreedGuide('${bid}')">
-        <div class="gc-emoji">${bd.emoji}</div>
-        <div class="gc-breed">${bd.name}</div>
-        <div class="gc-freq">Groom: ${g.freq}</div>
-        <div class="gc-tag">${g.difficulty} maintenance</div>
-      </div>
-    `;
-  }).join('');
-}
-
-function openBreedGuide(bid) {
-  const bd = breedData[bid];
-  const g = breedGuides[bid];
-  document.getElementById('guideBreedTitle').textContent = `${bd.emoji} ${bd.name} Guide`;
-  document.getElementById('guideBreedSub').textContent = 'Grooming tips, cuts & care';
-  document.getElementById('guideContent').innerHTML = `
-    <div class="guide-stat-row">
-      <div class="guide-stat"><div class="gs-val">${g.freq.split(' ')[1]||'6–8'}<br>wks</div><div class="gs-label">Groom freq.</div></div>
-      <div class="guide-stat"><div class="gs-val">${g.coat.split('/')[0].trim()}</div><div class="gs-label">Coat type</div></div>
-      <div class="guide-stat"><div class="gs-val">${g.difficulty}</div><div class="gs-label">Maintenance</div></div>
-    </div>
-    <div class="guide-section">
-      <h3>💡 Pro tips</h3>
-      ${g.tips.map(t=>`<div class="guide-tip"><div class="guide-tip-icon">•</div><div>${t}</div></div>`).join('')}
-    </div>
-    <div class="guide-section">
-      <h3>✂️ Popular cut styles</h3>
-      <div class="cut-style-grid">
-        ${g.cuts.map(c=>`
-          <div class="cut-style-card" onclick="this.classList.toggle('selected')">
-            <div class="cut-emoji">${c.emoji}</div>
-            <div class="cut-name">${c.name}</div>
-            <div class="cut-desc">${c.desc}</div>
-          </div>
-        `).join('')}
-      </div>
-    </div>
-    <div style="margin-top:20px">
-      <button onclick="quickPick('${bid}','full_groom','medium');goToScreen('results')" style="width:100%;background:var(--accent);color:var(--dark);border:none;border-radius:14px;padding:16px;font-family:'DM Sans',sans-serif;font-size:16px;font-weight:700;cursor:pointer;">
-        Find ${bd.name} groomers →
-      </button>
-    </div>
-  `;
-  goToScreen('guide');
-}
-
-// ── RESULTS ───────────────────────────────────────────────────────────────────
-function getAvailability(gid) {
-  const s = getSlots(gid,selectedBreedId,selectedServiceId,selectedSize,0);
+// ── AVAILABILITY ──────────────────────────────────────────────────────────────
+function getAvail(gid) {
+  const s = getSlots(gid,selBreedId,selSvcId,selSize,0);
   return s.length===0?'full':s.length<=1?'limited':'available';
 }
 
+// ── RENDER CARDS ──────────────────────────────────────────────────────────────
 function renderCards() {
   let list = [...groomers];
-  if (activeFilter==='available') list=list.filter(g=>getAvailability(g.id)!=='full');
-  else if (activeFilter==='specialist') list=list.filter(g=>specialtyBreeds[g.id].includes(selectedBreedId));
-  else if (activeFilter==='budget') list=[...list].sort((a,b)=>getServicePrice(a.id,selectedBreedId,selectedServiceId,selectedSize)-getServicePrice(b.id,selectedBreedId,selectedServiceId,selectedSize));
+  if (activeFilter==='available') list=list.filter(g=>getAvail(g.id)!=='full');
+  else if (activeFilter==='specialist') list=list.filter(g=>specialtyBreeds[g.id].includes(selBreedId));
+  else if (activeFilter==='budget') list=[...list].sort((a,b)=>getSvcPrice(a.id,selBreedId,selSvcId,selSize)-getSvcPrice(b.id,selBreedId,selSvcId,selSize));
   else if (activeFilter==='nearby') list=[...list].sort((a,b)=>a.distance-b.distance);
   else if (activeFilter==='rated') list=[...list].sort((a,b)=>b.rating-a.rating);
   document.getElementById('resultCount').textContent = list.length;
 
-  const breed = breedData[selectedBreedId];
-  const svc = serviceData[selectedServiceId];
-  const sizeLabel = breed.variableSize ? ` (${selectedSize})` : '';
+  const bd = breedData[selBreedId];
+  const s = serviceData[selSvcId];
+  const szLbl = bd.variableSize ? ` (${selSize})` : '';
 
-  document.getElementById('groomersList').innerHTML = list.map(g => {
-    const price = getServicePrice(g.id,selectedBreedId,selectedServiceId,selectedSize);
-    const time = getServiceTime(selectedBreedId,selectedServiceId,selectedSize);
-    const avail = getAvailability(g.id);
+  document.getElementById('cardsWrap').innerHTML = list.map(g => {
+    const price = getSvcPrice(g.id,selBreedId,selSvcId,selSize);
+    const time = getSvcTime(selBreedId,selSvcId,selSize);
+    const avail = getAvail(g.id);
     const isFull = avail==='full';
-    const isSpec = specialtyBreeds[g.id].includes(selectedBreedId);
-    const todaySlots = getSlots(g.id,selectedBreedId,selectedServiceId,selectedSize,0);
-    const allSvcs = Object.entries(serviceData).map(([sid,sv])=>({sid,name:sv.name,price:getServicePrice(g.id,selectedBreedId,sid,selectedSize),isMatch:sid===selectedServiceId}));
+    const isSpec = specialtyBreeds[g.id].includes(selBreedId);
+    const slots = getSlots(g.id,selBreedId,selSvcId,selSize,0);
+    const allSvcs = Object.entries(serviceData).map(([sid,sv])=>({...sv,sid,price:getSvcPrice(g.id,selBreedId,sid,selSize),isMatch:sid===selSvcId}));
 
     return `
-      <div class="groomer-card" onclick="openSheet(${g.id})">
-        <div class="card-image" style="background:${g.gradient}">
-          <div class="salon-emoji-bg">${g.emoji}</div>
-          <div class="card-image-overlay"></div>
-          <div class="card-badges">
-            ${isFull?`<div class="badge badge-full">Fully Booked</div>`:avail==='limited'?`<div class="badge badge-limited">⚡ 1 slot left</div>`:`<div class="badge badge-available">● Available Today</div>`}
-            ${isSpec?`<div class="badge badge-specialty">🏅 ${breed.name} specialist</div>`:''}
+      <div class="g-card" onclick="openSheet(${g.id})">
+        <div class="g-card-img" style="background:${g.gradient}">
+          <div class="bg-emoji">${g.emoji}</div>
+          <div class="g-card-img-overlay"></div>
+          <div class="g-badges">
+            ${isFull?`<div class="g-badge g-badge-full">Fully Booked</div>`:avail==='limited'?`<div class="g-badge g-badge-ltd">⚡ 1 slot left</div>`:`<div class="g-badge g-badge-avail">● Open Today</div>`}
+            ${isSpec?`<div class="g-badge g-badge-spec">🏅 ${bd.name} specialist</div>`:''}
           </div>
-          ${!isFull?`<div class="avail-bottom">
-            <div style="font-size:12px;color:rgba(255,255,255,0.7);margin-bottom:5px">Today's open slots</div>
-            <div class="avail-slots">
-              ${todaySlots.slice(0,3).map(s=>`<div class="slot-pill open">${s}</div>`).join('')}
-              ${todaySlots.length>3?`<div class="slot-pill">+${todaySlots.length-3} more</div>`:''}
-            </div>
-          </div>`:`<div class="avail-bottom" style="font-size:13px;color:rgba(255,255,255,0.5)">Check this week for openings</div>`}
+          ${!isFull&&slots.length>0?`<div class="g-slots-row">${slots.slice(0,3).map(sl=>`<div class="g-slot">${sl}</div>`).join('')}${slots.length>3?`<div class="g-slot">+${slots.length-3}</div>`:''}</div>`:''}
         </div>
-        <div class="breed-price-banner">
-          <div>
-            <div class="bpb-service">${breed.emoji} ${breed.name}${sizeLabel} · ${svc.name}</div>
-            <div class="bpb-time">⏱ ~${time} min</div>
-          </div>
-          <div class="bpb-price">$${price}</div>
+        <div class="g-price-bar">
+          <div><div class="gpb-left">${bd.emoji} ${bd.name}${szLbl} · ${s.name}</div><div class="gpb-time">⏱ ~${time} min</div></div>
+          <div class="gpb-price">$${price}</div>
         </div>
-        <div class="card-body">
-          <div class="card-top">
-            <div class="salon-name">${g.name}</div>
-            <div class="rating">⭐ ${g.rating} <span>(${g.reviews})</span></div>
+        <div class="g-body">
+          <div class="g-body-top">
+            <div class="g-name">${g.name}</div>
+            <div class="g-rating">⭐ ${g.rating} <span>(${g.reviews})</span></div>
           </div>
-          <div class="card-meta"><span>📍 ${g.address}</span><span>🚶 ${g.distance} mi</span></div>
-          <div class="all-prices-toggle" onclick="event.stopPropagation();togglePrices(${g.id})">
-            <span id="tog-${g.id}">▸</span> See all service prices
+          <div class="g-meta"><span>📍 ${g.address}</span><span>🚶 ${g.distance} mi</span></div>
+          <div class="prices-toggle" onclick="event.stopPropagation();togglePrices(${g.id})">
+            <span id="ptog-${g.id}">▸</span> All service prices
           </div>
-          <div class="all-prices-grid" id="prices-${g.id}">
-            ${allSvcs.map(s=>`
-              <div class="price-item ${s.isMatch?'match-svc':''}">
-                <div class="pi-name">${s.name}</div>
-                <div class="pi-price">$${s.price}</div>
-                ${s.isMatch?`<div class="pi-match-tag">selected</div>`:''}
-              </div>`).join('')}
+          <div class="prices-grid" id="pgrid-${g.id}">
+            ${allSvcs.map(sv=>`<div class="pg-item ${sv.isMatch?'match':''}"><div class="pg-name">${sv.name}</div><div class="pg-price">$${sv.price}</div>${sv.isMatch?`<div class="pg-match-tag">selected</div>`:''}</div>`).join('')}
           </div>
-          <button class="book-btn ${isFull?'full':''}" onclick="event.stopPropagation();${!isFull?`openSheet(${g.id})`:''}">
+          <button class="g-book-btn ${isFull?'full':''}" onclick="event.stopPropagation();${!isFull?`openSheet(${g.id})`:''}">
             ${isFull?'😔 Fully Booked':`📅 Book for $${price}`}
           </button>
         </div>
-      </div>
-    `;
+      </div>`;
   }).join('');
 }
 
 function togglePrices(id) {
-  const grid = document.getElementById(`prices-${id}`);
-  const icon = document.getElementById(`tog-${id}`);
-  grid.classList.toggle('open');
-  icon.textContent = grid.classList.contains('open')?'▾':'▸';
+  const g = document.getElementById(`pgrid-${id}`);
+  const i = document.getElementById(`ptog-${id}`);
+  g.classList.toggle('open');
+  i.textContent = g.classList.contains('open')?'▾':'▸';
 }
 
-// ── SHEET ─────────────────────────────────────────────────────────────────────
+// ── BOOKING SHEET ─────────────────────────────────────────────────────────────
 function openSheet(id) {
-  selectedGroomer = groomers.find(g=>g.id===id);
-  selectedDay='Today'; selectedDayIndex=0; selectedTime=null;
-  selectedAddons=new Set(); sheetMode='booking';
-  renderSheet();
-  document.getElementById('overlay').classList.add('open');
-  document.getElementById('sheet').classList.add('open');
+  selGroomer = groomers.find(g=>g.id===id);
+  selDay='Today'; selDayIdx=0; selTime=null; selAddons=new Set(); sheetMode='booking';
+  document.getElementById('bsTitle').textContent = selGroomer.name;
+  renderBsScroll();
+  document.getElementById('sheetOverlay').classList.add('open');
+  document.getElementById('bookingSheet').classList.add('open');
 }
 function closeSheet() {
-  document.getElementById('overlay').classList.remove('open');
-  document.getElementById('sheet').classList.remove('open');
+  document.getElementById('sheetOverlay').classList.remove('open');
+  document.getElementById('bookingSheet').classList.remove('open');
 }
 
 function calcTotal() {
-  const base = getServicePrice(selectedGroomer.id,selectedBreedId,selectedServiceId,selectedSize);
-  const time = getServiceTime(selectedBreedId,selectedServiceId,selectedSize);
+  const base = getSvcPrice(selGroomer.id,selBreedId,selSvcId,selSize);
+  const time = getSvcTime(selBreedId,selSvcId,selSize);
   const addons = getAddons(time);
-  const addonTotal = addons.filter(a=>selectedAddons.has(a.id)).reduce((s,a)=>s+a.price,0);
-  return { base, addonTotal, total:base+addonTotal, addons };
+  const at = addons.filter(a=>selAddons.has(a.id)).reduce((s,a)=>s+a.price,0);
+  return {base,addonTotal:at,total:base+at,addons};
 }
-function toggleAddon(id) { selectedAddons.has(id)?selectedAddons.delete(id):selectedAddons.add(id); renderSheet(); }
+function tapAddon(id){selAddons.has(id)?selAddons.delete(id):selAddons.add(id);renderBsScroll();}
+function tapDay(d,i){selDay=d;selDayIdx=i;selTime=null;renderBsScroll();}
+function tapTime(t){selTime=t;renderBsScroll();updateBookBtn();}
 
-function renderSheet() {
-  const g = selectedGroomer;
-  const breed = breedData[selectedBreedId];
-  const svc = serviceData[selectedServiceId];
-  const time = getServiceTime(selectedBreedId,selectedServiceId,selectedSize);
+function updateBookBtn() {
+  const btn = document.getElementById('bookNowBtn');
+  const {total} = calcTotal();
+  btn.disabled = !selTime;
+  btn.textContent = selTime ? `Book ${selTime} — $${total} →` : 'Select a time to book';
+}
+
+function renderBsScroll() {
+  const g = selGroomer;
+  const bd = breedData[selBreedId];
+  const s = serviceData[selSvcId];
+  const time = getSvcTime(selBreedId,selSvcId,selSize);
   const {base,addonTotal,total,addons} = calcTotal();
-  const sizeLabel = breed.variableSize ? ` (${selectedSize})` : '';
+  const szLbl = bd.variableSize ? ` (${selSize})` : '';
+  const slots = getSlots(g.id,selBreedId,selSvcId,selSize,selDayIdx);
 
-  if (sheetMode==='confirm') {
-    const addonNames = addons.filter(a=>selectedAddons.has(a.id)).map(a=>a.name).join(', ');
-    document.getElementById('sheetContent').innerHTML = `
-      <div class="confirm-screen">
-        <div class="confirm-icon">🎉</div>
-        <h2>You're booked!</h2>
-        <p>Real-time updates as your dog goes through grooming — plus a 15-min heads-up when they're ready.</p>
-        <div class="confirm-detail">
-          <div class="confirm-row"><span class="lbl">Salon</span><span class="val">${g.name}</span></div>
-          <div class="confirm-row"><span class="lbl">Dog</span><span class="val">${breed.name}${sizeLabel}</span></div>
-          <div class="confirm-row"><span class="lbl">Service</span><span class="val">${svc.name}</span></div>
-          <div class="confirm-row"><span class="lbl">Service price</span><span class="val">$${base}</span></div>
-          ${addonTotal>0?`<div class="confirm-row"><span class="lbl">Add-ons</span><span class="val">$${addonTotal}</span></div>`:''}
-          <div class="confirm-row"><span class="lbl">Total</span><span class="val" style="font-size:16px">$${total}</span></div>
-          <div class="confirm-row"><span class="lbl">Day</span><span class="val">${selectedDay}</span></div>
-          <div class="confirm-row"><span class="lbl">Time</span><span class="val">${selectedTime}</span></div>
-          ${addonNames?`<div class="confirm-row"><span class="lbl">Add-ons</span><span class="val" style="text-align:right;max-width:55%">${addonNames}</span></div>`:''}
-        </div>
-        <div class="notif-note">
-          <span style="font-size:20px">🔔</span>
-          <div>You'll get notified at every step: <strong>checked in → bathing → drying → ready</strong>. No more waiting outside!</div>
-        </div>
-        <button class="confirm-btn" onclick="closeSheet();addToHistory('${g.name}','${svc.name}',${total})">Done ✓</button>
-      </div>
-    `;
-    return;
-  }
-
-  const slots = getSlots(g.id,selectedBreedId,selectedServiceId,selectedSize,selectedDayIndex);
-  document.getElementById('sheetContent').innerHTML = `
-    <div class="sheet-handle"></div>
-    <div class="sheet-header">
-      <div class="sheet-title">${g.name}</div>
-      <button class="close-btn" onclick="closeSheet()">✕</button>
-    </div>
-    <div class="sheet-section">
-      <div style="display:flex;gap:14px;font-size:13px;color:var(--muted);margin-bottom:14px">
-        <span>⭐ ${g.rating} (${g.reviews})</span><span>📍 ${g.distance} mi</span>
-      </div>
-      <div class="breed-price-card">
-        <div><div class="bpc-label">${svc.name}</div><div class="bpc-breed">${breed.emoji} ${breed.name}${sizeLabel}</div></div>
-        <div style="text-align:right"><div class="bpc-price">$${base}</div><div class="bpc-time">⏱ ~${time} min</div></div>
+  document.getElementById('bsScroll').innerHTML = `
+    <div class="bs-section">
+      <div style="font-size:12px;color:var(--muted);margin-bottom:12px">⭐ ${g.rating} · 📍 ${g.distance} mi away</div>
+      <div class="price-hero">
+        <div><div class="ph-label">${s.name}</div><div class="ph-service">${bd.emoji} ${bd.name}${szLbl}</div></div>
+        <div style="text-align:right"><div class="ph-price">$${base}</div><div class="ph-time">⏱ ~${time} min</div></div>
       </div>
     </div>
-    <div class="sheet-section">
-      <div class="sheet-section-title">Add-on services</div>
+    <div class="bs-section">
+      <div class="bs-section-title">Add-ons</div>
       <div class="addon-list">
         ${addons.map(a=>`
-          <div class="addon-row ${selectedAddons.has(a.id)?'selected':''}" onclick="toggleAddon('${a.id}')">
-            <div class="addon-left"><div class="addon-icon">${a.icon}</div><div><div class="addon-name">${a.name}</div><div class="addon-desc">${a.desc}</div></div></div>
-            <div class="addon-right"><div class="addon-price">+$${a.price}</div><div class="addon-check">${selectedAddons.has(a.id)?'✓':''}</div></div>
+          <div class="addon-row ${selAddons.has(a.id)?'on':''}" onclick="tapAddon('${a.id}')">
+            <div class="ar-left"><div class="ar-icon">${a.icon}</div><div><div class="ar-name">${a.name}</div><div class="ar-desc">${a.desc}</div></div></div>
+            <div class="ar-right"><div class="ar-price">+$${a.price}</div><div class="ar-check">${selAddons.has(a.id)?'✓':''}</div></div>
           </div>`).join('')}
       </div>
-      <div class="total-bar">
-        <div><div class="total-label">Total</div><div class="total-items">${selectedAddons.size>0?`${svc.name} + ${selectedAddons.size} add-on${selectedAddons.size>1?'s':''}`:svc.name+' only'}</div></div>
-        <div class="total-amount">$${total}</div>
+      <div class="total-pill">
+        <div><div class="tp-label">Total</div><div class="tp-sub">${selAddons.size>0?`${s.name} + ${selAddons.size} add-on${selAddons.size>1?'s':''}`:s.name+' only'}</div></div>
+        <div class="tp-amount">$${total}</div>
       </div>
     </div>
-    <div class="sheet-section">
-      <div class="sheet-section-title">Pick a day & time</div>
-      <div style="font-size:12px;color:var(--muted);margin-bottom:10px;font-style:italic">⏱ Slots based on ~${time} min for ${breed.name}${sizeLabel}</div>
-      <div class="day-tabs">
-        ${DAYS.map((d,i)=>{const s=getSlots(g.id,selectedBreedId,selectedServiceId,selectedSize,i);return`<div class="day-tab ${d===selectedDay?'active':''}" onclick="selectDay('${d}',${i})">${d} ${s.length===0?'🔴':s.length<=1?'🟡':'🟢'}</div>`;}).join('')}
+    <div class="bs-section" style="padding-bottom:10px">
+      <div class="bs-section-title">Pick a day & time</div>
+      <div style="font-size:11px;color:var(--muted);font-style:italic;margin-bottom:10px">⏱ Slots based on ~${time} min for ${bd.name}${szLbl}</div>
+      <div class="day-row">
+        ${DAYS.map((d,i)=>{const sl=getSlots(g.id,selBreedId,selSvcId,selSize,i);return`<div class="day-chip ${d===selDay?'active':''}" onclick="tapDay('${d}',${i})">${d} ${sl.length===0?'🔴':sl.length<=1?'🟡':'🟢'}</div>`;}).join('')}
       </div>
       <div class="time-grid">
-        ${slots.length===0?`<div style="grid-column:1/-1;text-align:center;padding:24px;color:var(--muted);font-size:14px">😔 No slots — try another day</div>`:slots.map(t=>`<div class="time-slot available ${selectedTime===t?'selected':''}" onclick="selectTime('${t}')"><div class="t-time">${t}</div><div class="t-label">Open</div></div>`).join('')}
+        ${slots.length===0
+          ?`<div style="grid-column:1/-1;text-align:center;padding:20px;color:var(--muted);font-size:13px">😔 No slots — try another day</div>`
+          :slots.map(t=>`<div class="time-cell ${selTime===t?'active':''}" onclick="tapTime('${t}')"><div class="tc-time">${t}</div><div class="tc-label">Open</div></div>`).join('')}
       </div>
     </div>
-    <button class="confirm-btn" ${selectedTime?'':'disabled'} onclick="confirmBooking()">
-      ${selectedTime?`Book ${selectedTime} — $${total} →`:'Select a time to book'}
-    </button>
   `;
+  updateBookBtn();
 }
 
-function selectDay(d,i){selectedDay=d;selectedDayIndex=i;selectedTime=null;renderSheet();}
-function selectTime(t){selectedTime=t;renderSheet();}
-function confirmBooking(){sheetMode='confirm';renderSheet();}
-
-// ── PROFILE ───────────────────────────────────────────────────────────────────
-function updateDogDisplay() {
-  const name = document.getElementById('dogName').value || 'Your Dog';
-  const breedId = document.getElementById('dogBreed').value;
-  const bd = breedData[breedId];
-  document.getElementById('dogNameDisplay').textContent = name;
-  document.getElementById('dogBreedDisplay').textContent = bd ? bd.name : 'Add your dog\'s info below';
-  if (bd) document.getElementById('dogAvatarEmoji').textContent = bd.emoji;
-  const rb = document.getElementById('rebookTitle');
-  rb.textContent = `Time for ${name}'s groom!`;
+function confirmBooking() {
+  const {base,addonTotal,total,addons} = calcTotal();
+  const bd = breedData[selBreedId];
+  const s = serviceData[selSvcId];
+  const g = selGroomer;
+  const addonNames = addons.filter(a=>selAddons.has(a.id)).map(a=>a.name).join(', ');
+  const szLbl = bd.variableSize ? ` (${selSize})` : '';
+  document.getElementById('bsScroll').innerHTML = `
+    <div class="confirm-body">
+      <div class="confirm-icon">🎉</div>
+      <h2>You're booked!</h2>
+      <p>Real-time updates as your dog goes through grooming — plus a 15-min heads-up when they're ready for pickup.</p>
+      <div class="confirm-rows">
+        <div class="cr"><span class="cl">Salon</span><span class="cv">${g.name}</span></div>
+        <div class="cr"><span class="cl">Dog</span><span class="cv">${bd.name}${szLbl}</span></div>
+        <div class="cr"><span class="cl">Service</span><span class="cv">${s.name}</span></div>
+        <div class="cr"><span class="cl">Service price</span><span class="cv">$${base}</span></div>
+        ${addonTotal>0?`<div class="cr"><span class="cl">Add-ons</span><span class="cv">$${addonTotal}</span></div>`:''}
+        <div class="cr"><span class="cl">Total</span><span class="cv" style="font-size:16px">$${total}</span></div>
+        <div class="cr"><span class="cl">Day</span><span class="cv">${selDay}</span></div>
+        <div class="cr"><span class="cl">Time</span><span class="cv">${selTime}</span></div>
+        ${addonNames?`<div class="cr"><span class="cl">Add-ons</span><span class="cv" style="text-align:right;max-width:55%">${addonNames}</span></div>`:''}
+      </div>
+      <div class="notif-box"><span style="font-size:20px">🔔</span><div>You'll get notified at every step: <strong>checked in → bathing → drying → ready</strong>. No more waiting outside!</div></div>
+    </div>
+  `;
+  document.getElementById('bookNowBtn').textContent = 'Done ✓';
+  document.getElementById('bookNowBtn').disabled = false;
+  document.getElementById('bookNowBtn').onclick = () => { closeSheet(); addHistory(g.name,s.name,total); };
 }
 
-function setProfileSize(size, btn) {
-  document.querySelectorAll('.profile-size-btn').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  dogProfile.size = size;
-}
-
-function saveProfile() {
-  dogProfile.name = document.getElementById('dogName').value || 'My Dog';
-  dogProfile.breed = document.getElementById('dogBreed').value;
-  dogProfile.notes = document.getElementById('groomerNotes').value;
-  const btn = document.querySelector('.save-profile-btn');
-  btn.textContent = '✅ Saved!';
-  setTimeout(()=>btn.textContent='Save profile ✓', 2000);
-}
-
-function triggerPhotoUpload() { document.getElementById('photoInput').click(); }
-function handlePhotoUpload(e) {
-  const file = e.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = (ev) => {
-    const avatar = document.getElementById('dogAvatarEmoji');
-    avatar.style.display = 'none';
-    const img = document.createElement('img');
-    img.src = ev.target.result;
-    document.querySelector('.dog-avatar').insertBefore(img, avatar);
-  };
-  reader.readAsDataURL(file);
-}
-
-function addToHistory(salon, service, price) {
-  const today = new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
-  groomHistory.unshift({salon, service, date:today, price});
+function addHistory(salon,svc,price) {
+  const d = new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+  groomHistory.unshift({salon,service:svc,date:d,price});
   renderHistory();
 }
 
+// ── GUIDE ─────────────────────────────────────────────────────────────────────
+function renderGuideRow() {
+  const ids = ['goldendoodle','yorkie','frenchbulldog','husky','poodle','labrador','corgi','shiba'];
+  document.getElementById('guideRow').innerHTML = ids.map(bid => {
+    const bd = breedData[bid];
+    const g = breedGuides[bid];
+    if (!g) return '';
+    const diffClass = g.difficulty==='High'?'high':g.difficulty==='Medium'?'medium':'low';
+    return `<div class="guide-card" onclick="openGuide('${bid}')">
+      <div class="gc-emoji">${bd.emoji}</div>
+      <div class="gc-breed">${bd.name}</div>
+      <div class="gc-freq">${g.freq}</div>
+      <div class="gc-tag ${diffClass}">${g.difficulty} maintenance</div>
+    </div>`;
+  }).join('');
+}
+
+function openGuide(bid) {
+  const bd = breedData[bid];
+  const g = breedGuides[bid];
+  if (!g) return;
+  document.getElementById('guideTitle').textContent = `${bd.emoji} ${bd.name}`;
+  document.getElementById('guideSub').textContent = 'Grooming guide & cut styles';
+  document.getElementById('guideBody').innerHTML = `
+    <div class="stats-row">
+      <div class="stat-box"><div class="stat-val">${g.freq}</div><div class="stat-lbl">Groom freq.</div></div>
+      <div class="stat-box"><div class="stat-val">${g.coat.split('/')[0]}</div><div class="stat-lbl">Coat type</div></div>
+      <div class="stat-box"><div class="stat-val">${g.difficulty}</div><div class="stat-lbl">Maintenance</div></div>
+    </div>
+    <div class="gsection">
+      <h3>💡 Pro tips</h3>
+      ${g.tips.map(t=>`<div class="gtip"><span>•</span><span>${t}</span></div>`).join('')}
+    </div>
+    <div class="gsection">
+      <h3>✂️ Popular cut styles</h3>
+      <div class="cut-grid">
+        ${g.cuts.map(c=>`<div class="cut-card" onclick="this.classList.toggle('sel')"><div class="cc-emoji">${c.emoji}</div><div class="cc-name">${c.name}</div><div class="cc-desc">${c.desc}</div></div>`).join('')}
+      </div>
+    </div>
+    <button class="find-from-guide" onclick="quickPick('${bid}','full_groom','medium')">Find ${bd.name} groomers →</button>
+  `;
+  goToScreen('guide');
+}
+
+// ── PROFILE ───────────────────────────────────────────────────────────────────
+function updateDogPreview() {
+  const name = document.getElementById('dogName').value || 'Your Dog';
+  const bid = document.getElementById('dogBreed').value;
+  const bd = breedData[bid];
+  document.getElementById('dogNameBig').textContent = name;
+  document.getElementById('dogSubText').textContent = bd ? bd.name : 'Add info below';
+  if (bd) document.getElementById('dogAvatarEmoji').textContent = bd.emoji;
+  document.getElementById('rebookTitle').textContent = `Time for ${name}'s groom!`;
+}
+function setPSize(size,btn) { document.querySelectorAll('.psize-btn').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); }
+function saveProfile() { const btn=document.querySelector('.save-btn'); btn.textContent='✅ Saved!'; setTimeout(()=>btn.textContent='Save profile ✓',2000); }
+function handlePhoto(e) {
+  const file=e.target.files[0]; if (!file) return;
+  const r=new FileReader(); r.onload=ev=>{
+    const wrap=document.querySelector('.dog-avatar');
+    const old=document.getElementById('dogAvatarEmoji');
+    old.style.display='none';
+    let img=wrap.querySelector('img'); if(!img){img=document.createElement('img');wrap.insertBefore(img,old);}
+    img.src=ev.target.result;
+  }; r.readAsDataURL(file);
+}
 function renderHistory() {
-  document.getElementById('groomHistoryList').innerHTML = groomHistory.length === 0
-    ? `<div style="text-align:center;padding:20px;color:var(--muted);font-size:14px">No grooms yet — book your first!</div>`
-    : groomHistory.map(h=>`
-      <div class="history-item">
-        <div class="history-icon">✂️</div>
-        <div class="history-info">
-          <div class="history-salon">${h.salon}</div>
-          <div class="history-detail">${h.service} · ${h.date}</div>
-        </div>
-        <div class="history-price">$${h.price}</div>
-      </div>`).join('');
+  document.getElementById('historyList').innerHTML = groomHistory.length===0
+    ? `<div style="text-align:center;padding:16px;color:var(--muted);font-size:13px">No grooms yet — book your first!</div>`
+    : groomHistory.map(h=>`<div class="history-row"><div class="hr-icon">✂️</div><div class="hr-info"><div class="hr-salon">${h.salon}</div><div class="hr-detail">${h.service} · ${h.date}</div></div><div class="hr-price">$${h.price}</div></div>`).join('');
 }
 
 // ── NAV ───────────────────────────────────────────────────────────────────────
 function switchNav(name) {
-  document.querySelectorAll('.bottom-nav-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.bn-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById(`nav-${name}`).classList.add('active');
-  if (name==='search') goToScreen('search');
-  else if (name==='profile') goToScreen('profile');
+  goToScreen(name==='profile'?'profile':'search');
 }
-
 function goToScreen(name) {
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById(`screen-${name}`).classList.add('active');
-  window.scrollTo(0,0);
 }
 
-document.getElementById('filtersRow').addEventListener('click', e=>{
-  const chip = e.target.closest('.filter-chip');
-  if (!chip) return;
-  document.querySelectorAll('.filter-chip').forEach(c=>c.classList.remove('active'));
+document.getElementById('filterRow').addEventListener('click', e=>{
+  const chip = e.target.closest('.fchip'); if (!chip) return;
+  document.querySelectorAll('.fchip').forEach(c=>c.classList.remove('active'));
   chip.classList.add('active');
-  activeFilter = chip.dataset.filter;
+  activeFilter = chip.dataset.f;
   renderCards();
 });
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
-renderGuideScroll();
+renderGuideRow();
 renderHistory();
 </script>
 </body>
