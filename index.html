@@ -683,25 +683,67 @@ function getSvcTime(bid, sid, size) {
   return Math.max(15, Math.round((fullTime * ratio) + szAdj));
 }
 
-// More slots — salons have multiple groomers, so we generate slots every 30 min regardless of service length
+// ── CALENDAR SYSTEM — 8 weeks out ────────────────────────────────────────────
+const TODAY = new Date(); TODAY.setHours(0,0,0,0);
+const DAY_NAMES = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+function getCalendarDays(weeks=8) {
+  const days = [];
+  for (let i=0; i<weeks*7; i++) {
+    const d = new Date(TODAY); d.setDate(TODAY.getDate()+i);
+    days.push(d);
+  }
+  return days;
+}
+
 const slotCache = {};
-function getSlots(gid, bid, sid, size, dayIdx) {
-  const k = `${gid}-${bid}-${sid}-${size}-${dayIdx}`;
+function getSlots(gid, bid, sid, size, dateStr) {
+  const k = `${gid}-${bid}-${sid}-${size}-${dateStr}`;
   if (!slotCache[k]) {
+    // Seed random from key so slots are stable
+    let seed = [...k].reduce((a,c)=>a+c.charCodeAt(0),0);
+    const rng = ()=>{ seed=(seed*9301+49297)%233280; return seed/233280; };
+    const d = new Date(dateStr);
+    const dow = d.getDay(); // 0=Sun
+    // Sundays mostly closed, Saturdays very busy, weekdays vary
+    const booked_rate = dow===0?0.95 : dow===6?0.7 : dow===1?0.4 : dow===5?0.6 : 0.3;
     const slots = [];
-    for (let m = 9*60; m <= 18*60; m += 30) {
-      const h = Math.floor(m/60), min = m%60;
-      slots.push(`${h>12?h-12:h}:${min===0?'00':min} ${h>=12?'PM':'AM'}`);
+    for (let m=9*60; m<=17*60; m+=30) {
+      if (rng() > booked_rate) {
+        const h=Math.floor(m/60), min=m%60;
+        slots.push(`${h>12?h-12:h}:${min===0?'00':'30'} ${h>=12?'PM':'AM'}`);
+      }
     }
-    const rate = [0.45,0.25,0.15,0.35,0.2][dayIdx%5];
-    slotCache[k] = slots.filter(()=>Math.random()>rate);
+    slotCache[k] = slots;
   }
   return slotCache[k];
 }
 
+function dateStr(d) { return d.toISOString().split('T')[0]; }
+
+function firstAvailableDay(gid) {
+  const days = getCalendarDays(8);
+  for (const d of days) {
+    if (getSlots(gid, selBreed, selSvc, selSize, dateStr(d)).length > 0) return d;
+  }
+  return null;
+}
+
+function formatDayLabel(d) {
+  const diff = Math.round((d-TODAY)/(1000*60*60*24));
+  if (diff===0) return 'Today';
+  if (diff===1) return 'Tomorrow';
+  return `${DAY_NAMES[d.getDay()]} ${MONTH_NAMES[d.getMonth()]} ${d.getDate()}`;
+}
+
+function formatDayShort(d) {
+  return `${DAY_NAMES[d.getDay()].slice(0,1)} ${d.getDate()}`;
+}
+
 // ── STATE ─────────────────────────────────────────────────────────────────────
 let selBreed = null, selSvc = null, selSize = 'medium', locSet = false;
-let selGroomer = null, selDay = 'Today', selDayIdx = 0, selTime = null;
+let selGroomer = null, selDate = null, selTime = null;
 let selAddons = new Set(), activeTab = 'services', activeFilter = 'all';
 let sheetConfirm = false;
 let groomHistory = [
@@ -851,8 +893,33 @@ function findGroomers() {
 }
 
 function getAvail(gid) {
-  const s=getSlots(gid,selBreed,selSvc,selSize,0);
+  const s=getSlots(gid,selBreed,selSvc,selSize,dateStr(TODAY));
   return s.length===0?'full':s.length<=2?'limited':'available';
+}
+
+function getNextAvail(gid) {
+  const d=firstAvailableDay(gid);
+  if(!d) return null;
+  const diff=Math.round((d-TODAY)/(1000*60*60*24));
+  const slots=getSlots(gid,selBreed,selSvc,selSize,dateStr(d));
+  if(diff===0) return `Today · ${slots.length} slots`;
+  if(diff===1) return `Tomorrow · ${slots.length} slots`;
+  return `${DAY_NAMES[d.getDay()]} ${MONTH_NAMES[d.getMonth()]} ${d.getDate()} · ${slots.length} slots`;
+}
+
+// Build 14-day mini dot preview for card
+function miniAvailBar(gid) {
+  const days=getCalendarDays(2); // 14 days
+  return days.map(d=>{
+    const s=getSlots(gid,selBreed,selSvc,selSize,dateStr(d));
+    const dow=d.getDay();
+    const color=s.length===0?'#444':s.length<=2?'#e67e22':'#27ae60';
+    const label=DAY_NAMES[dow].slice(0,1);
+    return `<div style="display:flex;flex-direction:column;align-items:center;gap:3px;min-width:18px">
+      <div style="width:8px;height:8px;border-radius:50%;background:${color}"></div>
+      <div style="font-size:9px;color:#888">${label}</div>
+    </div>`;
+  }).join('');
 }
 
 function renderCards() {
@@ -871,16 +938,16 @@ function renderCards() {
   document.getElementById('cardsWrap').innerHTML=list.map(g=>{
     const price=getSvcPrice(g.id,selBreed,selSvc,selSize);
     const avail=getAvail(g.id);
-    const isFull=avail==='full';
     const isSpec=specialtyBreeds[g.id].includes(selBreed);
-    const slots=getSlots(g.id,selBreed,selSvc,selSize,0);
+    const nextAvail=getNextAvail(g.id);
+    const todayFull=avail==='full';
 
     return `<div class="g-card" onclick="openSheet(${g.id})">
       <div class="g-img" style="background:${g.gradient}">
         <div class="bg-e">${g.emoji}</div>
         <div class="g-img-ov"></div>
         <div class="g-badges">
-          ${isFull?`<div class="gbadge gb-full">Fully Booked</div>`:avail==='limited'?`<div class="gbadge gb-ltd">⚡ Few slots left</div>`:`<div class="gbadge gb-avail">● Open Today</div>`}
+          ${avail==='limited'?`<div class="gbadge gb-ltd">⚡ Last slots today</div>`:avail==='available'?`<div class="gbadge gb-avail">● Open Today</div>`:''}
           ${isSpec?`<div class="gbadge gb-spec">🏅 ${bd.name} specialist</div>`:''}
         </div>
       </div>
@@ -891,8 +958,15 @@ function renderCards() {
       <div class="g-body">
         <div class="g-top"><div class="g-name">${g.name}</div><div class="g-rating">⭐ ${g.rating} <span>(${g.reviews})</span></div></div>
         <div class="g-meta"><span>📍 ${g.address}</span><span>🚶 ${g.distance} mi</span></div>
-        <button class="g-menu-btn ${isFull?'full':''}" onclick="event.stopPropagation();${!isFull?`openSheet(${g.id})`:''}">
-          ${isFull?'😔 Fully Booked':`📋 See full menu & book →`}
+        <div style="margin:8px 0 10px">
+          <div style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:6px">Next 14 days</div>
+          <div style="display:flex;gap:4px;align-items:flex-end">${miniAvailBar(g.id)}</div>
+          <div style="font-size:12px;color:var(--success);font-weight:600;margin-top:7px">
+            ${nextAvail?`📅 Next available: ${nextAvail}`:'😔 No availability in next 8 weeks'}
+          </div>
+        </div>
+        <button class="g-menu-btn" onclick="event.stopPropagation();openSheet(${g.id})">
+          📋 See full schedule & book →
         </button>
       </div>
     </div>`;
@@ -908,7 +982,9 @@ document.getElementById('filterRow').addEventListener('click',e=>{
 // ── SALON MENU SHEET ──────────────────────────────────────────────────────────
 function openSheet(id) {
   selGroomer=groomers.find(g=>g.id===id);
-  selDay='Today'; selDayIdx=0; selTime=null; selAddons=new Set(); activeTab='services'; sheetConfirm=false;
+  const first=firstAvailableDay(selGroomer.id);
+  selDate=first?dateStr(first):null;
+  selTime=null; selAddons=new Set(); activeTab='services'; sheetConfirm=false;
   renderSheet();
   document.getElementById('sheetOv').classList.add('open');
   document.getElementById('menuSheet').classList.add('open');
@@ -952,7 +1028,7 @@ function renderSheet() {
           <div class="cr"><span class="cl">Service</span><span class="cv">$${base}</span></div>
           ${addonTotal>0?`<div class="cr"><span class="cl">Add-ons</span><span class="cv">$${addonTotal}</span></div>`:''}
           <div class="cr"><span class="cl">Total</span><span class="cv" style="font-size:16px">$${total}</span></div>
-          <div class="cr"><span class="cl">Day</span><span class="cv">${selDay}</span></div>
+          <div class="cr"><span class="cl">Day</span><span class="cv">${selDate?formatDayLabel(new Date(selDate+'T00:00:00')):''}</span></div>
           <div class="cr"><span class="cl">Time</span><span class="cv">${selTime}</span></div>
           ${addonNames?`<div class="cr"><span class="cl">Add-ons</span><span class="cv" style="text-align:right;max-width:55%">${addonNames}</span></div>`:''}
         </div>
@@ -1012,31 +1088,71 @@ function renderSheet() {
       <div style="padding:14px 18px 0"><button class="book-this-svc" onclick="switchTab('book')">Continue to book →</button></div>
     `;
   } else if (activeTab==='book') {
-    const slots=getSlots(g.id,selBreed,selSvc,selSize,selDayIdx);
+    const allDays=getCalendarDays(8);
+    const slots=selDate?getSlots(g.id,selBreed,selSvc,selSize,selDate):[];
+
+    // Build weeks for calendar grid
+    const weeks=[];
+    let week=[];
+    allDays.forEach((d,i)=>{
+      week.push(d);
+      if(week.length===7||(i===allDays.length-1)){weeks.push(week);week=[];}
+    });
+
     document.getElementById('msScroll').innerHTML=`
       <div class="book-tab-wrap">
         <div class="price-hero">
           <div class="ph-l"><div class="ph-lbl">${s.name}</div><div class="ph-svc">${bd.emoji} ${bd.name}${szLbl}</div></div>
-          <div class="ph-r"><div class="ph-price">$${total}</div><div class="ph-time">⏱ ~${time} min${addonTotal>0?` + add-ons`:''}</div></div>
+          <div class="ph-r"><div class="ph-price">$${total}</div><div class="ph-time">⏱ ~${time} min${addonTotal>0?' + add-ons':''}</div></div>
         </div>
-        <div class="bt-section-lbl">Pick a day</div>
-        <div class="day-row">
-          ${DAYS.map((d,i)=>{const sl=getSlots(g.id,selBreed,selSvc,selSize,i);return`<div class="day-chip ${d===selDay?'active':''}" onclick="tapDay('${d}',${i})">${d} ${sl.length===0?'🔴':sl.length<=2?'🟡':'🟢'}</div>`;}).join('')}
+
+        <div class="bt-section-lbl" style="margin-bottom:8px">Pick a date</div>
+        <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:4px">
+          ${DAY_NAMES.map(d=>`<div style="text-align:center;font-size:10px;font-weight:700;color:var(--muted);padding:4px 0">${d.slice(0,1)}</div>`).join('')}
         </div>
-        <div class="bt-section-lbl">Pick a time</div>
-        <div style="font-size:11px;color:var(--muted);font-style:italic;margin-bottom:10px">Slots available every 30 min · ${slots.length} open ${selDay==='Today'?'today':'this day'}</div>
-        <div class="time-grid">
-          ${slots.length===0
-            ?`<div style="grid-column:1/-1;text-align:center;padding:20px;color:var(--muted);font-size:13px">😔 No slots — try another day</div>`
-            :slots.map(t=>`<div class="time-cell ${selTime===t?'active':''}" onclick="tapTime('${t}')"><div class="tc-t">${t}</div><div class="tc-l">Open</div></div>`).join('')}
-        </div>
-        <button class="confirm-book-btn" ${selTime?'':'disabled'} id="confirmBookBtn" onclick="doConfirm()">
-          ${selTime?`Confirm ${selTime} — $${total} →`:'Select a time to book'}
+        ${weeks.map((wk,wi)=>`
+          <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:3px">
+            ${wk.map(d=>{
+              const ds=dateStr(d);
+              const sl=getSlots(g.id,selBreed,selSvc,selSize,ds);
+              const isSelected=selDate===ds;
+              const hasSlots=sl.length>0;
+              const isPast=d<TODAY;
+              const dow=d.getDay();
+              let bg=isPast?'transparent':isSelected?'var(--dark)':hasSlots?'var(--card)':'#f0ede8';
+              let color=isPast?'#ccc':isSelected?'#fff':hasSlots?'var(--text)':'#bbb';
+              let dot=!isPast&&hasSlots&&!isSelected?`<div style="width:5px;height:5px;border-radius:50%;background:${sl.length<=2?'#e67e22':'#27ae60'};margin:1px auto 0"></div>`:'';
+              return `<div onclick="${!isPast&&hasSlots?`tapDate('${ds}')`:''}"
+                style="text-align:center;padding:6px 2px;border-radius:8px;cursor:${!isPast&&hasSlots?'pointer':'default'};background:${bg};border:${isSelected?'none':`1.5px solid ${!isPast&&hasSlots?'var(--border)':'transparent'}`}">
+                <div style="font-size:12px;font-weight:600;color:${color}">${d.getDate()}</div>
+                ${dot}
+              </div>`;
+            }).join('')}
+          </div>
+          ${wi<weeks.length-1?`<div style="font-size:10px;color:var(--muted);text-align:right;margin-bottom:4px;padding-right:2px">${MONTH_NAMES[weeks[wi+1][0].getMonth()]} →</div>`:''}
+        `).join('')}
+
+        ${selDate?`
+          <div class="bt-section-lbl" style="margin-top:14px">Available times — ${formatDayLabel(new Date(selDate+'T00:00:00'))}</div>
+          <div class="time-grid">
+            ${slots.length===0
+              ?`<div style="grid-column:1/-1;text-align:center;padding:20px;color:var(--muted);font-size:13px">😔 No slots this day — pick another</div>`
+              :slots.map(t=>`<div class="time-cell ${selTime===t?'active':''}" onclick="tapTime('${t}')"><div class="tc-t">${t}</div><div class="tc-l">Open</div></div>`).join('')}
+          </div>
+          ${slots.length===0?`
+            <div style="padding:0 0 10px">
+              <button style="width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:13px;padding:13px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;color:var(--text);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px" onclick="joinWaitlist()">
+                🔔 Join waitlist — get notified if a spot opens
+              </button>
+            </div>`:''}
+        `:`<div style="text-align:center;padding:20px;color:var(--muted);font-size:13px">👆 Tap a green date to see times</div>`}
+
+        <button class="confirm-book-btn" ${selTime?'':'disabled'} onclick="doConfirm()">
+          ${selTime?`Confirm ${formatDayLabel(new Date(selDate+'T00:00:00'))} at ${selTime} — $${total} →`:'Select a date & time to book'}
         </button>
       </div>
     `;
   }
-}
 
 function selectSvcFromMenu(id) {
   selSvc=id;
@@ -1048,9 +1164,10 @@ function selectSvcFromMenu(id) {
 }
 
 function tapAddon(id){selAddons.has(id)?selAddons.delete(id):selAddons.add(id);renderSheet();}
-function tapDay(d,i){selDay=d;selDayIdx=i;selTime=null;renderSheet();}
+function tapDate(ds){selDate=ds;selTime=null;renderSheet();}
 function tapTime(t){selTime=t;renderSheet();}
 function doConfirm(){sheetConfirm=true;renderSheet();}
+function joinWaitlist(){alert('🔔 You\'re on the waitlist! We\'ll text you if a spot opens up.');}
 
 // ── GUIDES ────────────────────────────────────────────────────────────────────
 function renderGuideRow() {
