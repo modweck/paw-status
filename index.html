@@ -16,107 +16,85 @@
     body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; min-height: 100vh; }
 
     /* HEADER */
-    .header { background: var(--dark); padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+    .header { background: var(--dark); padding: 14px 20px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
     .logo { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 800; color: var(--accent); }
     .logo span { color: #fff; }
-    .header-action { font-size: 13px; color: #aaa; cursor: pointer; display: none; }
+    .nav-tabs { display: flex; gap: 4px; }
+    .nav-tab { padding: 7px 14px; border-radius: 999px; font-size: 13px; font-weight: 500; color: #888; cursor: pointer; transition: all 0.15s; border: none; background: none; }
+    .nav-tab.active { background: rgba(245,200,66,0.15); color: var(--accent); }
 
     .screen { display: none; }
     .screen.active { display: block; }
 
-    /* ── SEARCH SCREEN ── */
-    .search-hero {
-      background: var(--dark);
-      padding: 32px 20px 28px;
-      color: #fff;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-    }
-    .search-hero h1 { font-family: 'Syne', sans-serif; font-size: 30px; font-weight: 800; line-height: 1.2; margin-bottom: 8px; }
+    /* ══ SEARCH SCREEN ══ */
+    .search-hero { background: var(--dark); padding: 28px 20px 24px; color: #fff; }
+    .search-hero h1 { font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 800; line-height: 1.2; margin-bottom: 6px; }
     .search-hero h1 span { color: var(--accent); }
-    .search-hero p { font-size: 14px; color: #aaa; margin-bottom: 32px; }
-
-    .search-form { display: flex; flex-direction: column; gap: 12px; }
-
-    .form-label { font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: #888; margin-bottom: 6px; }
-
-    /* LOCATION INPUT */
+    .search-hero p { font-size: 14px; color: #aaa; margin-bottom: 24px; }
+    .search-form { display: flex; flex-direction: column; gap: 10px; }
+    .form-label { font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: #777; margin-bottom: 5px; }
     .location-wrap { position: relative; }
-    .location-input {
-      width: 100%; background: rgba(255,255,255,0.08); border: 1.5px solid rgba(255,255,255,0.12);
-      border-radius: 14px; padding: 0 16px 0 46px; height: 54px;
-      font-family: 'DM Sans', sans-serif; font-size: 15px; color: #fff; outline: none;
-      transition: border-color 0.2s;
-    }
-    .location-input::placeholder { color: #666; }
+    .location-input { width: 100%; background: rgba(255,255,255,0.08); border: 1.5px solid rgba(255,255,255,0.12); border-radius: 14px; padding: 0 16px 0 46px; height: 52px; font-family: 'DM Sans', sans-serif; font-size: 15px; color: #fff; outline: none; transition: border-color 0.2s; }
+    .location-input::placeholder { color: #555; }
     .location-input:focus { border-color: var(--accent); }
-    .location-icon { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); font-size: 18px; pointer-events: none; }
-    .my-location-btn {
-      width: 100%; margin-top: 8px; background: rgba(245,200,66,0.12); border: 1.5px solid rgba(245,200,66,0.3);
-      border-radius: 12px; padding: 13px 16px; font-family: 'DM Sans', sans-serif; font-size: 14px;
-      font-weight: 600; color: var(--accent); cursor: pointer; display: flex; align-items: center;
-      justify-content: center; gap: 8px; transition: all 0.15s;
-    }
-    .my-location-btn:active { background: rgba(245,200,66,0.2); }
-
-    /* DROPDOWNS */
+    .input-icon { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); font-size: 17px; pointer-events: none; }
+    .my-location-btn { width: 100%; margin-top: 7px; background: rgba(245,200,66,0.1); border: 1.5px solid rgba(245,200,66,0.25); border-radius: 12px; padding: 12px 16px; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 600; color: var(--accent); cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
     .dropdown-wrap { position: relative; }
-    .dropdown-wrap select {
-      width: 100%; background: rgba(255,255,255,0.08); border: 1.5px solid rgba(255,255,255,0.12);
-      border-radius: 14px; padding: 0 44px 0 46px; height: 54px;
-      font-family: 'DM Sans', sans-serif; font-size: 15px; color: #fff; outline: none;
-      appearance: none; cursor: pointer; transition: border-color 0.2s;
-    }
+    .dropdown-wrap select { width: 100%; background: rgba(255,255,255,0.08); border: 1.5px solid rgba(255,255,255,0.12); border-radius: 14px; padding: 0 44px 0 46px; height: 52px; font-family: 'DM Sans', sans-serif; font-size: 15px; color: #fff; outline: none; appearance: none; cursor: pointer; transition: border-color 0.2s; }
     .dropdown-wrap select:focus { border-color: var(--accent); }
     .dropdown-wrap select option { background: #1a1512; color: #fff; }
-    .dropdown-icon { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); font-size: 18px; pointer-events: none; }
-    .dropdown-arrow { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); font-size: 12px; color: #666; pointer-events: none; }
+    .dropdown-wrap select optgroup { color: #aaa; }
+    .dropdown-arrow { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); font-size: 12px; color: #555; pointer-events: none; }
 
-    /* DIVIDER */
-    .form-divider { display: flex; align-items: center; gap: 12px; margin: 4px 0; }
-    .form-divider hr { flex: 1; border: none; border-top: 1px solid rgba(255,255,255,0.08); }
-    .form-divider span { font-size: 12px; color: #555; }
+    /* SIZE SELECTOR */
+    .size-selector { display: none; }
+    .size-selector.visible { display: block; }
+    .size-row { display: flex; gap: 8px; margin-top: 5px; }
+    .size-btn { flex: 1; padding: 10px 8px; border-radius: 12px; border: 1.5px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.06); color: #ccc; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; text-align: center; transition: all 0.15s; }
+    .size-btn.active { border-color: var(--accent); background: rgba(245,200,66,0.15); color: var(--accent); }
 
-    /* FIND BTN */
-    .find-btn {
-      width: 100%; background: var(--accent); color: var(--dark); border: none;
-      border-radius: 14px; padding: 17px; font-family: 'DM Sans', sans-serif;
-      font-size: 17px; font-weight: 700; cursor: pointer; margin-top: 8px;
-      transition: all 0.15s; display: flex; align-items: center; justify-content: center; gap: 8px;
-    }
-    .find-btn:disabled { background: #333; color: #666; cursor: not-allowed; }
-    .find-btn:not(:disabled):active { transform: scale(0.98); }
+    .form-divider { display: flex; align-items: center; gap: 10px; margin: 2px 0; }
+    .form-divider hr { flex: 1; border: none; border-top: 1px solid rgba(255,255,255,0.07); }
+    .form-divider span { font-size: 11px; color: #444; }
 
-    /* QUICK PICKS */
-    .quick-picks { margin-top: 32px; }
+    .find-btn { width: 100%; background: var(--accent); color: var(--dark); border: none; border-radius: 14px; padding: 16px; font-family: 'DM Sans', sans-serif; font-size: 17px; font-weight: 700; cursor: pointer; margin-top: 6px; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.15s; }
+    .find-btn:disabled { background: #2a2a2a; color: #555; cursor: not-allowed; }
+
+    .quick-picks { padding: 20px 20px 0; background: var(--dark); padding-bottom: 24px; }
     .quick-picks p { font-size: 12px; color: #555; margin-bottom: 10px; }
-    .quick-row { display: flex; gap: 8px; flex-wrap: wrap; }
-    .quick-chip {
-      background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 999px; padding: 7px 14px; font-size: 13px; color: #bbb; cursor: pointer;
-      transition: all 0.15s; white-space: nowrap;
-    }
-    .quick-chip:active { background: rgba(245,200,66,0.15); border-color: var(--accent); color: var(--accent); }
+    .quick-row { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; padding-bottom: 4px; }
+    .quick-row::-webkit-scrollbar { display: none; }
+    .quick-chip { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 999px; padding: 7px 14px; font-size: 13px; color: #bbb; cursor: pointer; white-space: nowrap; flex-shrink: 0; transition: all 0.15s; }
+    .quick-chip:active { border-color: var(--accent); color: var(--accent); }
 
-    /* ── RESULTS SCREEN ── */
-    .results-header { background: var(--dark); padding: 16px 20px; display: flex; align-items: center; gap: 12px; }
+    /* BREED GUIDE CARDS ON SEARCH */
+    .breed-guides { padding: 20px 20px 80px; }
+    .section-heading { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 800; margin-bottom: 14px; }
+    .guide-scroll { display: flex; gap: 12px; overflow-x: auto; scrollbar-width: none; padding-bottom: 4px; }
+    .guide-scroll::-webkit-scrollbar { display: none; }
+    .guide-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 16px; min-width: 200px; max-width: 200px; cursor: pointer; box-shadow: var(--shadow); flex-shrink: 0; transition: transform 0.15s; }
+    .guide-card:active { transform: scale(0.97); }
+    .guide-card .gc-emoji { font-size: 36px; margin-bottom: 10px; }
+    .guide-card .gc-breed { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 800; margin-bottom: 4px; }
+    .guide-card .gc-freq { font-size: 12px; color: var(--muted); margin-bottom: 8px; }
+    .guide-card .gc-tag { display: inline-block; background: rgba(245,200,66,0.15); color: #8a6d00; font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 999px; }
+
+    /* ══ RESULTS SCREEN ══ */
+    .results-header { background: var(--dark); padding: 14px 20px; display: flex; align-items: center; gap: 12px; }
     .back-btn { background: rgba(255,255,255,0.1); border: none; color: #fff; width: 36px; height: 36px; border-radius: 50%; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
     .results-header-info h2 { font-family: 'Syne', sans-serif; font-size: 17px; font-weight: 800; color: #fff; line-height: 1.2; }
     .results-header-info p { font-size: 12px; color: #aaa; }
-
     .filters-wrap { padding: 12px 20px 0; background: var(--dark); }
     .filters-scroll { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 12px; scrollbar-width: none; }
     .filters-scroll::-webkit-scrollbar { display: none; }
     .filter-chip { padding: 7px 14px; border-radius: 999px; font-size: 13px; font-weight: 500; white-space: nowrap; cursor: pointer; flex-shrink: 0; border: 1.5px solid rgba(255,255,255,0.15); color: #ccc; background: rgba(255,255,255,0.05); transition: all 0.15s; }
     .filter-chip.active { background: var(--accent); color: var(--dark); border-color: var(--accent); font-weight: 600; }
-
     .sort-bar { padding: 12px 20px; }
     .results-count { font-size: 13px; color: var(--muted); }
     .results-count strong { color: var(--text); font-weight: 600; }
-
-    /* CARDS */
     .groomers-list { padding: 0 20px 100px; }
+
+    /* GROOMER CARD */
     .groomer-card { background: var(--card); border-radius: var(--radius); margin-bottom: 14px; overflow: hidden; box-shadow: var(--shadow); border: 1px solid var(--border); cursor: pointer; transition: transform 0.15s; }
     .groomer-card:active { transform: scale(0.98); }
     .card-image { width: 100%; height: 145px; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; }
@@ -132,33 +110,90 @@
     .avail-slots { display: flex; gap: 5px; margin-top: 5px; flex-wrap: wrap; }
     .slot-pill { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.25); color: #fff; padding: 3px 9px; border-radius: 999px; font-size: 12px; font-weight: 500; }
     .slot-pill.open { background: rgba(46,204,113,0.35); border-color: rgba(46,204,113,0.5); }
-
     .breed-price-banner { background: var(--accent); padding: 11px 16px; display: flex; align-items: center; justify-content: space-between; }
-    .bpb-left .bpb-service { font-size: 13px; font-weight: 700; color: var(--dark); }
-    .bpb-left .bpb-time { font-size: 12px; color: rgba(26,21,18,0.55); margin-top: 1px; }
+    .bpb-service { font-size: 13px; font-weight: 700; color: var(--dark); }
+    .bpb-time { font-size: 12px; color: rgba(26,21,18,0.55); margin-top: 1px; }
     .bpb-price { font-family: 'Syne', sans-serif; font-size: 24px; font-weight: 800; color: var(--dark); }
-
     .card-body { padding: 14px 16px 16px; }
     .card-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 6px; }
     .salon-name { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 700; }
     .rating { display: flex; align-items: center; gap: 4px; font-size: 14px; font-weight: 600; }
     .rating span { color: var(--muted); font-size: 12px; font-weight: 400; }
     .card-meta { display: flex; gap: 14px; font-size: 13px; color: var(--muted); margin-bottom: 12px; }
-
     .all-prices-toggle { font-size: 13px; color: var(--muted); cursor: pointer; margin-bottom: 10px; display: flex; align-items: center; gap: 5px; }
     .all-prices-grid { display: none; grid-template-columns: repeat(2,1fr); gap: 7px; margin-bottom: 14px; }
     .all-prices-grid.open { display: grid; }
     .price-item { background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 9px 12px; }
-    .price-item.match-breed { border-color: var(--accent); background: rgba(245,200,66,0.07); }
-    .pi-breed { font-size: 12px; color: var(--muted); margin-bottom: 2px; }
+    .price-item.match-svc { border-color: var(--accent); background: rgba(245,200,66,0.07); }
+    .pi-name { font-size: 12px; color: var(--muted); margin-bottom: 2px; }
     .pi-price { font-weight: 700; font-size: 15px; }
-    .pi-time { font-size: 11px; color: var(--muted); margin-top: 2px; }
     .pi-match-tag { font-size: 10px; color: #7a5c00; font-weight: 600; background: rgba(245,200,66,0.3); padding: 1px 6px; border-radius: 999px; display: inline-block; margin-top: 3px; }
-
     .book-btn { width: 100%; background: var(--dark); color: #fff; border: none; border-radius: 12px; padding: 14px; font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 600; cursor: pointer; }
     .book-btn.full { background: #e0dbd0; color: var(--muted); cursor: not-allowed; }
 
-    /* SHEET */
+    /* ══ PROFILE SCREEN ══ */
+    .profile-screen { padding: 24px 20px 100px; }
+    .profile-hero { background: var(--dark); margin: -24px -20px 24px; padding: 28px 20px 24px; color: #fff; }
+    .profile-hero h2 { font-family: 'Syne', sans-serif; font-size: 24px; font-weight: 800; margin-bottom: 4px; }
+    .profile-hero p { font-size: 14px; color: #aaa; }
+    .dog-profile-card { background: var(--card); border-radius: var(--radius); padding: 20px; border: 1px solid var(--border); box-shadow: var(--shadow); margin-bottom: 16px; }
+    .dog-avatar-row { display: flex; align-items: center; gap: 16px; margin-bottom: 20px; }
+    .dog-avatar { width: 72px; height: 72px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), #ff6b35); display: flex; align-items: center; justify-content: center; font-size: 36px; flex-shrink: 0; cursor: pointer; position: relative; overflow: hidden; }
+    .dog-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+    .dog-avatar-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; font-size: 18px; opacity: 0; transition: opacity 0.2s; border-radius: 50%; }
+    .dog-avatar:hover .dog-avatar-overlay { opacity: 1; }
+    .dog-name-big { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 800; }
+    .dog-breed-tag { font-size: 13px; color: var(--muted); margin-top: 2px; }
+    .profile-field { margin-bottom: 14px; }
+    .profile-field label { font-size: 11px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; color: var(--muted); display: block; margin-bottom: 6px; }
+    .profile-field input, .profile-field select, .profile-field textarea { width: 100%; background: var(--bg); border: 1.5px solid var(--border); border-radius: 12px; padding: 12px 14px; font-family: 'DM Sans', sans-serif; font-size: 15px; color: var(--text); outline: none; transition: border-color 0.2s; }
+    .profile-field input:focus, .profile-field select:focus, .profile-field textarea:focus { border-color: var(--accent); }
+    .profile-field textarea { resize: none; height: 80px; }
+    .profile-size-row { display: flex; gap: 8px; }
+    .profile-size-btn { flex: 1; padding: 11px 8px; border-radius: 12px; border: 1.5px solid var(--border); background: var(--bg); font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 600; color: var(--muted); cursor: pointer; text-align: center; transition: all 0.15s; }
+    .profile-size-btn.active { border-color: var(--accent); background: rgba(245,200,66,0.1); color: var(--dark); }
+    .save-profile-btn { width: 100%; background: var(--accent); color: var(--dark); border: none; border-radius: 14px; padding: 16px; font-family: 'DM Sans', sans-serif; font-size: 16px; font-weight: 700; cursor: pointer; margin-top: 8px; }
+
+    .groom-history { background: var(--card); border-radius: var(--radius); padding: 20px; border: 1px solid var(--border); box-shadow: var(--shadow); margin-bottom: 16px; }
+    .groom-history h3 { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 800; margin-bottom: 14px; }
+    .history-item { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+    .history-item:last-child { border-bottom: none; }
+    .history-icon { width: 40px; height: 40px; border-radius: 10px; background: var(--bg); display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+    .history-info { flex: 1; }
+    .history-salon { font-weight: 600; font-size: 14px; }
+    .history-detail { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .history-price { font-weight: 700; font-size: 14px; }
+
+    .rebook-banner { background: linear-gradient(135deg, var(--accent), #ffb700); border-radius: 16px; padding: 16px; display: flex; align-items: center; gap: 14px; margin-bottom: 16px; cursor: pointer; }
+    .rebook-banner .rb-icon { font-size: 32px; }
+    .rebook-banner h4 { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 800; color: var(--dark); margin-bottom: 2px; }
+    .rebook-banner p { font-size: 13px; color: rgba(26,21,18,0.65); }
+    .rebook-banner .rb-arrow { font-size: 20px; color: var(--dark); margin-left: auto; }
+
+    /* ══ GUIDE SCREEN ══ */
+    .guide-screen { padding-bottom: 100px; }
+    .guide-hero { background: var(--dark); padding: 24px 20px; color: #fff; }
+    .guide-hero h2 { font-family: 'Syne', sans-serif; font-size: 24px; font-weight: 800; margin-bottom: 4px; }
+    .guide-hero p { font-size: 14px; color: #aaa; }
+    .guide-back { background: rgba(255,255,255,0.1); border: none; color: #fff; padding: 8px 14px; border-radius: 999px; font-size: 13px; cursor: pointer; margin-bottom: 14px; display: inline-flex; align-items: center; gap: 6px; font-family: 'DM Sans', sans-serif; }
+    .guide-content { padding: 20px; }
+    .guide-stat-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-bottom: 20px; }
+    .guide-stat { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 14px 12px; text-align: center; }
+    .guide-stat .gs-val { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 800; color: var(--dark); margin-bottom: 2px; }
+    .guide-stat .gs-label { font-size: 11px; color: var(--muted); }
+    .guide-section { margin-bottom: 20px; }
+    .guide-section h3 { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 800; margin-bottom: 10px; }
+    .guide-tip { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 13px 14px; margin-bottom: 8px; display: flex; gap: 10px; font-size: 14px; line-height: 1.5; }
+    .guide-tip-icon { font-size: 18px; flex-shrink: 0; }
+    .cut-style-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 10px; }
+    .cut-style-card { background: var(--card); border: 1.5px solid var(--border); border-radius: 14px; padding: 14px; text-align: center; cursor: pointer; transition: all 0.15s; }
+    .cut-style-card:active { transform: scale(0.97); }
+    .cut-style-card.selected { border-color: var(--accent); background: rgba(245,200,66,0.07); }
+    .cut-emoji { font-size: 36px; margin-bottom: 8px; }
+    .cut-name { font-weight: 700; font-size: 14px; margin-bottom: 3px; }
+    .cut-desc { font-size: 12px; color: var(--muted); line-height: 1.4; }
+
+    /* ══ SHEET ══ */
     .sheet-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 200; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
     .sheet-overlay.open { opacity: 1; pointer-events: all; }
     .sheet { position: fixed; bottom: 0; left: 0; right: 0; background: var(--card); border-radius: 24px 24px 0 0; z-index: 201; max-height: 92vh; overflow-y: auto; transform: translateY(100%); transition: transform 0.35s cubic-bezier(0.32,0.72,0,1); padding-bottom: 40px; }
@@ -169,15 +204,13 @@
     .close-btn { width: 32px; height: 32px; border-radius: 50%; background: var(--bg); border: none; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
     .sheet-section { padding: 18px 20px 0; }
     .sheet-section-title { font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); margin-bottom: 12px; }
-
     .breed-price-card { background: rgba(245,200,66,0.1); border: 1.5px solid var(--accent); border-radius: 14px; padding: 14px 16px; margin-bottom: 0; display: flex; align-items: center; justify-content: space-between; }
     .bpc-label { font-size: 12px; color: var(--muted); margin-bottom: 2px; }
     .bpc-breed { font-size: 16px; font-weight: 700; }
     .bpc-price { font-family: 'Syne', sans-serif; font-size: 30px; font-weight: 800; }
     .bpc-time { font-size: 12px; color: var(--muted); text-align: right; margin-top: 2px; }
-
     .addon-list { display: flex; flex-direction: column; gap: 8px; }
-    .addon-row { display: flex; align-items: center; justify-content: space-between; background: var(--bg); border: 1.5px solid var(--border); border-radius: 12px; padding: 13px 14px; cursor: pointer; transition: all 0.15s; }
+    .addon-row { display: flex; align-items: center; justify-content: space-between; background: var(--bg); border: 1.5px solid var(--border); border-radius: 12px; padding: 12px 14px; cursor: pointer; transition: all 0.15s; }
     .addon-row.selected { border-color: var(--accent); background: rgba(245,200,66,0.07); }
     .addon-left { display: flex; align-items: center; gap: 10px; }
     .addon-icon { font-size: 20px; width: 28px; text-align: center; }
@@ -187,27 +220,22 @@
     .addon-price { font-weight: 700; font-size: 14px; white-space: nowrap; }
     .addon-check { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 12px; transition: all 0.15s; flex-shrink: 0; }
     .addon-row.selected .addon-check { background: var(--accent); border-color: var(--accent); }
-
     .total-bar { background: var(--dark); border-radius: 14px; padding: 14px 16px; margin-top: 14px; display: flex; align-items: center; justify-content: space-between; }
     .total-label { font-size: 13px; color: #aaa; }
     .total-items { font-size: 12px; color: #777; margin-top: 2px; }
     .total-amount { font-family: 'Syne', sans-serif; font-size: 26px; font-weight: 800; color: var(--accent); }
-
     .day-tabs { display: flex; gap: 8px; margin-bottom: 14px; overflow-x: auto; scrollbar-width: none; }
     .day-tabs::-webkit-scrollbar { display: none; }
     .day-tab { padding: 8px 16px; border-radius: 999px; border: 1.5px solid var(--border); font-size: 13px; font-weight: 500; cursor: pointer; white-space: nowrap; transition: all 0.15s; flex-shrink: 0; }
     .day-tab.active { background: var(--dark); color: #fff; border-color: var(--dark); }
-
     .time-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; }
     .time-slot { border: 1.5px solid var(--border); border-radius: 12px; padding: 12px 8px; text-align: center; cursor: pointer; transition: all 0.15s; }
     .time-slot.available:hover { border-color: var(--accent); }
     .time-slot.selected { border-color: var(--accent); background: rgba(245,200,66,0.12); }
     .t-time { font-size: 14px; font-weight: 600; }
     .t-label { font-size: 11px; color: var(--success); margin-top: 2px; }
-
     .confirm-btn { margin: 20px 20px 0; width: calc(100% - 40px); background: var(--accent); color: var(--dark); border: none; border-radius: 14px; padding: 16px; font-family: 'DM Sans', sans-serif; font-size: 16px; font-weight: 700; cursor: pointer; }
     .confirm-btn:disabled { background: var(--border); color: var(--muted); cursor: not-allowed; }
-
     .confirm-screen { text-align: center; padding: 40px 24px; }
     .confirm-icon { font-size: 64px; margin-bottom: 16px; }
     .confirm-screen h2 { font-family: 'Syne', sans-serif; font-size: 26px; font-weight: 800; margin-bottom: 8px; }
@@ -218,43 +246,44 @@
     .confirm-row .lbl { color: var(--muted); }
     .confirm-row .val { font-weight: 600; }
     .notif-note { background: rgba(46,204,113,0.1); border: 1px solid rgba(46,204,113,0.3); border-radius: 12px; padding: 14px; font-size: 13px; color: #1a7a40; display: flex; gap: 10px; align-items: flex-start; text-align: left; margin-bottom: 20px; }
+
+    /* BOTTOM NAV */
+    .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--card); border-top: 1px solid var(--border); display: flex; z-index: 99; padding-bottom: env(safe-area-inset-bottom); }
+    .bottom-nav-btn { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 10px 0; cursor: pointer; border: none; background: none; gap: 3px; transition: all 0.15s; }
+    .bottom-nav-btn .bn-icon { font-size: 22px; }
+    .bottom-nav-btn .bn-label { font-size: 10px; font-weight: 600; color: var(--muted); }
+    .bottom-nav-btn.active .bn-label { color: var(--accent); }
+    .bottom-nav-btn.active .bn-icon { filter: drop-shadow(0 0 4px rgba(245,200,66,0.5)); }
   </style>
 </head>
 <body>
 
 <div class="header">
   <div class="logo">Paw<span>Status</span></div>
-  <div class="header-action" id="headerAction"></div>
 </div>
 
-<!-- ══ SCREEN 1: SEARCH ══ -->
+<!-- ══ SCREEN: SEARCH ══ -->
 <div class="screen active" id="screen-search">
   <div class="search-hero">
     <h1>Book a groomer<br>your dog will <span>love</span></h1>
     <p>Real prices by breed. Live availability. Pickup alerts.</p>
-
     <div class="search-form">
-
-      <!-- LOCATION -->
       <div>
         <div class="form-label">📍 Your location</div>
         <div class="location-wrap">
-          <span class="location-icon">📍</span>
+          <span class="input-icon">📍</span>
           <input class="location-input" type="text" id="locationInput" placeholder="Enter your address..." />
         </div>
         <button class="my-location-btn" onclick="useMyLocation()">
-          <span>🎯</span> Use my current location
+          <span>🎯</span><span id="locationBtnText">Use my current location</span>
         </button>
       </div>
-
-      <div class="form-divider"><hr /><span>then</span><hr /></div>
-
-      <!-- BREED DROPDOWN -->
+      <div class="form-divider"><hr/><span>then</span><hr/></div>
       <div>
-        <div class="form-label">🐕 Your dog's breed</div>
+        <div class="form-label">🐕 Breed</div>
         <div class="dropdown-wrap">
-          <span class="dropdown-icon">🐕</span>
-          <select id="breedSelect" onchange="checkForm()">
+          <span class="input-icon">🐕</span>
+          <select id="breedSelect" onchange="onBreedChange()">
             <option value="">Select breed...</option>
             <optgroup label="Small breeds">
               <option value="chihuahua">Chihuahua</option>
@@ -268,10 +297,10 @@
               <option value="cockapoo">Cockapoo</option>
               <option value="cavapoo">Cavapoo</option>
               <option value="pomsky">Pomsky</option>
-              <option value="poodle">Poodle</option>
+              <option value="poodle">Poodle (size varies)</option>
             </optgroup>
             <optgroup label="Large breeds">
-              <option value="goldendoodle">Goldendoodle</option>
+              <option value="goldendoodle">Goldendoodle (size varies)</option>
               <option value="labrador">Labrador</option>
               <option value="goldenretriever">Golden Retriever</option>
               <option value="husky">Husky</option>
@@ -281,46 +310,70 @@
           </select>
           <span class="dropdown-arrow">▾</span>
         </div>
+        <!-- SIZE SELECTOR for variable-size breeds -->
+        <div class="size-selector" id="sizeSelector">
+          <div class="form-label" style="margin-top:10px">Dog size</div>
+          <div class="size-row">
+            <button class="size-btn" onclick="selectSize('small',this)">Small</button>
+            <button class="size-btn active" onclick="selectSize('medium',this)">Medium</button>
+            <button class="size-btn" onclick="selectSize('large',this)">Large</button>
+          </div>
+        </div>
       </div>
-
-      <!-- SERVICE DROPDOWN -->
       <div>
-        <div class="form-label">✂️ Service needed</div>
+        <div class="form-label">✂️ Service</div>
         <div class="dropdown-wrap">
-          <span class="dropdown-icon">✂️</span>
+          <span class="input-icon">✂️</span>
           <select id="serviceSelect" onchange="checkForm()">
             <option value="">Select service...</option>
-            <option value="full_groom">Full Groom (bath, cut, dry, brush)</option>
-            <option value="bath_brush">Bath + Brush Out</option>
-            <option value="bath_nail">Bath + Nail Trim</option>
-            <option value="bath_only">Bath Only</option>
-            <option value="nail_only">Nail Trim Only</option>
+            <optgroup label="Full services">
+              <option value="full_groom">Full Groom — bath, cut, dry, brush</option>
+              <option value="puppy_first">Puppy's First Groom</option>
+              <option value="senior_groom">Senior Dog Groom (gentle)</option>
+            </optgroup>
+            <optgroup label="Bath services">
+              <option value="bath_brush">Bath + Brush Out</option>
+              <option value="bath_nail">Bath + Nail Trim</option>
+              <option value="bath_only">Bath Only</option>
+              <option value="deshed_bath">De-shed Bath + Blow Out</option>
+              <option value="flea_bath">Flea & Tick Treatment Bath</option>
+            </optgroup>
+            <optgroup label="Quick services">
+              <option value="nail_only">Nail Trim Only</option>
+              <option value="nail_dremel">Nail Dremel (grind smooth)</option>
+              <option value="ear_clean">Ear Cleaning Only</option>
+              <option value="teeth_clean">Teeth Brushing Only</option>
+              <option value="dematting">De-matting Treatment</option>
+            </optgroup>
           </select>
           <span class="dropdown-arrow">▾</span>
         </div>
       </div>
-
       <button class="find-btn" id="findBtn" disabled onclick="findGroomers()">
         Find Groomers 🐾
       </button>
-
     </div>
+  </div>
 
-    <!-- QUICK PICKS -->
-    <div class="quick-picks">
-      <p>Popular searches</p>
-      <div class="quick-row">
-        <div class="quick-chip" onclick="quickPick('goldendoodle','full_groom')">🐩 Goldendoodle full groom</div>
-        <div class="quick-chip" onclick="quickPick('frenchbulldog','bath_nail')">🐾 Frenchie bath + nails</div>
-        <div class="quick-chip" onclick="quickPick('yorkie','full_groom')">🐕 Yorkie full groom</div>
-        <div class="quick-chip" onclick="quickPick('labrador','bath_brush')">🦮 Lab bath + brush</div>
-      </div>
+  <div class="quick-picks">
+    <p>Popular searches</p>
+    <div class="quick-row">
+      <div class="quick-chip" onclick="quickPick('goldendoodle','full_groom','medium')">🐩 Goldendoodle full groom</div>
+      <div class="quick-chip" onclick="quickPick('frenchbulldog','bath_nail',null)">🐾 Frenchie bath + nails</div>
+      <div class="quick-chip" onclick="quickPick('yorkie','full_groom',null)">🐕 Yorkie full groom</div>
+      <div class="quick-chip" onclick="quickPick('husky','deshed_bath',null)">🐺 Husky de-shed</div>
+      <div class="quick-chip" onclick="quickPick('labrador','bath_brush',null)">🦮 Lab bath + brush</div>
     </div>
+  </div>
 
+  <!-- BREED GUIDES -->
+  <div class="breed-guides">
+    <div class="section-heading">Grooming guides by breed</div>
+    <div class="guide-scroll" id="guideScroll"></div>
   </div>
 </div>
 
-<!-- ══ SCREEN 2: RESULTS ══ -->
+<!-- ══ SCREEN: RESULTS ══ -->
 <div class="screen" id="screen-results">
   <div class="results-header">
     <button class="back-btn" onclick="goToScreen('search')">←</button>
@@ -339,109 +392,293 @@
       <div class="filter-chip" data-filter="rated">Top Rated</div>
     </div>
   </div>
-  <div class="sort-bar">
-    <div class="results-count"><strong id="resultCount">4</strong> groomers near you</div>
-  </div>
+  <div class="sort-bar"><div class="results-count"><strong id="resultCount">4</strong> groomers near you</div></div>
   <div class="groomers-list" id="groomersList"></div>
 </div>
 
+<!-- ══ SCREEN: PROFILE ══ -->
+<div class="screen" id="screen-profile">
+  <div class="profile-screen">
+    <div class="profile-hero">
+      <h2>Your dog's profile</h2>
+      <p>Save info so groomers know your pup before they arrive.</p>
+    </div>
+
+    <!-- REBOOK REMINDER -->
+    <div class="rebook-banner" onclick="goToScreen('search')">
+      <div class="rb-icon">🔔</div>
+      <div>
+        <h4 id="rebookTitle">Time for a groom!</h4>
+        <p id="rebookSub">Max's last groom was 6 weeks ago</p>
+      </div>
+      <div class="rb-arrow">→</div>
+    </div>
+
+    <!-- DOG PROFILE CARD -->
+    <div class="dog-profile-card">
+      <div class="dog-avatar-row">
+        <div class="dog-avatar" onclick="triggerPhotoUpload()">
+          <span id="dogAvatarEmoji">🐶</span>
+          <div class="dog-avatar-overlay">📷</div>
+        </div>
+        <div>
+          <div class="dog-name-big" id="dogNameDisplay">Your Dog</div>
+          <div class="dog-breed-tag" id="dogBreedDisplay">Add your dog's info below</div>
+        </div>
+      </div>
+      <input type="file" id="photoInput" accept="image/*" style="display:none" onchange="handlePhotoUpload(event)" />
+
+      <div class="profile-field">
+        <label>Dog's name</label>
+        <input type="text" id="dogName" placeholder="e.g. Max" oninput="updateDogDisplay()" />
+      </div>
+      <div class="profile-field">
+        <label>Breed</label>
+        <select id="dogBreed" onchange="updateDogDisplay()">
+          <option value="">Select breed...</option>
+          <option value="chihuahua">Chihuahua</option>
+          <option value="yorkie">Yorkie</option>
+          <option value="maltese">Maltese</option>
+          <option value="frenchbulldog">French Bulldog</option>
+          <option value="mini_schnauzer">Mini Schnauzer</option>
+          <option value="shihtzhu">Shih Tzu</option>
+          <option value="cockapoo">Cockapoo</option>
+          <option value="cavapoo">Cavapoo</option>
+          <option value="poodle">Poodle</option>
+          <option value="goldendoodle">Goldendoodle</option>
+          <option value="labrador">Labrador</option>
+          <option value="goldenretriever">Golden Retriever</option>
+          <option value="husky">Husky</option>
+          <option value="bernedoodle">Bernedoodle</option>
+          <option value="boxer">Boxer</option>
+        </select>
+      </div>
+      <div class="profile-field">
+        <label>Size</label>
+        <div class="profile-size-row">
+          <button class="profile-size-btn" onclick="setProfileSize('small',this)">Small</button>
+          <button class="profile-size-btn active" onclick="setProfileSize('medium',this)">Medium</button>
+          <button class="profile-size-btn" onclick="setProfileSize('large',this)">Large</button>
+        </div>
+      </div>
+      <div class="profile-field">
+        <label>Age</label>
+        <select id="dogAge">
+          <option value="">Select age...</option>
+          <option value="puppy">Puppy (under 1 year)</option>
+          <option value="young">Young (1–3 years)</option>
+          <option value="adult">Adult (3–8 years)</option>
+          <option value="senior">Senior (8+ years)</option>
+        </select>
+      </div>
+      <div class="profile-field">
+        <label>Notes for groomer</label>
+        <textarea id="groomerNotes" placeholder="e.g. Anxious around other dogs. Hates blow dryer. Loves treats. Has a sensitive spot on left ear."></textarea>
+      </div>
+      <button class="save-profile-btn" onclick="saveProfile()">Save profile ✓</button>
+    </div>
+
+    <!-- GROOM HISTORY -->
+    <div class="groom-history">
+      <h3>📋 Groom history</h3>
+      <div id="groomHistoryList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SCREEN: BREED GUIDE ══ -->
+<div class="screen" id="screen-guide">
+  <div class="guide-screen">
+    <div class="guide-hero">
+      <button class="guide-back" onclick="goToScreen('search')">← Back</button>
+      <h2 id="guideBreedTitle">Breed Guide</h2>
+      <p id="guideBreedSub">Everything you need to know</p>
+    </div>
+    <div class="guide-content" id="guideContent"></div>
+  </div>
+</div>
+
+<!-- SHEET -->
 <div class="sheet-overlay" id="overlay" onclick="closeSheet()"></div>
 <div class="sheet" id="sheet"><div id="sheetContent"></div></div>
 
+<!-- BOTTOM NAV -->
+<div class="bottom-nav">
+  <button class="bottom-nav-btn active" id="nav-search" onclick="switchNav('search')">
+    <span class="bn-icon">🔍</span><span class="bn-label">Find</span>
+  </button>
+  <button class="bottom-nav-btn" id="nav-profile" onclick="switchNav('profile')">
+    <span class="bn-icon">🐾</span><span class="bn-label">My Dog</span>
+  </button>
+</div>
+
 <script>
-// ── DATA ──────────────────────────────────────────────────────────────────────
-
+// ── BREED DATA ────────────────────────────────────────────────────────────────
 const breedData = {
-  chihuahua:      { name:'Chihuahua',       emoji:'🐾', groomTime:45  },
-  yorkie:         { name:'Yorkie',           emoji:'🐕', groomTime:75  },
-  maltese:        { name:'Maltese',          emoji:'🐶', groomTime:75  },
-  frenchbulldog:  { name:'French Bulldog',   emoji:'🐾', groomTime:60  },
-  mini_schnauzer: { name:'Mini Schnauzer',   emoji:'🐶', groomTime:80  },
-  shihtzhu:       { name:'Shih Tzu',         emoji:'🐶', groomTime:90  },
-  cockapoo:       { name:'Cockapoo',         emoji:'🐕', groomTime:100 },
-  cavapoo:        { name:'Cavapoo',          emoji:'🐕', groomTime:90  },
-  pomsky:         { name:'Pomsky',           emoji:'🐺', groomTime:120 },
-  poodle:         { name:'Poodle',           emoji:'🐩', groomTime:120 },
-  goldendoodle:   { name:'Goldendoodle',     emoji:'🐩', groomTime:150 },
-  labrador:       { name:'Labrador',         emoji:'🦮', groomTime:90  },
-  goldenretriever:{ name:'Golden Retriever', emoji:'🦮', groomTime:120 },
-  husky:          { name:'Husky',            emoji:'🐺', groomTime:180 },
-  bernedoodle:    { name:'Bernedoodle',      emoji:'🐩', groomTime:180 },
-  boxer:          { name:'Boxer',            emoji:'🦮', groomTime:90  },
+  chihuahua:       { name:'Chihuahua',       emoji:'🐾', groomTime:45,  variableSize:false },
+  yorkie:          { name:'Yorkie',           emoji:'🐕', groomTime:75,  variableSize:false },
+  maltese:         { name:'Maltese',          emoji:'🐶', groomTime:75,  variableSize:false },
+  frenchbulldog:   { name:'French Bulldog',   emoji:'🐾', groomTime:60,  variableSize:false },
+  mini_schnauzer:  { name:'Mini Schnauzer',   emoji:'🐶', groomTime:80,  variableSize:false },
+  shihtzhu:        { name:'Shih Tzu',         emoji:'🐶', groomTime:90,  variableSize:false },
+  cockapoo:        { name:'Cockapoo',         emoji:'🐕', groomTime:100, variableSize:false },
+  cavapoo:         { name:'Cavapoo',          emoji:'🐕', groomTime:90,  variableSize:false },
+  pomsky:          { name:'Pomsky',           emoji:'🐺', groomTime:120, variableSize:false },
+  poodle:          { name:'Poodle',           emoji:'🐩', groomTime:120, variableSize:true  },
+  goldendoodle:    { name:'Goldendoodle',     emoji:'🐩', groomTime:150, variableSize:true  },
+  labrador:        { name:'Labrador',         emoji:'🦮', groomTime:90,  variableSize:false },
+  goldenretriever: { name:'Golden Retriever', emoji:'🦮', groomTime:120, variableSize:false },
+  husky:           { name:'Husky',            emoji:'🐺', groomTime:180, variableSize:false },
+  bernedoodle:     { name:'Bernedoodle',      emoji:'🐩', groomTime:180, variableSize:true  },
+  boxer:           { name:'Boxer',            emoji:'🦮', groomTime:90,  variableSize:false },
 };
 
-// Service multipliers on base full-groom price
+// Size multipliers on base price
+const sizeMultiplier = { small: 0.8, medium: 1.0, large: 1.25 };
+const sizeTimeAdd = { small: -20, medium: 0, large: 30 };
+
+// Service data — multiplier on base full-groom price, time adjustment
 const serviceData = {
-  full_groom:  { name:'Full Groom',          mult:1.0,  timeAdd:0   },
-  bath_brush:  { name:'Bath + Brush Out',    mult:0.65, timeAdd:-20 },
-  bath_nail:   { name:'Bath + Nail Trim',    mult:0.6,  timeAdd:-15 },
-  bath_only:   { name:'Bath Only',           mult:0.5,  timeAdd:-30 },
-  nail_only:   { name:'Nail Trim Only',      mult:0.2,  timeAdd:-60 },
+  full_groom:   { name:'Full Groom',              mult:1.0,  timeAdd:0,   icon:'✂️' },
+  puppy_first:  { name:"Puppy's First Groom",     mult:0.9,  timeAdd:-10, icon:'🐣' },
+  senior_groom: { name:'Senior Dog Groom',        mult:1.0,  timeAdd:20,  icon:'👴' },
+  bath_brush:   { name:'Bath + Brush Out',        mult:0.65, timeAdd:-20, icon:'🛁' },
+  bath_nail:    { name:'Bath + Nail Trim',        mult:0.6,  timeAdd:-15, icon:'💅' },
+  bath_only:    { name:'Bath Only',               mult:0.5,  timeAdd:-30, icon:'🚿' },
+  deshed_bath:  { name:'De-shed Bath + Blow Out', mult:0.75, timeAdd:10,  icon:'🪮' },
+  flea_bath:    { name:'Flea & Tick Bath',        mult:0.7,  timeAdd:0,   icon:'🌿' },
+  nail_only:    { name:'Nail Trim Only',          mult:0.18, timeAdd:-60, icon:'💅' },
+  nail_dremel:  { name:'Nail Dremel',             mult:0.22, timeAdd:-55, icon:'🔧' },
+  ear_clean:    { name:'Ear Cleaning Only',       mult:0.15, timeAdd:-65, icon:'👂' },
+  teeth_clean:  { name:'Teeth Brushing Only',     mult:0.18, timeAdd:-65, icon:'🦷' },
+  dematting:    { name:'De-matting Treatment',    mult:0.55, timeAdd:20,  icon:'🪮' },
 };
 
-// Base full-groom prices per groomer per breed
+// Base full-groom prices (medium size, per groomer per breed)
 const basePricing = {
-  1: { chihuahua:55, yorkie:75, maltese:75, frenchbulldog:70, mini_schnauzer:80, shihtzhu:80, cockapoo:95, cavapoo:90, pomsky:105, poodle:110, goldendoodle:120, labrador:95, goldenretriever:110, husky:140, bernedoodle:145, boxer:90 },
-  2: { chihuahua:45, yorkie:65, maltese:65, frenchbulldog:60, mini_schnauzer:70, shihtzhu:70, cockapoo:80, cavapoo:78, pomsky:90, poodle:90, goldendoodle:95, labrador:80, goldenretriever:90, husky:120, bernedoodle:120, boxer:80 },
-  3: { chihuahua:50, yorkie:70, maltese:68, frenchbulldog:65, mini_schnauzer:75, shihtzhu:75, cockapoo:88, cavapoo:84, pomsky:100, poodle:100, goldendoodle:110, labrador:90, goldenretriever:105, husky:130, bernedoodle:135, boxer:95 },
-  4: { chihuahua:40, yorkie:60, maltese:58, frenchbulldog:55, mini_schnauzer:62, shihtzhu:65, cockapoo:72, cavapoo:68, pomsky:82, poodle:80, goldendoodle:85, labrador:75, goldenretriever:85, husky:110, bernedoodle:115, boxer:75 },
+  1: { chihuahua:55,yorkie:75,maltese:75,frenchbulldog:70,mini_schnauzer:80,shihtzhu:80,cockapoo:95,cavapoo:90,pomsky:105,poodle:110,goldendoodle:120,labrador:95,goldenretriever:110,husky:140,bernedoodle:145,boxer:90 },
+  2: { chihuahua:45,yorkie:65,maltese:65,frenchbulldog:60,mini_schnauzer:70,shihtzhu:70,cockapoo:80,cavapoo:78,pomsky:90,poodle:90,goldendoodle:95,labrador:80,goldenretriever:90,husky:120,bernedoodle:120,boxer:80 },
+  3: { chihuahua:50,yorkie:70,maltese:68,frenchbulldog:65,mini_schnauzer:75,shihtzhu:75,cockapoo:88,cavapoo:84,pomsky:100,poodle:100,goldendoodle:110,labrador:90,goldenretriever:105,husky:130,bernedoodle:135,boxer:95 },
+  4: { chihuahua:40,yorkie:60,maltese:58,frenchbulldog:55,mini_schnauzer:62,shihtzhu:65,cockapoo:72,cavapoo:68,pomsky:82,poodle:80,goldendoodle:85,labrador:75,goldenretriever:85,husky:110,bernedoodle:115,boxer:75 },
 };
 
 const specialtyBreeds = {
-  1: ['goldendoodle','poodle','cockapoo','bernedoodle','cavapoo'],
-  2: ['frenchbulldog','shihtzhu','maltese','chihuahua','mini_schnauzer'],
-  3: ['labrador','husky','goldenretriever','bernedoodle','boxer','pomsky'],
-  4: ['yorkie','shihtzhu','maltese','chihuahua','cavapoo','mini_schnauzer'],
+  1:['goldendoodle','poodle','cockapoo','bernedoodle','cavapoo'],
+  2:['frenchbulldog','shihtzhu','maltese','chihuahua','mini_schnauzer'],
+  3:['labrador','husky','goldenretriever','bernedoodle','boxer','pomsky'],
+  4:['yorkie','shihtzhu','maltese','chihuahua','cavapoo','mini_schnauzer'],
 };
 
 const groomers = [
-  { id:1, name:"Groomingdales",    address:"349 E 82nd St", distance:0.3, rating:4.9, reviews:312, emoji:"🏆", gradient:"linear-gradient(135deg,#2d3a2d,#4a5e4a)" },
-  { id:2, name:"Doggy Stylez",     address:"356 E 87th St", distance:0.6, rating:4.7, reviews:189, emoji:"✂️", gradient:"linear-gradient(135deg,#2d2040,#4a3a60)" },
-  { id:3, name:"Urban Woof NYC",   address:"1420 2nd Ave",  distance:0.8, rating:4.8, reviews:241, emoji:"🌟", gradient:"linear-gradient(135deg,#3a2010,#6a4020)" },
-  { id:4, name:"Puppy Tale Lodge", address:"515 E 72nd St", distance:1.1, rating:4.6, reviews:98,  emoji:"🐶", gradient:"linear-gradient(135deg,#1a2a3a,#2a4a6a)" },
+  {id:1,name:"Groomingdales",   address:"349 E 82nd St",distance:0.3,rating:4.9,reviews:312,emoji:"🏆",gradient:"linear-gradient(135deg,#2d3a2d,#4a5e4a)"},
+  {id:2,name:"Doggy Stylez",    address:"356 E 87th St",distance:0.6,rating:4.7,reviews:189,emoji:"✂️",gradient:"linear-gradient(135deg,#2d2040,#4a3a60)"},
+  {id:3,name:"Urban Woof NYC",  address:"1420 2nd Ave", distance:0.8,rating:4.8,reviews:241,emoji:"🌟",gradient:"linear-gradient(135deg,#3a2010,#6a4020)"},
+  {id:4,name:"Puppy Tale Lodge",address:"515 E 72nd St",distance:1.1,rating:4.6,reviews:98, emoji:"🐶",gradient:"linear-gradient(135deg,#1a2a3a,#2a4a6a)"},
 ];
 
-function getServicePrice(groomerId, breedId, serviceId) {
-  const base = basePricing[groomerId][breedId] || 0;
-  const svc = serviceData[serviceId];
-  return Math.round(base * svc.mult);
-}
+// ── BREED GUIDES DATA ─────────────────────────────────────────────────────────
+const breedGuides = {
+  goldendoodle: {
+    freq:'Every 6–8 weeks', coat:'Wavy / Curly', difficulty:'High',
+    tips:['Brush 3–4x per week to prevent matting — especially around ears and legs','Ask for a "puppy cut" or "teddy bear cut" to keep coat manageable','Book early — Doodles are the most in-demand breed at every salon','Avoid shaving too short in winter; their coat provides insulation'],
+    cuts:[
+      {name:'Teddy Bear Cut',emoji:'🧸',desc:'Round face, fluffy body, medium length. The most popular Doodle cut.'},
+      {name:'Puppy Cut',emoji:'🐣',desc:'Uniform short length all over. Easy to maintain, great for summer.'},
+      {name:'Lion Cut',emoji:'🦁',desc:'Short body, full mane around face. Dramatic and distinctive.'},
+      {name:'Kennel Cut',emoji:'✂️',desc:'Very short all over. Practical for active dogs or hot weather.'},
+    ]
+  },
+  yorkie: {
+    freq:'Every 4–6 weeks', coat:'Silky / Fine', difficulty:'Medium',
+    tips:['Yorkies have hair (not fur) — it grows continuously like human hair','Daily brushing prevents tangles in longer styles','The "puppy cut" keeps them looking tidy with minimal brushing','Ear hair grows inside the canal — ask groomer to pluck it'],
+    cuts:[
+      {name:'Puppy Cut',emoji:'🐣',desc:'Short, uniform trim. Low maintenance and adorable.'},
+      {name:'Show Cut',emoji:'🏆',desc:'Long, flowing coat parted down the middle. High maintenance.'},
+      {name:'Schnauzer Cut',emoji:'✂️',desc:'Short body, longer beard and eyebrows. Very dapper.'},
+      {name:'Westie Cut',emoji:'🐶',desc:'Rounded head, shorter body. Classic terrier look.'},
+    ]
+  },
+  frenchbulldog: {
+    freq:'Every 8–12 weeks', coat:'Short / Smooth', difficulty:'Low',
+    tips:['French Bulldogs are low-maintenance coat-wise — baths and nail trims are the priority','Clean facial folds weekly with a damp cloth to prevent infections','Their nails grow fast — trim every 3–4 weeks','Sensitive skin — ask for hypoallergenic shampoo'],
+    cuts:[
+      {name:'Bath + Nail',emoji:'🛁',desc:'Most Frenchies just need a good bath and nail trim. No cut needed.'},
+      {name:'Full Groom',emoji:'✂️',desc:'Bath, blow dry, nail trim, ear clean, and tidy up.'},
+    ]
+  },
+  husky: {
+    freq:'Every 8–12 weeks', coat:'Double coat / Heavy shed', difficulty:'High',
+    tips:['NEVER shave a Husky — their double coat regulates temperature both ways','De-shed treatments 2x per year (spring and fall) are essential','Blow-out sessions remove undercoat without cutting','Brush 2–3x per week during shedding season'],
+    cuts:[
+      {name:'De-shed Blow Out',emoji:'🪮',desc:'High-velocity dryer removes loose undercoat. No cutting.'},
+      {name:'Bath + Brush',emoji:'🛁',desc:'Deep clean with thorough brush-out. Essential maintenance.'},
+      {name:'Tidy Up',emoji:'✂️',desc:'Minor trimming around paws and sanitary areas only.'},
+    ]
+  },
+  poodle: {
+    freq:'Every 4–6 weeks', coat:'Curly / Non-shedding', difficulty:'High',
+    tips:['Poodle coats mat extremely fast — never skip brushing','Book every 4–6 weeks or coat becomes unmanageable','The "puppy clip" works great for non-show dogs','Ear hair grows into the canal — groomer should pluck monthly'],
+    cuts:[
+      {name:'Puppy Clip',emoji:'🐣',desc:'Even length all over with rounded pom on top. Classic and clean.'},
+      {name:'Continental Clip',emoji:'👑',desc:'The iconic show-poodle look. Dramatic shaved patches with poms.'},
+      {name:'Teddy Bear',emoji:'🧸',desc:'Fluffy and rounded face. Very popular for Miniature Poodles.'},
+      {name:'Sporting Clip',emoji:'🏃',desc:'Short all over with a longer topknot. Practical and smart-looking.'},
+    ]
+  },
+  labrador: {
+    freq:'Every 8–12 weeks', coat:'Short / Double coat', difficulty:'Low',
+    tips:['Labs shed year-round — de-shed baths significantly reduce indoor shedding','Their short coat only needs bathing and nail trims','High-velocity dryers remove loose undercoat effectively','Check ears after water activities — Labs are prone to ear infections'],
+    cuts:[
+      {name:'Bath + De-shed',emoji:'🪮',desc:'Deep bath with blow-out to remove loose undercoat. Best for Labs.'},
+      {name:'Bath + Nail',emoji:'💅',desc:'Standard maintenance. Quick and affordable.'},
+      {name:'Full Groom',emoji:'✂️',desc:'Complete treatment including ear clean and all finishing touches.'},
+    ]
+  },
+};
 
-function getServiceTime(breedId, serviceId) {
-  const base = breedData[breedId]?.groomTime || 60;
-  const add = serviceData[serviceId]?.timeAdd || 0;
-  return Math.max(20, base + add);
-}
-
+// Add-ons
 function getAddons(groomTime) {
   const big = groomTime >= 120;
   return [
-    { id:'nail',      icon:'💅', name:'Nail Trim',          desc:'Clip + file all nails',        price:15 },
-    { id:'teeth',     icon:'🦷', name:'Teeth Brushing',     desc:'Enzymatic toothpaste clean',   price:20 },
-    { id:'ears',      icon:'👂', name:'Ear Cleaning',       desc:'Gentle flush + wipe',          price:15 },
-    { id:'deshed',    icon:'🪮', name:'De-shed Treatment',  desc:'Removes loose undercoat',      price:big?45:30 },
-    { id:'blueberry', icon:'🫐', name:'Blueberry Facial',   desc:'Brightens coat around face',   price:20 },
-    { id:'pawbalm',   icon:'🐾', name:'Paw Balm Treatment', desc:'Moisturizes & heals dry paws', price:15 },
-    { id:'cologne',   icon:'🌸', name:'Cologne / Spritz',   desc:'Finishing scent spray',        price:10 },
-    { id:'bow',       icon:'🎀', name:'Bow or Bandana',     desc:'Cute finishing touch',         price:5  },
+    {id:'nail',    icon:'💅',name:'Nail Trim',         desc:'Clip + file all nails',        price:15},
+    {id:'teeth',   icon:'🦷',name:'Teeth Brushing',    desc:'Enzymatic toothpaste clean',   price:20},
+    {id:'ears',    icon:'👂',name:'Ear Cleaning',      desc:'Gentle flush + wipe',          price:15},
+    {id:'deshed',  icon:'🪮',name:'De-shed Treatment', desc:'Removes loose undercoat',      price:big?45:30},
+    {id:'blueberry',icon:'🫐',name:'Blueberry Facial', desc:'Brightens coat around face',   price:20},
+    {id:'pawbalm', icon:'🐾',name:'Paw Balm',          desc:'Moisturizes dry paws',         price:15},
+    {id:'cologne', icon:'🌸',name:'Cologne / Spritz',  desc:'Finishing scent spray',        price:10},
+    {id:'bow',     icon:'🎀',name:'Bow or Bandana',    desc:'Cute finishing touch',         price:5 },
   ];
 }
 
-// Slot generator
+function getServicePrice(gid, bid, sid, size) {
+  const base = basePricing[gid][bid] || 0;
+  const svc = serviceData[sid];
+  const szMult = (breedData[bid]?.variableSize && size) ? sizeMultiplier[size] : 1.0;
+  return Math.round(base * svc.mult * szMult);
+}
+
+function getServiceTime(bid, sid, size) {
+  const base = breedData[bid]?.groomTime || 60;
+  const svcAdd = serviceData[sid]?.timeAdd || 0;
+  const szAdd = (breedData[bid]?.variableSize && size) ? sizeTimeAdd[size] : 0;
+  return Math.max(15, base + svcAdd + szAdd);
+}
+
+// Slot cache
 const slotCache = {};
-function getSlots(groomerId, breedId, serviceId, dayIndex) {
-  const key = `${groomerId}-${breedId}-${serviceId}-${dayIndex}`;
+function getSlots(gid, bid, sid, size, dayIndex) {
+  const key = `${gid}-${bid}-${sid}-${size}-${dayIndex}`;
   if (!slotCache[key]) {
-    const groomTime = getServiceTime(breedId, serviceId);
-    const interval = groomTime + 15;
+    const t = getServiceTime(bid, sid, size);
+    const interval = t + 15;
     const slots = [];
-    for (let m = 9*60; m + groomTime <= 19*60; m += interval) {
-      const h = Math.floor(m/60);
-      const min = m % 60;
+    for (let m = 9*60; m + t <= 19*60; m += interval) {
+      const h = Math.floor(m/60), min = m%60;
       slots.push(`${h>12?h-12:h}:${min===0?'00':min} ${h>=12?'PM':'AM'}`);
     }
-    const bookingRate = [0.5,0.3,0.2,0.4,0.25][dayIndex%5];
-    slotCache[key] = slots.filter(()=>Math.random()>bookingRate);
+    const rate = [0.5,0.3,0.2,0.4,0.25][dayIndex%5];
+    slotCache[key] = slots.filter(()=>Math.random()>rate);
   }
   return slotCache[key];
 }
@@ -449,7 +686,7 @@ function getSlots(groomerId, breedId, serviceId, dayIndex) {
 // ── STATE ─────────────────────────────────────────────────────────────────────
 let selectedBreedId = null;
 let selectedServiceId = null;
-let selectedLocation = '';
+let selectedSize = 'medium';
 let activeFilter = 'all';
 let selectedGroomer = null;
 let selectedDay = 'Today';
@@ -459,50 +696,58 @@ let selectedAddons = new Set();
 let sheetMode = 'booking';
 const DAYS = ['Today','Tomorrow','Wed','Thu','Fri'];
 
+// Profile state
+let dogProfile = { name:'Max', breed:'goldendoodle', size:'medium', age:'adult', notes:'', photo:null };
+let groomHistory = [
+  { salon:'Groomingdales', service:'Full Groom', date:'Feb 12, 2026', price:120 },
+  { salon:'Doggy Stylez',  service:'Bath + Nail', date:'Dec 28, 2025', price:78 },
+];
+
 // ── SEARCH SCREEN ─────────────────────────────────────────────────────────────
+function onBreedChange() {
+  selectedBreedId = document.getElementById('breedSelect').value;
+  const bd = breedData[selectedBreedId];
+  const sel = document.getElementById('sizeSelector');
+  if (bd && bd.variableSize) sel.classList.add('visible');
+  else sel.classList.remove('visible');
+  checkForm();
+}
+
+function selectSize(size, btn) {
+  selectedSize = size;
+  document.querySelectorAll('.size-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  checkForm();
+}
+
 function checkForm() {
   selectedBreedId = document.getElementById('breedSelect').value;
   selectedServiceId = document.getElementById('serviceSelect').value;
-  const btn = document.getElementById('findBtn');
-  const hasLocation = document.getElementById('locationInput').value.trim() || selectedLocation;
-  btn.disabled = !(selectedBreedId && selectedServiceId && hasLocation);
+  const hasLoc = document.getElementById('locationInput').value.trim();
+  document.getElementById('findBtn').disabled = !(selectedBreedId && selectedServiceId && hasLoc);
 }
 
 document.getElementById('locationInput').addEventListener('input', checkForm);
+document.getElementById('serviceSelect').addEventListener('change', checkForm);
 
 function useMyLocation() {
-  const btn = document.querySelector('.my-location-btn');
+  const btn = document.getElementById('locationBtnText');
   btn.textContent = '📡 Getting location...';
-  if (navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(
-      () => {
-        selectedLocation = 'Current location';
-        document.getElementById('locationInput').value = 'Upper East Side, NYC';
-        btn.textContent = '✅ Location found!';
-        checkForm();
-      },
-      () => {
-        document.getElementById('locationInput').value = 'Upper East Side, NYC';
-        selectedLocation = 'Upper East Side, NYC';
-        btn.textContent = '✅ Using UES, NYC';
-        checkForm();
-      }
-    );
-  } else {
-    document.getElementById('locationInput').value = 'Upper East Side, NYC';
-    selectedLocation = 'Upper East Side, NYC';
-    btn.innerHTML = '<span>✅</span> Using UES, NYC';
-    checkForm();
-  }
+  const set = (txt) => { document.getElementById('locationInput').value = txt; btn.textContent = '✅ Location set!'; checkForm(); };
+  if (navigator.geolocation) navigator.geolocation.getCurrentPosition(()=>set('Upper East Side, NYC'), ()=>set('Upper East Side, NYC'));
+  else set('Upper East Side, NYC');
 }
 
-function quickPick(breedId, serviceId) {
-  document.getElementById('breedSelect').value = breedId;
-  document.getElementById('serviceSelect').value = serviceId;
+function quickPick(bid, sid, size) {
+  document.getElementById('breedSelect').value = bid;
+  document.getElementById('serviceSelect').value = sid;
   document.getElementById('locationInput').value = 'Upper East Side, NYC';
-  selectedLocation = 'Upper East Side, NYC';
+  selectedBreedId = bid; selectedServiceId = sid;
+  if (size) { selectedSize = size; document.querySelectorAll('.size-btn').forEach(b=>b.classList.toggle('active',b.textContent.toLowerCase()===size)); }
+  const bd = breedData[bid];
+  document.getElementById('sizeSelector').classList.toggle('visible', bd?.variableSize||false);
   checkForm();
-  setTimeout(findGroomers, 100);
+  setTimeout(findGroomers, 80);
 }
 
 function findGroomers() {
@@ -510,7 +755,8 @@ function findGroomers() {
   selectedServiceId = document.getElementById('serviceSelect').value;
   const breed = breedData[selectedBreedId];
   const svc = serviceData[selectedServiceId];
-  document.getElementById('resultsTitle').textContent = `${breed.emoji} ${breed.name} · ${svc.name}`;
+  const sizeLabel = breed.variableSize ? ` (${selectedSize})` : '';
+  document.getElementById('resultsTitle').textContent = `${breed.emoji} ${breed.name}${sizeLabel} · ${svc.name}`;
   const loc = document.getElementById('locationInput').value || 'your area';
   document.getElementById('resultsSubtitle').textContent = `📍 ${loc}`;
   activeFilter = 'all';
@@ -519,9 +765,62 @@ function findGroomers() {
   goToScreen('results');
 }
 
+// ── BREED GUIDES ─────────────────────────────────────────────────────────────
+function renderGuideScroll() {
+  const breeds = ['goldendoodle','yorkie','frenchbulldog','husky','poodle','labrador'];
+  document.getElementById('guideScroll').innerHTML = breeds.map(bid => {
+    const bd = breedData[bid];
+    const g = breedGuides[bid];
+    return `
+      <div class="guide-card" onclick="openBreedGuide('${bid}')">
+        <div class="gc-emoji">${bd.emoji}</div>
+        <div class="gc-breed">${bd.name}</div>
+        <div class="gc-freq">Groom: ${g.freq}</div>
+        <div class="gc-tag">${g.difficulty} maintenance</div>
+      </div>
+    `;
+  }).join('');
+}
+
+function openBreedGuide(bid) {
+  const bd = breedData[bid];
+  const g = breedGuides[bid];
+  document.getElementById('guideBreedTitle').textContent = `${bd.emoji} ${bd.name} Guide`;
+  document.getElementById('guideBreedSub').textContent = 'Grooming tips, cuts & care';
+  document.getElementById('guideContent').innerHTML = `
+    <div class="guide-stat-row">
+      <div class="guide-stat"><div class="gs-val">${g.freq.split(' ')[1]||'6–8'}<br>wks</div><div class="gs-label">Groom freq.</div></div>
+      <div class="guide-stat"><div class="gs-val">${g.coat.split('/')[0].trim()}</div><div class="gs-label">Coat type</div></div>
+      <div class="guide-stat"><div class="gs-val">${g.difficulty}</div><div class="gs-label">Maintenance</div></div>
+    </div>
+    <div class="guide-section">
+      <h3>💡 Pro tips</h3>
+      ${g.tips.map(t=>`<div class="guide-tip"><div class="guide-tip-icon">•</div><div>${t}</div></div>`).join('')}
+    </div>
+    <div class="guide-section">
+      <h3>✂️ Popular cut styles</h3>
+      <div class="cut-style-grid">
+        ${g.cuts.map(c=>`
+          <div class="cut-style-card" onclick="this.classList.toggle('selected')">
+            <div class="cut-emoji">${c.emoji}</div>
+            <div class="cut-name">${c.name}</div>
+            <div class="cut-desc">${c.desc}</div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+    <div style="margin-top:20px">
+      <button onclick="quickPick('${bid}','full_groom','medium');goToScreen('results')" style="width:100%;background:var(--accent);color:var(--dark);border:none;border-radius:14px;padding:16px;font-family:'DM Sans',sans-serif;font-size:16px;font-weight:700;cursor:pointer;">
+        Find ${bd.name} groomers →
+      </button>
+    </div>
+  `;
+  goToScreen('guide');
+}
+
 // ── RESULTS ───────────────────────────────────────────────────────────────────
 function getAvailability(gid) {
-  const s = getSlots(gid, selectedBreedId, selectedServiceId, 0);
+  const s = getSlots(gid,selectedBreedId,selectedServiceId,selectedSize,0);
   return s.length===0?'full':s.length<=1?'limited':'available';
 }
 
@@ -529,28 +828,23 @@ function renderCards() {
   let list = [...groomers];
   if (activeFilter==='available') list=list.filter(g=>getAvailability(g.id)!=='full');
   else if (activeFilter==='specialist') list=list.filter(g=>specialtyBreeds[g.id].includes(selectedBreedId));
-  else if (activeFilter==='budget') list=[...list].sort((a,b)=>getServicePrice(a.id,selectedBreedId,selectedServiceId)-getServicePrice(b.id,selectedBreedId,selectedServiceId));
+  else if (activeFilter==='budget') list=[...list].sort((a,b)=>getServicePrice(a.id,selectedBreedId,selectedServiceId,selectedSize)-getServicePrice(b.id,selectedBreedId,selectedServiceId,selectedSize));
   else if (activeFilter==='nearby') list=[...list].sort((a,b)=>a.distance-b.distance);
   else if (activeFilter==='rated') list=[...list].sort((a,b)=>b.rating-a.rating);
-
   document.getElementById('resultCount').textContent = list.length;
+
   const breed = breedData[selectedBreedId];
   const svc = serviceData[selectedServiceId];
+  const sizeLabel = breed.variableSize ? ` (${selectedSize})` : '';
 
   document.getElementById('groomersList').innerHTML = list.map(g => {
-    const price = getServicePrice(g.id, selectedBreedId, selectedServiceId);
-    const time = getServiceTime(selectedBreedId, selectedServiceId);
+    const price = getServicePrice(g.id,selectedBreedId,selectedServiceId,selectedSize);
+    const time = getServiceTime(selectedBreedId,selectedServiceId,selectedSize);
     const avail = getAvailability(g.id);
     const isFull = avail==='full';
     const isSpec = specialtyBreeds[g.id].includes(selectedBreedId);
-    const todaySlots = getSlots(g.id, selectedBreedId, selectedServiceId, 0);
-
-    // All services prices for this breed
-    const allServices = Object.entries(serviceData).map(([sid, sv]) => ({
-      id: sid, name: sv.name,
-      price: getServicePrice(g.id, selectedBreedId, sid),
-      isMatch: sid === selectedServiceId,
-    }));
+    const todaySlots = getSlots(g.id,selectedBreedId,selectedServiceId,selectedSize,0);
+    const allSvcs = Object.entries(serviceData).map(([sid,sv])=>({sid,name:sv.name,price:getServicePrice(g.id,selectedBreedId,sid,selectedSize),isMatch:sid===selectedServiceId}));
 
     return `
       <div class="groomer-card" onclick="openSheet(${g.id})">
@@ -569,38 +863,30 @@ function renderCards() {
             </div>
           </div>`:`<div class="avail-bottom" style="font-size:13px;color:rgba(255,255,255,0.5)">Check this week for openings</div>`}
         </div>
-
         <div class="breed-price-banner">
-          <div class="bpb-left">
-            <div class="bpb-service">${breed.emoji} ${breed.name} · ${svc.name}</div>
+          <div>
+            <div class="bpb-service">${breed.emoji} ${breed.name}${sizeLabel} · ${svc.name}</div>
             <div class="bpb-time">⏱ ~${time} min</div>
           </div>
           <div class="bpb-price">$${price}</div>
         </div>
-
         <div class="card-body">
           <div class="card-top">
             <div class="salon-name">${g.name}</div>
             <div class="rating">⭐ ${g.rating} <span>(${g.reviews})</span></div>
           </div>
-          <div class="card-meta">
-            <span>📍 ${g.address}</span>
-            <span>🚶 ${g.distance} mi</span>
-          </div>
-
+          <div class="card-meta"><span>📍 ${g.address}</span><span>🚶 ${g.distance} mi</span></div>
           <div class="all-prices-toggle" onclick="event.stopPropagation();togglePrices(${g.id})">
-            <span id="tog-${g.id}">▸</span> See all service prices for ${breed.name}
+            <span id="tog-${g.id}">▸</span> See all service prices
           </div>
           <div class="all-prices-grid" id="prices-${g.id}">
-            ${allServices.map(s=>`
-              <div class="price-item ${s.isMatch?'match-breed':''}">
-                <div class="pi-breed">${s.name}</div>
+            ${allSvcs.map(s=>`
+              <div class="price-item ${s.isMatch?'match-svc':''}">
+                <div class="pi-name">${s.name}</div>
                 <div class="pi-price">$${s.price}</div>
                 ${s.isMatch?`<div class="pi-match-tag">selected</div>`:''}
-              </div>
-            `).join('')}
+              </div>`).join('')}
           </div>
-
           <button class="book-btn ${isFull?'full':''}" onclick="event.stopPropagation();${!isFull?`openSheet(${g.id})`:''}">
             ${isFull?'😔 Fully Booked':`📅 Book for $${price}`}
           </button>
@@ -614,10 +900,10 @@ function togglePrices(id) {
   const grid = document.getElementById(`prices-${id}`);
   const icon = document.getElementById(`tog-${id}`);
   grid.classList.toggle('open');
-  icon.textContent = grid.classList.contains('open') ? '▾' : '▸';
+  icon.textContent = grid.classList.contains('open')?'▾':'▸';
 }
 
-// ── SHEET ──────────────────────────────────────────────────────────────────────
+// ── SHEET ─────────────────────────────────────────────────────────────────────
 function openSheet(id) {
   selectedGroomer = groomers.find(g=>g.id===id);
   selectedDay='Today'; selectedDayIndex=0; selectedTime=null;
@@ -632,24 +918,21 @@ function closeSheet() {
 }
 
 function calcTotal() {
-  const base = getServicePrice(selectedGroomer.id, selectedBreedId, selectedServiceId);
-  const time = getServiceTime(selectedBreedId, selectedServiceId);
+  const base = getServicePrice(selectedGroomer.id,selectedBreedId,selectedServiceId,selectedSize);
+  const time = getServiceTime(selectedBreedId,selectedServiceId,selectedSize);
   const addons = getAddons(time);
   const addonTotal = addons.filter(a=>selectedAddons.has(a.id)).reduce((s,a)=>s+a.price,0);
-  return { base, addonTotal, total: base+addonTotal, addons };
+  return { base, addonTotal, total:base+addonTotal, addons };
 }
-
-function toggleAddon(id) {
-  selectedAddons.has(id) ? selectedAddons.delete(id) : selectedAddons.add(id);
-  renderSheet();
-}
+function toggleAddon(id) { selectedAddons.has(id)?selectedAddons.delete(id):selectedAddons.add(id); renderSheet(); }
 
 function renderSheet() {
   const g = selectedGroomer;
   const breed = breedData[selectedBreedId];
   const svc = serviceData[selectedServiceId];
-  const time = getServiceTime(selectedBreedId, selectedServiceId);
-  const { base, addonTotal, total, addons } = calcTotal();
+  const time = getServiceTime(selectedBreedId,selectedServiceId,selectedSize);
+  const {base,addonTotal,total,addons} = calcTotal();
+  const sizeLabel = breed.variableSize ? ` (${selectedSize})` : '';
 
   if (sheetMode==='confirm') {
     const addonNames = addons.filter(a=>selectedAddons.has(a.id)).map(a=>a.name).join(', ');
@@ -660,7 +943,7 @@ function renderSheet() {
         <p>Real-time updates as your dog goes through grooming — plus a 15-min heads-up when they're ready.</p>
         <div class="confirm-detail">
           <div class="confirm-row"><span class="lbl">Salon</span><span class="val">${g.name}</span></div>
-          <div class="confirm-row"><span class="lbl">Breed</span><span class="val">${breed.name}</span></div>
+          <div class="confirm-row"><span class="lbl">Dog</span><span class="val">${breed.name}${sizeLabel}</span></div>
           <div class="confirm-row"><span class="lbl">Service</span><span class="val">${svc.name}</span></div>
           <div class="confirm-row"><span class="lbl">Service price</span><span class="val">$${base}</span></div>
           ${addonTotal>0?`<div class="confirm-row"><span class="lbl">Add-ons</span><span class="val">$${addonTotal}</span></div>`:''}
@@ -671,95 +954,133 @@ function renderSheet() {
         </div>
         <div class="notif-note">
           <span style="font-size:20px">🔔</span>
-          <div>You'll get notified at every step: <strong>checked in → bathing → drying → ready</strong>.</div>
+          <div>You'll get notified at every step: <strong>checked in → bathing → drying → ready</strong>. No more waiting outside!</div>
         </div>
-        <button class="confirm-btn" onclick="closeSheet()">Done ✓</button>
+        <button class="confirm-btn" onclick="closeSheet();addToHistory('${g.name}','${svc.name}',${total})">Done ✓</button>
       </div>
     `;
     return;
   }
 
-  const slots = getSlots(g.id, selectedBreedId, selectedServiceId, selectedDayIndex);
-
+  const slots = getSlots(g.id,selectedBreedId,selectedServiceId,selectedSize,selectedDayIndex);
   document.getElementById('sheetContent').innerHTML = `
     <div class="sheet-handle"></div>
     <div class="sheet-header">
       <div class="sheet-title">${g.name}</div>
       <button class="close-btn" onclick="closeSheet()">✕</button>
     </div>
-
     <div class="sheet-section">
       <div style="display:flex;gap:14px;font-size:13px;color:var(--muted);margin-bottom:14px">
         <span>⭐ ${g.rating} (${g.reviews})</span><span>📍 ${g.distance} mi</span>
       </div>
       <div class="breed-price-card">
-        <div>
-          <div class="bpc-label">${svc.name}</div>
-          <div class="bpc-breed">${breed.emoji} ${breed.name}</div>
-        </div>
-        <div style="text-align:right">
-          <div class="bpc-price">$${base}</div>
-          <div class="bpc-time">⏱ ~${time} min</div>
-        </div>
+        <div><div class="bpc-label">${svc.name}</div><div class="bpc-breed">${breed.emoji} ${breed.name}${sizeLabel}</div></div>
+        <div style="text-align:right"><div class="bpc-price">$${base}</div><div class="bpc-time">⏱ ~${time} min</div></div>
       </div>
     </div>
-
     <div class="sheet-section">
       <div class="sheet-section-title">Add-on services</div>
       <div class="addon-list">
         ${addons.map(a=>`
           <div class="addon-row ${selectedAddons.has(a.id)?'selected':''}" onclick="toggleAddon('${a.id}')">
-            <div class="addon-left">
-              <div class="addon-icon">${a.icon}</div>
-              <div>
-                <div class="addon-name">${a.name}</div>
-                <div class="addon-desc">${a.desc}</div>
-              </div>
-            </div>
-            <div class="addon-right">
-              <div class="addon-price">+$${a.price}</div>
-              <div class="addon-check">${selectedAddons.has(a.id)?'✓':''}</div>
-            </div>
-          </div>
-        `).join('')}
+            <div class="addon-left"><div class="addon-icon">${a.icon}</div><div><div class="addon-name">${a.name}</div><div class="addon-desc">${a.desc}</div></div></div>
+            <div class="addon-right"><div class="addon-price">+$${a.price}</div><div class="addon-check">${selectedAddons.has(a.id)?'✓':''}</div></div>
+          </div>`).join('')}
       </div>
       <div class="total-bar">
-        <div>
-          <div class="total-label">Total</div>
-          <div class="total-items">${selectedAddons.size>0?`${svc.name} + ${selectedAddons.size} add-on${selectedAddons.size>1?'s':''}`:svc.name+' only'}</div>
-        </div>
+        <div><div class="total-label">Total</div><div class="total-items">${selectedAddons.size>0?`${svc.name} + ${selectedAddons.size} add-on${selectedAddons.size>1?'s':''}`:svc.name+' only'}</div></div>
         <div class="total-amount">$${total}</div>
       </div>
     </div>
-
     <div class="sheet-section">
       <div class="sheet-section-title">Pick a day & time</div>
-      <div style="font-size:12px;color:var(--muted);margin-bottom:10px;font-style:italic">⏱ Slots based on ~${time} min for ${breed.name}</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:10px;font-style:italic">⏱ Slots based on ~${time} min for ${breed.name}${sizeLabel}</div>
       <div class="day-tabs">
-        ${DAYS.map((d,i)=>{
-          const s=getSlots(g.id,selectedBreedId,selectedServiceId,i);
-          return `<div class="day-tab ${d===selectedDay?'active':''}" onclick="selectDay('${d}',${i})">${d} ${s.length===0?'🔴':s.length<=1?'🟡':'🟢'}</div>`;
-        }).join('')}
+        ${DAYS.map((d,i)=>{const s=getSlots(g.id,selectedBreedId,selectedServiceId,selectedSize,i);return`<div class="day-tab ${d===selectedDay?'active':''}" onclick="selectDay('${d}',${i})">${d} ${s.length===0?'🔴':s.length<=1?'🟡':'🟢'}</div>`;}).join('')}
       </div>
       <div class="time-grid">
-        ${slots.length===0
-          ?`<div style="grid-column:1/-1;text-align:center;padding:24px;color:var(--muted);font-size:14px">😔 No slots — try another day</div>`
-          :slots.map(t=>`
-            <div class="time-slot available ${selectedTime===t?'selected':''}" onclick="selectTime('${t}')">
-              <div class="t-time">${t}</div><div class="t-label">Open</div>
-            </div>`).join('')}
+        ${slots.length===0?`<div style="grid-column:1/-1;text-align:center;padding:24px;color:var(--muted);font-size:14px">😔 No slots — try another day</div>`:slots.map(t=>`<div class="time-slot available ${selectedTime===t?'selected':''}" onclick="selectTime('${t}')"><div class="t-time">${t}</div><div class="t-label">Open</div></div>`).join('')}
       </div>
     </div>
-
     <button class="confirm-btn" ${selectedTime?'':'disabled'} onclick="confirmBooking()">
       ${selectedTime?`Book ${selectedTime} — $${total} →`:'Select a time to book'}
     </button>
   `;
 }
 
-function selectDay(d,i) { selectedDay=d; selectedDayIndex=i; selectedTime=null; renderSheet(); }
-function selectTime(t) { selectedTime=t; renderSheet(); }
-function confirmBooking() { sheetMode='confirm'; renderSheet(); }
+function selectDay(d,i){selectedDay=d;selectedDayIndex=i;selectedTime=null;renderSheet();}
+function selectTime(t){selectedTime=t;renderSheet();}
+function confirmBooking(){sheetMode='confirm';renderSheet();}
+
+// ── PROFILE ───────────────────────────────────────────────────────────────────
+function updateDogDisplay() {
+  const name = document.getElementById('dogName').value || 'Your Dog';
+  const breedId = document.getElementById('dogBreed').value;
+  const bd = breedData[breedId];
+  document.getElementById('dogNameDisplay').textContent = name;
+  document.getElementById('dogBreedDisplay').textContent = bd ? bd.name : 'Add your dog\'s info below';
+  if (bd) document.getElementById('dogAvatarEmoji').textContent = bd.emoji;
+  const rb = document.getElementById('rebookTitle');
+  rb.textContent = `Time for ${name}'s groom!`;
+}
+
+function setProfileSize(size, btn) {
+  document.querySelectorAll('.profile-size-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  dogProfile.size = size;
+}
+
+function saveProfile() {
+  dogProfile.name = document.getElementById('dogName').value || 'My Dog';
+  dogProfile.breed = document.getElementById('dogBreed').value;
+  dogProfile.notes = document.getElementById('groomerNotes').value;
+  const btn = document.querySelector('.save-profile-btn');
+  btn.textContent = '✅ Saved!';
+  setTimeout(()=>btn.textContent='Save profile ✓', 2000);
+}
+
+function triggerPhotoUpload() { document.getElementById('photoInput').click(); }
+function handlePhotoUpload(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    const avatar = document.getElementById('dogAvatarEmoji');
+    avatar.style.display = 'none';
+    const img = document.createElement('img');
+    img.src = ev.target.result;
+    document.querySelector('.dog-avatar').insertBefore(img, avatar);
+  };
+  reader.readAsDataURL(file);
+}
+
+function addToHistory(salon, service, price) {
+  const today = new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+  groomHistory.unshift({salon, service, date:today, price});
+  renderHistory();
+}
+
+function renderHistory() {
+  document.getElementById('groomHistoryList').innerHTML = groomHistory.length === 0
+    ? `<div style="text-align:center;padding:20px;color:var(--muted);font-size:14px">No grooms yet — book your first!</div>`
+    : groomHistory.map(h=>`
+      <div class="history-item">
+        <div class="history-icon">✂️</div>
+        <div class="history-info">
+          <div class="history-salon">${h.salon}</div>
+          <div class="history-detail">${h.service} · ${h.date}</div>
+        </div>
+        <div class="history-price">$${h.price}</div>
+      </div>`).join('');
+}
+
+// ── NAV ───────────────────────────────────────────────────────────────────────
+function switchNav(name) {
+  document.querySelectorAll('.bottom-nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById(`nav-${name}`).classList.add('active');
+  if (name==='search') goToScreen('search');
+  else if (name==='profile') goToScreen('profile');
+}
 
 function goToScreen(name) {
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
@@ -767,7 +1088,7 @@ function goToScreen(name) {
   window.scrollTo(0,0);
 }
 
-document.getElementById('filtersRow').addEventListener('click', e => {
+document.getElementById('filtersRow').addEventListener('click', e=>{
   const chip = e.target.closest('.filter-chip');
   if (!chip) return;
   document.querySelectorAll('.filter-chip').forEach(c=>c.classList.remove('active'));
@@ -775,6 +1096,10 @@ document.getElementById('filtersRow').addEventListener('click', e => {
   activeFilter = chip.dataset.filter;
   renderCards();
 });
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+renderGuideScroll();
+renderHistory();
 </script>
 </body>
 </html>
