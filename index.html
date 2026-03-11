@@ -1099,60 +1099,73 @@ function renderSheet() {
       if(week.length===7||(i===allDays.length-1)){weeks.push(week);week=[];}
     });
 
-    document.getElementById('msScroll').innerHTML=`
-      <div class="book-tab-wrap">
-        <div class="price-hero">
-          <div class="ph-l"><div class="ph-lbl">${s.name}</div><div class="ph-svc">${bd.emoji} ${bd.name}${szLbl}</div></div>
-          <div class="ph-r"><div class="ph-price">$${total}</div><div class="ph-time">⏱ ~${time} min${addonTotal>0?' + add-ons':''}</div></div>
-        </div>
+    // Build calendar HTML using string concat to avoid nested backtick issues
+    let calHTML = '';
+    // Day headers
+    calHTML += '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:4px">';
+    DAY_NAMES.forEach(dn=>{ calHTML += '<div style="text-align:center;font-size:10px;font-weight:700;color:var(--muted);padding:4px 0">'+dn.slice(0,1)+'</div>'; });
+    calHTML += '</div>';
+    weeks.forEach((wk,wi)=>{
+      calHTML += '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:3px">';
+      wk.forEach(d=>{
+        const ds=dateStr(d);
+        const sl=getSlots(g.id,selBreed,selSvc,selSize,ds);
+        const isSel=selDate===ds;
+        const has=sl.length>0;
+        const isPast=d<TODAY;
+        const bg=isPast?'transparent':isSel?'var(--dark)':has?'var(--card)':'#f0ede8';
+        const col=isPast?'#ccc':isSel?'#fff':has?'var(--text)':'#bbb';
+        const dotCol=sl.length<=2?'#e67e22':'#27ae60';
+        const dot=(!isPast&&has&&!isSel)?'<div style="width:5px;height:5px;border-radius:50%;background:'+dotCol+';margin:1px auto 0"></div>':'';
+        const border=isSel?'none':(!isPast&&has?'1.5px solid var(--border)':'1.5px solid transparent');
+        const cursor=(!isPast&&has)?'pointer':'default';
+        const fn=(!isPast&&has)?"tapDate('"+ds+"')":'';
+        calHTML += '<div onclick="'+fn+'" style="text-align:center;padding:6px 2px;border-radius:8px;cursor:'+cursor+';background:'+bg+';border:'+border+'">';
+        calHTML += '<div style="font-size:12px;font-weight:600;color:'+col+'">'+d.getDate()+'</div>';
+        calHTML += dot+'</div>';
+      });
+      calHTML += '</div>';
+      if(wi<weeks.length-1){
+        const nextMonth=MONTH_NAMES[weeks[wi+1][0].getMonth()];
+        calHTML += '<div style="font-size:10px;color:var(--muted);text-align:right;margin-bottom:4px">'+nextMonth+'</div>';
+      }
+    });
 
-        <div class="bt-section-lbl" style="margin-bottom:8px">Pick a date</div>
-        <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:4px">
-          ${DAY_NAMES.map(d=>`<div style="text-align:center;font-size:10px;font-weight:700;color:var(--muted);padding:4px 0">${d.slice(0,1)}</div>`).join('')}
-        </div>
-        ${weeks.map((wk,wi)=>`
-          <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:3px">
-            ${wk.map(d=>{
-              const ds=dateStr(d);
-              const sl=getSlots(g.id,selBreed,selSvc,selSize,ds);
-              const isSelected=selDate===ds;
-              const hasSlots=sl.length>0;
-              const isPast=d<TODAY;
-              const dow=d.getDay();
-              let bg=isPast?'transparent':isSelected?'var(--dark)':hasSlots?'var(--card)':'#f0ede8';
-              let color=isPast?'#ccc':isSelected?'#fff':hasSlots?'var(--text)':'#bbb';
-              let dot=!isPast&&hasSlots&&!isSelected?`<div style="width:5px;height:5px;border-radius:50%;background:${sl.length<=2?'#e67e22':'#27ae60'};margin:1px auto 0"></div>`:'';
-              return `<div onclick="${!isPast&&hasSlots?`tapDate('${ds}')`:''}"
-                style="text-align:center;padding:6px 2px;border-radius:8px;cursor:${!isPast&&hasSlots?'pointer':'default'};background:${bg};border:${isSelected?'none':`1.5px solid ${!isPast&&hasSlots?'var(--border)':'transparent'}`}">
-                <div style="font-size:12px;font-weight:600;color:${color}">${d.getDate()}</div>
-                ${dot}
-              </div>`;
-            }).join('')}
-          </div>
-          ${wi<weeks.length-1?`<div style="font-size:10px;color:var(--muted);text-align:right;margin-bottom:4px;padding-right:2px">${MONTH_NAMES[weeks[wi+1][0].getMonth()]} →</div>`:''}
-        `).join('')}
+    // Times section
+    let timesHTML = '';
+    if(selDate){
+      const dLabel=formatDayLabel(new Date(selDate+'T00:00:00'));
+      timesHTML += '<div class="bt-section-lbl" style="margin-top:14px">Available times — '+dLabel+'</div>';
+      timesHTML += '<div class="time-grid">';
+      if(slots.length===0){
+        timesHTML += '<div style="grid-column:1/-1;text-align:center;padding:20px;color:var(--muted);font-size:13px">😔 No slots this day</div>';
+      } else {
+        slots.forEach(t=>{
+          const act=selTime===t?'active':'';
+          timesHTML += '<div class="time-cell '+act+'" onclick="tapTime(\''+t+'\')"><div class="tc-t">'+t+'</div><div class="tc-l">Open</div></div>';
+        });
+      }
+      timesHTML += '</div>';
+      if(slots.length===0){
+        timesHTML += '<div style="padding:0 0 10px"><button style="width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:13px;padding:13px;font-family:\'DM Sans\',sans-serif;font-size:14px;font-weight:600;color:var(--text);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px" onclick="joinWaitlist()">🔔 Join waitlist — get notified if a spot opens</button></div>';
+      }
+    } else {
+      timesHTML = '<div style="text-align:center;padding:20px;color:var(--muted);font-size:13px">👆 Tap a green date to see times</div>';
+    }
 
-        ${selDate?`
-          <div class="bt-section-lbl" style="margin-top:14px">Available times — ${formatDayLabel(new Date(selDate+'T00:00:00'))}</div>
-          <div class="time-grid">
-            ${slots.length===0
-              ?`<div style="grid-column:1/-1;text-align:center;padding:20px;color:var(--muted);font-size:13px">😔 No slots this day — pick another</div>`
-              :slots.map(t=>`<div class="time-cell ${selTime===t?'active':''}" onclick="tapTime('${t}')"><div class="tc-t">${t}</div><div class="tc-l">Open</div></div>`).join('')}
-          </div>
-          ${slots.length===0?`
-            <div style="padding:0 0 10px">
-              <button style="width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:13px;padding:13px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;color:var(--text);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px" onclick="joinWaitlist()">
-                🔔 Join waitlist — get notified if a spot opens
-              </button>
-            </div>`:''}
-        `:`<div style="text-align:center;padding:20px;color:var(--muted);font-size:13px">👆 Tap a green date to see times</div>`}
+    const confirmLabel = selTime ? ('Confirm '+formatDayLabel(new Date(selDate+'T00:00:00'))+' at '+selTime+' — $'+total+' →') : 'Select a date & time to book';
+    const confirmDis = selTime?'':'disabled';
 
-        <button class="confirm-book-btn" ${selTime?'':'disabled'} onclick="doConfirm()">
-          ${selTime?`Confirm ${formatDayLabel(new Date(selDate+'T00:00:00'))} at ${selTime} — $${total} →`:'Select a date & time to book'}
-        </button>
-      </div>
-    `;
+    document.getElementById('msScroll').innerHTML =
+      '<div class="book-tab-wrap">' +
+      '<div class="price-hero"><div class="ph-l"><div class="ph-lbl">'+s.name+'</div><div class="ph-svc">'+bd.emoji+' '+bd.name+szLbl+'</div></div>' +
+      '<div class="ph-r"><div class="ph-price">$'+total+'</div><div class="ph-time">⏱ ~'+time+' min'+(addonTotal>0?' + add-ons':'')+'</div></div></div>' +
+      '<div class="bt-section-lbl" style="margin-bottom:8px">Pick a date</div>' +
+      calHTML + timesHTML +
+      '<button class="confirm-book-btn" '+confirmDis+' onclick="doConfirm()">'+confirmLabel+'</button>' +
+      '</div>';
   }
+} // end renderSheet
 
 function selectSvcFromMenu(id) {
   selSvc=id;
