@@ -63,12 +63,12 @@
     .size-pill.active { border-color: var(--accent); background: rgba(245,200,66,0.12); color: var(--dark); }
 
     /* ESTIMATED TIME BADGE */
-    .est-time-bar { display: none; align-items: center; gap: 10px; background: rgba(245,200,66,0.12); border: 1.5px solid rgba(245,200,66,0.35); border-radius: 12px; padding: 11px 14px; margin-top: 12px; }
+    .est-time-bar { display: none; align-items: center; gap: 12px; background: var(--accent); border-radius: 12px; padding: 13px 16px; margin-top: 12px; }
     .est-time-bar.vis { display: flex; }
-    .et-icon { font-size: 20px; }
+    .et-icon { font-size: 22px; }
     .et-text { flex: 1; }
-    .et-main { font-size: 14px; font-weight: 700; color: var(--dark); }
-    .et-sub { font-size: 12px; color: rgba(26,21,18,0.55); margin-top: 1px; }
+    .et-main { font-size: 15px; font-weight: 800; color: var(--dark); font-family: 'Syne', sans-serif; }
+    .et-sub { font-size: 12px; color: rgba(26,21,18,0.6); margin-top: 2px; }
 
     .find-btn { margin: 14px 20px 0; width: calc(100% - 40px); background: var(--accent); color: var(--dark); border: none; border-radius: 14px; padding: 16px; font-family: 'DM Sans', sans-serif; font-size: 16px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.15s; }
     .find-btn:disabled { background: #2a2520; color: #555; cursor: not-allowed; }
@@ -751,7 +751,7 @@ function renderBreedList(q) {
       const bd=breedData[id];
       return `<div class="p-item ${selBreed===id?'sel':''}" onclick="pickBreed('${id}')">
         <div class="pi-emoji">${bd.emoji}</div>
-        <div class="pi-info"><div class="pi-name">${bd.name}</div><div class="pi-sub">Full groom ~${bd.groomTime} min${bd.variableSize?' · size varies':''}</div></div>
+        <div class="pi-info"><div class="pi-name">${bd.name}</div>${bd.variableSize?'<div class="pi-sub">Size varies — small / medium / large</div>':''}</div>
         ${selBreed===id?'<div class="pi-check">✓</div>':''}
       </div>`;
     }).join('');
