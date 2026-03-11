@@ -707,7 +707,7 @@ function getSlots(gid, bid, sid, size, dateStr) {
     const d = new Date(dateStr);
     const dow = d.getDay(); // 0=Sun
     // Sundays mostly closed, Saturdays very busy, weekdays vary
-    const booked_rate = dow===0?0.95 : dow===6?0.7 : dow===1?0.4 : dow===5?0.6 : 0.3;
+    const booked_rate = dow===0?1.0 : dow===6?0.85 : dow===1?0.75 : dow===5?0.8 : dow===3?0.7 : 0.55;
     const slots = [];
     for (let m=9*60; m<=17*60; m+=30) {
       if (rng() > booked_rate) {
@@ -910,15 +910,17 @@ function getNextAvail(gid) {
 // Build 14-day mini dot preview for card
 function miniAvailBar(gid) {
   const days=getCalendarDays(2); // 14 days
-  return days.map(d=>{
+  // Filter out Sundays (closed) and show remaining
+  const shown = days.filter(d=>d.getDay()!==0);
+  return shown.map(d=>{
     const s=getSlots(gid,selBreed,selSvc,selSize,dateStr(d));
     const dow=d.getDay();
-    const color=s.length===0?'#444':s.length<=2?'#e67e22':'#27ae60';
+    const color=s.length===0?'#c0392b':s.length<=2?'#e67e22':'#27ae60';
     const label=DAY_NAMES[dow].slice(0,1);
-    return `<div style="display:flex;flex-direction:column;align-items:center;gap:3px;min-width:18px">
-      <div style="width:8px;height:8px;border-radius:50%;background:${color}"></div>
-      <div style="font-size:9px;color:#888">${label}</div>
-    </div>`;
+    return '<div style="display:flex;flex-direction:column;align-items:center;gap:3px;min-width:16px">'
+      +'<div style="width:8px;height:8px;border-radius:50%;background:'+color+'"></div>'
+      +'<div style="font-size:9px;color:#888">'+label+'</div>'
+      +'</div>';
   }).join('');
 }
 
@@ -984,7 +986,7 @@ function openSheet(id) {
   selGroomer=groomers.find(g=>g.id===id);
   const first=firstAvailableDay(selGroomer.id);
   selDate=first?dateStr(first):null;
-  selTime=null; selAddons=new Set(); activeTab='services'; sheetConfirm=false;
+  selTime=null; selAddons=new Set(); activeTab='book'; sheetConfirm=false;
   renderSheet();
   document.getElementById('sheetOv').classList.add('open');
   document.getElementById('menuSheet').classList.add('open');
@@ -1113,13 +1115,13 @@ function renderSheet() {
         const isSel=selDate===ds;
         const has=sl.length>0;
         const isPast=d<TODAY;
-        const bg=isPast?'transparent':isSel?'var(--dark)':has?'var(--card)':'#f0ede8';
-        const col=isPast?'#ccc':isSel?'#fff':has?'var(--text)':'#bbb';
+        const bg=isPast||dow===0?'transparent':isSel?'var(--dark)':has?'var(--card)':'rgba(192,57,43,0.08)';
+        const col=isPast||dow===0?'#ccc':isSel?'#fff':has?'var(--text)':'#c0392b';
         const dotCol=sl.length<=2?'#e67e22':'#27ae60';
-        const dot=(!isPast&&has&&!isSel)?'<div style="width:5px;height:5px;border-radius:50%;background:'+dotCol+';margin:1px auto 0"></div>':'';
-        const border=isSel?'none':(!isPast&&has?'1.5px solid var(--border)':'1.5px solid transparent');
-        const cursor=(!isPast&&has)?'pointer':'default';
-        const fn=(!isPast&&has)?"tapDate('"+ds+"')":'';
+        const dot=(!isPast&&has&&!isSel&&dow!==0)?'<div style="width:5px;height:5px;border-radius:50%;background:'+dotCol+';margin:1px auto 0"></div>':'';
+        const border=isSel?'none':((!isPast&&has&&dow!==0)?'1.5px solid var(--border)':'1.5px solid transparent');
+        const cursor=(!isPast&&has&&dow!==0)?'pointer':'default';
+        const fn=(!isPast&&has&&dow!==0)?"tapDate('"+ds+"')":'';
         calHTML += '<div onclick="'+fn+'" style="text-align:center;padding:6px 2px;border-radius:8px;cursor:'+cursor+';background:'+bg+';border:'+border+'">';
         calHTML += '<div style="font-size:12px;font-weight:600;color:'+col+'">'+d.getDate()+'</div>';
         calHTML += dot+'</div>';
