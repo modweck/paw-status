@@ -14,125 +14,82 @@
       --accent: #f5c842; --dark: #171310; --text: #1e1a16;
       --muted: #9e9080; --success: #27ae60; --warning: #e67e22;
       --danger: #e74c3c; --radius: 18px; --shadow: 0 1px 12px rgba(0,0,0,0.06);
-      --max: 430px;
     }
-    html, body { height: 100%; overflow: hidden; }
-    body {
-      background: #111;
-      display: flex; justify-content: center;
-      font-family: 'DM Sans', sans-serif;
-      color: var(--text);
-    }
+    html, body { height: 100%; overflow: hidden; background: #111; display: flex; justify-content: center; font-family: 'DM Sans', sans-serif; color: var(--text); }
 
-    /* APP SHELL */
-    #app {
-      width: 100%; max-width: var(--max);
-      height: 100vh; height: 100dvh;
-      background: var(--bg);
-      display: flex; flex-direction: column;
-      overflow: hidden;
-      position: relative;
-    }
+    #app { width: 100%; max-width: 430px; height: 100vh; height: 100dvh; background: var(--bg); display: flex; flex-direction: column; overflow: hidden; position: relative; }
 
-    /* STATUS BAR SIMULATION */
-    .status-bar {
-      background: var(--dark);
-      padding: 12px 20px 0;
-      display: flex; align-items: center; justify-content: space-between;
-      flex-shrink: 0;
-    }
+    /* STATUS BAR */
+    .status-bar { background: var(--dark); padding: 12px 20px 0; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
     .status-time { font-size: 15px; font-weight: 600; color: #fff; }
-    .status-icons { display: flex; gap: 6px; align-items: center; color: #fff; font-size: 13px; }
+    .status-icons { font-size: 13px; color: #fff; display: flex; gap: 5px; }
 
     /* HEADER */
-    .app-header {
-      background: var(--dark);
-      padding: 10px 20px 14px;
-      display: flex; align-items: center; justify-content: space-between;
-      flex-shrink: 0;
-    }
-    .logo { font-family: 'Syne', sans-serif; font-size: 24px; font-weight: 800; color: var(--accent); letter-spacing: -0.5px; }
+    .app-header { background: var(--dark); padding: 10px 20px 14px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+    .logo { font-family: 'Syne', sans-serif; font-size: 24px; font-weight: 800; color: var(--accent); }
     .logo span { color: #fff; }
-    .header-right { display: flex; gap: 10px; align-items: center; }
     .icon-btn { width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,0.08); border: none; color: #fff; font-size: 16px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
 
-    /* SCROLLABLE CONTENT */
+    /* SCREENS */
     .screen { display: none; flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
     .screen.active { display: block; }
     .screen::-webkit-scrollbar { display: none; }
 
     /* ══ SEARCH SCREEN ══ */
     .search-top { background: var(--dark); padding: 0 20px 20px; }
-    .hero-text { padding-bottom: 18px; }
+    .hero-text { padding-bottom: 16px; }
     .hero-text h1 { font-family: 'Syne', sans-serif; font-size: 26px; font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 4px; }
     .hero-text h1 em { color: var(--accent); font-style: normal; }
-    .hero-text p { font-size: 13px; color: #777; }
+    .hero-text p { font-size: 13px; color: #666; }
 
     /* SEARCH CARD */
-    .search-card {
-      background: var(--card);
-      border-radius: 20px;
-      overflow: hidden;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.25);
-    }
-    .search-row {
-      display: flex; align-items: center;
-      padding: 14px 16px;
-      border-bottom: 1px solid var(--border);
-      gap: 12px;
-      cursor: pointer;
-      position: relative;
-    }
+    .search-card { background: var(--card); border-radius: 20px; overflow: hidden; box-shadow: 0 8px 32px rgba(0,0,0,0.25); }
+    .search-row { display: flex; align-items: center; padding: 14px 16px; border-bottom: 1px solid var(--border); gap: 12px; cursor: pointer; transition: background 0.1s; }
     .search-row:last-child { border-bottom: none; }
+    .search-row:active { background: var(--bg); }
     .sr-icon { font-size: 18px; flex-shrink: 0; width: 24px; text-align: center; }
     .sr-content { flex: 1; min-width: 0; }
     .sr-label { font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); margin-bottom: 3px; }
     .sr-value { font-size: 15px; font-weight: 500; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .sr-value.placeholder { color: #bbb; font-weight: 400; }
-    .sr-arrow { color: #ccc; font-size: 12px; flex-shrink: 0; }
+    .sr-value.ph { color: #bbb; font-weight: 400; }
+    .sr-arrow { color: #ccc; font-size: 14px; flex-shrink: 0; }
 
-    /* SIZE PILLS — shown inline after breed pick for variable breeds */
+    /* SIZE INLINE */
     .size-inline { display: none; padding: 10px 16px 14px; border-bottom: 1px solid var(--border); }
-    .size-inline.visible { display: block; }
-    .size-inline-label { font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+    .size-inline.vis { display: block; }
+    .size-inline-lbl { font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
     .size-pills { display: flex; gap: 8px; }
-    .size-pill { flex: 1; padding: 9px 4px; border-radius: 10px; border: 1.5px solid var(--border); background: var(--bg); font-size: 13px; font-weight: 600; color: var(--muted); text-align: center; cursor: pointer; transition: all 0.15s; }
+    .size-pill { flex: 1; padding: 9px; border-radius: 10px; border: 1.5px solid var(--border); background: var(--bg); font-size: 13px; font-weight: 600; color: var(--muted); text-align: center; cursor: pointer; transition: all 0.15s; }
     .size-pill.active { border-color: var(--accent); background: rgba(245,200,66,0.12); color: var(--dark); }
 
-    .find-btn {
-      margin: 16px 20px 0;
-      width: calc(100% - 40px);
-      background: var(--accent); color: var(--dark); border: none;
-      border-radius: 14px; padding: 16px;
-      font-family: 'DM Sans', sans-serif; font-size: 16px; font-weight: 700;
-      cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
-      transition: all 0.15s;
-    }
+    /* ESTIMATED TIME BADGE */
+    .est-time-bar { display: none; align-items: center; gap: 10px; background: rgba(245,200,66,0.12); border: 1.5px solid rgba(245,200,66,0.35); border-radius: 12px; padding: 11px 14px; margin-top: 12px; }
+    .est-time-bar.vis { display: flex; }
+    .et-icon { font-size: 20px; }
+    .et-text { flex: 1; }
+    .et-main { font-size: 14px; font-weight: 700; color: var(--dark); }
+    .et-sub { font-size: 12px; color: rgba(26,21,18,0.55); margin-top: 1px; }
+
+    .find-btn { margin: 14px 20px 0; width: calc(100% - 40px); background: var(--accent); color: var(--dark); border: none; border-radius: 14px; padding: 16px; font-family: 'DM Sans', sans-serif; font-size: 16px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.15s; }
     .find-btn:disabled { background: #2a2520; color: #555; cursor: not-allowed; }
     .find-btn:not(:disabled):active { transform: scale(0.98); }
 
-    /* QUICK CHIPS */
+    /* QUICK + GUIDES */
     .quick-section { padding: 18px 20px 0; }
     .section-label { font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
     .chip-scroll { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
     .chip-scroll::-webkit-scrollbar { display: none; }
-    .quick-chip { background: var(--card); border: 1px solid var(--border); border-radius: 999px; padding: 8px 14px; font-size: 13px; color: var(--text); cursor: pointer; white-space: nowrap; flex-shrink: 0; font-weight: 500; box-shadow: var(--shadow); transition: all 0.15s; }
-    .quick-chip:active { background: var(--accent); border-color: var(--accent); color: var(--dark); transform: scale(0.96); }
-
-    /* GUIDE CARDS — compact horizontal scroll */
+    .qchip { background: var(--card); border: 1px solid var(--border); border-radius: 999px; padding: 8px 14px; font-size: 13px; color: var(--text); cursor: pointer; white-space: nowrap; flex-shrink: 0; font-weight: 500; box-shadow: var(--shadow); transition: all 0.15s; }
+    .qchip:active { background: var(--accent); border-color: var(--accent); color: var(--dark); transform: scale(0.96); }
     .guide-section { padding: 18px 20px 20px; }
     .guide-row { display: flex; gap: 10px; overflow-x: auto; scrollbar-width: none; padding-bottom: 4px; }
     .guide-row::-webkit-scrollbar { display: none; }
-    .guide-card {
-      background: var(--card); border: 1px solid var(--border); border-radius: 14px;
-      padding: 12px; min-width: 130px; max-width: 130px; flex-shrink: 0;
-      cursor: pointer; box-shadow: var(--shadow); transition: transform 0.15s;
-    }
-    .guide-card:active { transform: scale(0.96); }
-    .gc-emoji { font-size: 28px; margin-bottom: 7px; }
-    .gc-breed { font-weight: 700; font-size: 13px; margin-bottom: 2px; }
-    .gc-freq { font-size: 11px; color: var(--muted); margin-bottom: 6px; }
-    .gc-tag { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 999px; }
+    .gcard { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 12px; min-width: 120px; max-width: 120px; flex-shrink: 0; cursor: pointer; box-shadow: var(--shadow); transition: transform 0.15s; }
+    .gcard:active { transform: scale(0.96); }
+    .gc-emoji { font-size: 26px; margin-bottom: 6px; }
+    .gc-name { font-weight: 700; font-size: 12px; margin-bottom: 2px; }
+    .gc-freq { font-size: 10px; color: var(--muted); margin-bottom: 5px; }
+    .gc-tag { font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 999px; display: inline-block; }
     .gc-tag.high { background: rgba(231,76,60,0.1); color: #c0392b; }
     .gc-tag.medium { background: rgba(230,126,34,0.1); color: #d35400; }
     .gc-tag.low { background: rgba(39,174,96,0.1); color: #1e8449; }
@@ -140,213 +97,215 @@
     /* ══ PICKER SHEETS ══ */
     .picker-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.5); z-index: 300; opacity: 0; pointer-events: none; transition: opacity 0.25s; }
     .picker-overlay.open { opacity: 1; pointer-events: all; }
-    .picker-sheet {
-      position: absolute; bottom: 0; left: 0; right: 0;
-      background: var(--card); border-radius: 24px 24px 0 0;
-      max-height: 80%; display: flex; flex-direction: column;
-      transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.32,0.72,0,1);
-      z-index: 301;
-    }
+    .picker-sheet { position: absolute; bottom: 0; left: 0; right: 0; background: var(--card); border-radius: 24px 24px 0 0; max-height: 82%; display: flex; flex-direction: column; transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.32,0.72,0,1); z-index: 301; }
     .picker-sheet.open { transform: translateY(0); }
-    .picker-handle { width: 36px; height: 4px; background: var(--border); border-radius: 2px; margin: 12px auto 0; flex-shrink: 0; }
-    .picker-header { padding: 14px 20px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); flex-shrink: 0; }
-    .picker-title { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 800; }
-    .picker-done { background: var(--accent); color: var(--dark); border: none; border-radius: 999px; padding: 7px 16px; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 700; cursor: pointer; }
-    .picker-search { padding: 10px 16px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
-    .picker-search input { width: 100%; background: var(--bg); border: none; outline: none; border-radius: 10px; padding: 10px 14px; font-family: 'DM Sans', sans-serif; font-size: 15px; color: var(--text); }
-    .picker-list { overflow-y: auto; flex: 1; }
-    .picker-list::-webkit-scrollbar { display: none; }
-    .picker-group-label { padding: 10px 20px 4px; font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); }
-    .picker-item { display: flex; align-items: center; padding: 14px 20px; border-bottom: 1px solid var(--border); cursor: pointer; gap: 12px; transition: background 0.1s; }
-    .picker-item:active { background: var(--bg); }
-    .picker-item.selected { background: rgba(245,200,66,0.08); }
-    .picker-item .pi-emoji { font-size: 22px; flex-shrink: 0; }
-    .picker-item .pi-info { flex: 1; }
-    .picker-item .pi-name { font-size: 15px; font-weight: 600; }
-    .picker-item .pi-sub { font-size: 12px; color: var(--muted); margin-top: 1px; }
-    .picker-item .pi-check { font-size: 18px; color: var(--accent); flex-shrink: 0; }
+    .p-handle { width: 36px; height: 4px; background: var(--border); border-radius: 2px; margin: 12px auto 0; flex-shrink: 0; }
+    .p-header { padding: 14px 20px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+    .p-title { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 800; }
+    .p-done { background: var(--accent); color: var(--dark); border: none; border-radius: 999px; padding: 7px 16px; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 700; cursor: pointer; }
+    .p-search { padding: 10px 16px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+    .p-search input { width: 100%; background: var(--bg); border: none; outline: none; border-radius: 10px; padding: 10px 14px; font-family: 'DM Sans', sans-serif; font-size: 15px; color: var(--text); }
+    .p-list { overflow-y: auto; flex: 1; padding-bottom: 20px; }
+    .p-list::-webkit-scrollbar { display: none; }
+    .p-group-lbl { padding: 10px 20px 4px; font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); }
+    .p-item { display: flex; align-items: center; padding: 13px 20px; border-bottom: 1px solid var(--border); cursor: pointer; gap: 12px; transition: background 0.1s; }
+    .p-item:active { background: var(--bg); }
+    .p-item.sel { background: rgba(245,200,66,0.07); }
+    .pi-emoji { font-size: 22px; flex-shrink: 0; }
+    .pi-info { flex: 1; }
+    .pi-name { font-size: 15px; font-weight: 600; }
+    .pi-sub { font-size: 12px; color: var(--muted); margin-top: 1px; }
+    .pi-check { font-size: 18px; color: var(--accent); flex-shrink: 0; }
 
     /* ══ RESULTS SCREEN ══ */
-    .results-nav {
-      background: var(--dark); padding: 12px 20px 0;
-      display: flex; align-items: center; gap: 12px; flex-shrink: 0;
-    }
+    .results-nav { background: var(--dark); padding: 12px 20px 0; display: flex; align-items: center; gap: 12px; }
     .back-btn { background: rgba(255,255,255,0.1); border: none; color: #fff; width: 34px; height: 34px; border-radius: 50%; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-    .results-title-wrap { flex: 1; min-width: 0; }
-    .results-title-wrap h2 { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 800; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .results-title-wrap p { font-size: 12px; color: #888; }
-    .filter-scroll-wrap { background: var(--dark); padding: 10px 20px 12px; }
+    .r-title-wrap { flex: 1; min-width: 0; }
+    .r-title-wrap h2 { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 800; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .r-title-wrap p { font-size: 12px; color: #777; }
+    .filter-bar { background: var(--dark); padding: 10px 20px 12px; }
     .filter-row { display: flex; gap: 7px; overflow-x: auto; scrollbar-width: none; }
     .filter-row::-webkit-scrollbar { display: none; }
     .fchip { padding: 6px 13px; border-radius: 999px; font-size: 12px; font-weight: 600; white-space: nowrap; cursor: pointer; flex-shrink: 0; border: 1.5px solid rgba(255,255,255,0.15); color: #aaa; background: rgba(255,255,255,0.05); transition: all 0.15s; }
     .fchip.active { background: var(--accent); color: var(--dark); border-color: var(--accent); }
-    .results-meta { padding: 10px 20px; font-size: 13px; color: var(--muted); }
-    .results-meta strong { color: var(--text); font-weight: 600; }
+    .r-meta { padding: 10px 16px; font-size: 13px; color: var(--muted); }
+    .r-meta strong { color: var(--text); font-weight: 600; }
     .cards-wrap { padding: 0 16px 100px; }
 
     /* GROOMER CARD */
     .g-card { background: var(--card); border-radius: var(--radius); margin-bottom: 12px; overflow: hidden; box-shadow: var(--shadow); border: 1px solid var(--border); cursor: pointer; transition: transform 0.15s; }
     .g-card:active { transform: scale(0.98); }
-    .g-card-img { height: 130px; position: relative; display: flex; align-items: center; justify-content: center; overflow: hidden; }
-    .g-card-img .bg-emoji { font-size: 56px; opacity: 0.2; }
-    .g-card-img-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.6) 0%, transparent 60%); }
+    .g-img { height: 120px; position: relative; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+    .g-img .bg-e { font-size: 52px; opacity: 0.2; }
+    .g-img-ov { position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.6) 0%, transparent 60%); }
     .g-badges { position: absolute; top: 10px; left: 10px; display: flex; gap: 5px; flex-wrap: wrap; }
-    .g-badge { padding: 3px 9px; border-radius: 999px; font-size: 10px; font-weight: 700; }
-    .g-badge-avail { background: var(--success); color: #fff; }
-    .g-badge-ltd { background: var(--warning); color: #fff; }
-    .g-badge-full { background: var(--danger); color: #fff; }
-    .g-badge-spec { background: rgba(255,255,255,0.92); color: var(--dark); }
-    .g-slots-row { position: absolute; bottom: 10px; left: 10px; display: flex; gap: 5px; }
-    .g-slot { background: rgba(39,174,96,0.35); border: 1px solid rgba(39,174,96,0.5); color: #fff; padding: 3px 8px; border-radius: 999px; font-size: 11px; font-weight: 500; }
-    .g-price-bar { background: var(--accent); padding: 9px 14px; display: flex; align-items: center; justify-content: space-between; }
-    .g-price-bar .gpb-left { font-size: 12px; font-weight: 600; color: var(--dark); }
-    .g-price-bar .gpb-time { font-size: 11px; color: rgba(26,21,18,0.5); margin-top: 1px; }
-    .g-price-bar .gpb-price { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 800; color: var(--dark); }
-    .g-body { padding: 12px 14px 14px; }
-    .g-body-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 5px; }
+    .gbadge { padding: 3px 9px; border-radius: 999px; font-size: 10px; font-weight: 700; }
+    .gb-avail { background: var(--success); color: #fff; }
+    .gb-ltd { background: var(--warning); color: #fff; }
+    .gb-full { background: var(--danger); color: #fff; }
+    .gb-spec { background: rgba(255,255,255,0.92); color: var(--dark); }
+    .g-price-row { background: var(--accent); padding: 9px 14px; display: flex; align-items: center; justify-content: space-between; }
+    .gpr-left .gpr-svc { font-size: 12px; font-weight: 600; color: var(--dark); }
+    .gpr-left .gpr-time { font-size: 11px; color: rgba(26,21,18,0.5); margin-top: 1px; }
+    .gpr-price { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 800; color: var(--dark); }
+    .g-body { padding: 11px 14px 13px; }
+    .g-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
     .g-name { font-family: 'Syne', sans-serif; font-size: 17px; font-weight: 800; }
     .g-rating { font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 3px; }
     .g-rating span { color: var(--muted); font-size: 11px; font-weight: 400; }
-    .g-meta { font-size: 12px; color: var(--muted); margin-bottom: 10px; display: flex; gap: 12px; }
-    .prices-toggle { font-size: 12px; color: var(--muted); cursor: pointer; margin-bottom: 8px; display: flex; align-items: center; gap: 4px; }
-    .prices-grid { display: none; grid-template-columns: repeat(2,1fr); gap: 6px; margin-bottom: 12px; }
-    .prices-grid.open { display: grid; }
-    .pg-item { background: var(--bg); border: 1px solid var(--border); border-radius: 9px; padding: 8px 10px; }
-    .pg-item.match { border-color: var(--accent); background: rgba(245,200,66,0.06); }
-    .pg-name { font-size: 11px; color: var(--muted); margin-bottom: 2px; }
-    .pg-price { font-weight: 700; font-size: 14px; }
-    .pg-match-tag { font-size: 9px; font-weight: 700; color: #7a5c00; background: rgba(245,200,66,0.3); padding: 1px 5px; border-radius: 999px; display: inline-block; margin-top: 2px; }
-    .g-book-btn { width: 100%; background: var(--dark); color: #fff; border: none; border-radius: 11px; padding: 13px; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 600; cursor: pointer; }
-    .g-book-btn.full { background: #e8e3d8; color: var(--muted); cursor: not-allowed; }
+    .g-meta { font-size: 12px; color: var(--muted); display: flex; gap: 12px; margin-bottom: 10px; }
+    .g-menu-btn { width: 100%; background: var(--dark); color: #fff; border: none; border-radius: 11px; padding: 13px; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.15s; }
+    .g-menu-btn:active { transform: scale(0.98); }
+    .g-menu-btn.full { background: #e8e3d8; color: var(--muted); cursor: not-allowed; }
 
-    /* ══ BOOKING SHEET ══ */
+    /* ══ SALON MENU SHEET ══ */
     .sheet-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.5); z-index: 400; opacity: 0; pointer-events: none; transition: opacity 0.25s; }
     .sheet-overlay.open { opacity: 1; pointer-events: all; }
-    .booking-sheet {
-      position: absolute; bottom: 0; left: 0; right: 0;
-      background: var(--card); border-radius: 24px 24px 0 0;
-      max-height: 92%; display: flex; flex-direction: column;
-      transform: translateY(100%); transition: transform 0.35s cubic-bezier(0.32,0.72,0,1);
-      z-index: 401;
-    }
-    .booking-sheet.open { transform: translateY(0); }
-    .bs-handle { width: 36px; height: 4px; background: var(--border); border-radius: 2px; margin: 12px auto 0; flex-shrink: 0; }
-    .bs-header { padding: 16px 18px 0; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
-    .bs-title { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 800; }
-    .bs-close { width: 30px; height: 30px; border-radius: 50%; background: var(--bg); border: none; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-    .bs-scroll { flex: 1; overflow-y: auto; padding-bottom: 20px; }
-    .bs-scroll::-webkit-scrollbar { display: none; }
-    .bs-section { padding: 16px 18px 0; }
-    .bs-section-title { font-size: 10px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
-    .price-hero { background: rgba(245,200,66,0.1); border: 1.5px solid var(--accent); border-radius: 14px; padding: 13px 14px; display: flex; align-items: center; justify-content: space-between; }
-    .ph-label { font-size: 11px; color: var(--muted); margin-bottom: 2px; }
-    .ph-service { font-size: 15px; font-weight: 700; }
-    .ph-price { font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 800; }
-    .ph-time { font-size: 11px; color: var(--muted); text-align: right; margin-top: 2px; }
-    .addon-list { display: flex; flex-direction: column; gap: 7px; }
-    .addon-row { display: flex; align-items: center; justify-content: space-between; background: var(--bg); border: 1.5px solid var(--border); border-radius: 12px; padding: 11px 12px; cursor: pointer; transition: all 0.15s; }
+    .menu-sheet { position: absolute; bottom: 0; left: 0; right: 0; background: var(--card); border-radius: 24px 24px 0 0; max-height: 93%; display: flex; flex-direction: column; transform: translateY(100%); transition: transform 0.35s cubic-bezier(0.32,0.72,0,1); z-index: 401; }
+    .menu-sheet.open { transform: translateY(0); }
+    .ms-handle { width: 36px; height: 4px; background: var(--border); border-radius: 2px; margin: 12px auto 0; flex-shrink: 0; }
+
+    /* MENU TABS */
+    .ms-tabs { display: flex; border-bottom: 1px solid var(--border); flex-shrink: 0; padding: 0 18px; gap: 4px; }
+    .ms-tab { flex: 1; padding: 12px 4px; text-align: center; font-size: 13px; font-weight: 600; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.15s; }
+    .ms-tab.active { color: var(--dark); border-bottom-color: var(--accent); }
+
+    .ms-scroll { flex: 1; overflow-y: auto; padding-bottom: 30px; }
+    .ms-scroll::-webkit-scrollbar { display: none; }
+
+    /* SALON HEADER in sheet */
+    .ms-salon-header { padding: 16px 18px 0; }
+    .ms-salon-name { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 800; margin-bottom: 4px; }
+    .ms-salon-meta { font-size: 13px; color: var(--muted); display: flex; gap: 14px; margin-bottom: 14px; }
+    .ms-close { position: absolute; top: 20px; right: 18px; width: 30px; height: 30px; border-radius: 50%; background: var(--bg); border: none; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+
+    /* SERVICES TAB */
+    .svc-group-lbl { padding: 14px 18px 6px; font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); }
+    .svc-row { display: flex; align-items: center; justify-content: space-between; padding: 13px 18px; border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.1s; gap: 12px; }
+    .svc-row:active { background: var(--bg); }
+    .svc-row.highlighted { background: rgba(245,200,66,0.07); }
+    .svc-row-left { flex: 1; }
+    .svc-row-icon { font-size: 20px; margin-right: 10px; }
+    .svc-row-name { font-size: 15px; font-weight: 600; margin-bottom: 2px; }
+    .svc-row-desc { font-size: 12px; color: var(--muted); }
+    .svc-row-right { text-align: right; flex-shrink: 0; }
+    .svc-row-price { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 800; }
+    .svc-row-time { font-size: 11px; color: var(--muted); margin-top: 1px; }
+    .svc-selected-tag { font-size: 10px; font-weight: 700; color: #7a5c00; background: rgba(245,200,66,0.3); padding: 2px 7px; border-radius: 999px; display: inline-block; margin-top: 3px; }
+    .book-this-svc { margin: 16px 18px 0; width: calc(100% - 36px); background: var(--accent); color: var(--dark); border: none; border-radius: 13px; padding: 14px; font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
+    .book-this-svc:active { transform: scale(0.98); }
+
+    /* ADDONS TAB */
+    .addon-list { padding: 14px 18px 0; display: flex; flex-direction: column; gap: 8px; }
+    .addon-row { display: flex; align-items: center; justify-content: space-between; background: var(--bg); border: 1.5px solid var(--border); border-radius: 12px; padding: 12px 13px; cursor: pointer; transition: all 0.15s; }
     .addon-row.on { border-color: var(--accent); background: rgba(245,200,66,0.06); }
     .addon-row:active { transform: scale(0.98); }
-    .ar-left { display: flex; align-items: center; gap: 9px; }
+    .ar-l { display: flex; align-items: center; gap: 10px; }
     .ar-icon { font-size: 19px; width: 26px; text-align: center; }
-    .ar-name { font-weight: 600; font-size: 13px; margin-bottom: 1px; }
+    .ar-name { font-weight: 600; font-size: 14px; margin-bottom: 1px; }
     .ar-desc { font-size: 11px; color: var(--muted); }
-    .ar-right { display: flex; align-items: center; gap: 8px; }
-    .ar-price { font-weight: 700; font-size: 13px; }
-    .ar-check { width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 11px; flex-shrink: 0; transition: all 0.15s; }
+    .ar-r { display: flex; align-items: center; gap: 8px; }
+    .ar-price { font-weight: 700; font-size: 14px; }
+    .ar-check { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 11px; flex-shrink: 0; transition: all 0.15s; }
     .addon-row.on .ar-check { background: var(--accent); border-color: var(--accent); }
-    .total-pill { background: var(--dark); border-radius: 12px; padding: 12px 14px; margin-top: 12px; display: flex; align-items: center; justify-content: space-between; }
-    .tp-label { font-size: 12px; color: #aaa; }
-    .tp-sub { font-size: 11px; color: #666; margin-top: 1px; }
-    .tp-amount { font-family: 'Syne', sans-serif; font-size: 24px; font-weight: 800; color: var(--accent); }
+    .total-pill { background: var(--dark); border-radius: 12px; padding: 13px 14px; margin: 14px 18px 0; display: flex; align-items: center; justify-content: space-between; }
+    .tp-l { }
+    .tp-lbl { font-size: 12px; color: #aaa; }
+    .tp-sub { font-size: 11px; color: #555; margin-top: 1px; }
+    .tp-amt { font-family: 'Syne', sans-serif; font-size: 26px; font-weight: 800; color: var(--accent); }
+
+    /* BOOK TAB */
+    .book-tab-wrap { padding: 16px 18px 0; }
+    .price-hero { background: rgba(245,200,66,0.1); border: 1.5px solid var(--accent); border-radius: 14px; padding: 14px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+    .ph-l .ph-lbl { font-size: 11px; color: var(--muted); margin-bottom: 2px; }
+    .ph-l .ph-svc { font-size: 16px; font-weight: 700; }
+    .ph-r { text-align: right; }
+    .ph-r .ph-price { font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 800; }
+    .ph-r .ph-time { font-size: 11px; color: var(--muted); margin-top: 2px; }
     .day-row { display: flex; gap: 7px; overflow-x: auto; scrollbar-width: none; margin-bottom: 12px; }
     .day-row::-webkit-scrollbar { display: none; }
     .day-chip { padding: 7px 13px; border-radius: 999px; border: 1.5px solid var(--border); font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap; flex-shrink: 0; transition: all 0.15s; }
     .day-chip.active { background: var(--dark); color: #fff; border-color: var(--dark); }
-    .slot-hint { font-size: 11px; color: var(--muted); font-style: italic; margin-bottom: 10px; }
-    .time-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 7px; }
+    .bt-section-lbl { font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
+    .time-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 7px; margin-bottom: 14px; }
     .time-cell { border: 1.5px solid var(--border); border-radius: 11px; padding: 11px 6px; text-align: center; cursor: pointer; transition: all 0.15s; }
     .time-cell.active { border-color: var(--accent); background: rgba(245,200,66,0.1); }
     .time-cell:active { transform: scale(0.96); }
-    .tc-time { font-size: 13px; font-weight: 600; }
-    .tc-label { font-size: 10px; color: var(--success); margin-top: 2px; }
-    .bs-footer { padding: 12px 18px; border-top: 1px solid var(--border); flex-shrink: 0; }
-    .book-now-btn { width: 100%; background: var(--accent); color: var(--dark); border: none; border-radius: 13px; padding: 15px; font-family: 'DM Sans', sans-serif; font-size: 16px; font-weight: 700; cursor: pointer; transition: all 0.15s; }
-    .book-now-btn:disabled { background: var(--border); color: var(--muted); cursor: not-allowed; }
-    .book-now-btn:not(:disabled):active { transform: scale(0.98); }
+    .tc-t { font-size: 13px; font-weight: 600; }
+    .tc-l { font-size: 10px; color: var(--success); margin-top: 2px; }
+    .confirm-book-btn { width: 100%; background: var(--accent); color: var(--dark); border: none; border-radius: 13px; padding: 15px; font-family: 'DM Sans', sans-serif; font-size: 16px; font-weight: 700; cursor: pointer; margin-top: 4px; }
+    .confirm-book-btn:disabled { background: var(--border); color: var(--muted); cursor: not-allowed; }
+    .confirm-book-btn:not(:disabled):active { transform: scale(0.98); }
 
-    /* CONFIRM SCREEN */
-    .confirm-body { text-align: center; padding: 36px 22px; }
-    .confirm-icon { font-size: 64px; margin-bottom: 14px; }
-    .confirm-body h2 { font-family: 'Syne', sans-serif; font-size: 26px; font-weight: 800; margin-bottom: 7px; }
-    .confirm-body p { font-size: 14px; color: var(--muted); margin-bottom: 22px; line-height: 1.6; }
-    .confirm-rows { background: var(--bg); border-radius: 14px; padding: 14px; margin-bottom: 18px; text-align: left; }
+    /* CONFIRM VIEW */
+    .confirm-view { text-align: center; padding: 36px 22px; }
+    .confirm-view .ci { font-size: 60px; margin-bottom: 14px; }
+    .confirm-view h2 { font-family: 'Syne', sans-serif; font-size: 24px; font-weight: 800; margin-bottom: 7px; }
+    .confirm-view p { font-size: 14px; color: var(--muted); margin-bottom: 20px; line-height: 1.6; }
+    .confirm-rows { background: var(--bg); border-radius: 14px; padding: 14px; margin-bottom: 16px; text-align: left; }
     .cr { display: flex; justify-content: space-between; font-size: 13px; padding: 6px 0; border-bottom: 1px solid var(--border); }
     .cr:last-child { border-bottom: none; }
     .cr .cl { color: var(--muted); }
     .cr .cv { font-weight: 600; }
-    .notif-box { background: rgba(39,174,96,0.1); border: 1px solid rgba(39,174,96,0.3); border-radius: 12px; padding: 12px; font-size: 13px; color: #1a7a40; display: flex; gap: 9px; align-items: flex-start; text-align: left; margin-bottom: 18px; }
+    .notif-box { background: rgba(39,174,96,0.1); border: 1px solid rgba(39,174,96,0.3); border-radius: 12px; padding: 12px; font-size: 13px; color: #1a7a40; display: flex; gap: 9px; align-items: flex-start; text-align: left; margin-bottom: 16px; }
+    .done-btn { width: 100%; background: var(--dark); color: #fff; border: none; border-radius: 13px; padding: 15px; font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 600; cursor: pointer; }
 
     /* ══ PROFILE SCREEN ══ */
     .profile-top { background: var(--dark); padding: 16px 20px 20px; }
     .profile-top h2 { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 800; color: #fff; margin-bottom: 3px; }
     .profile-top p { font-size: 13px; color: #777; }
     .profile-body { padding: 16px 16px 100px; display: flex; flex-direction: column; gap: 12px; }
-
-    .rebook-card { background: linear-gradient(135deg, var(--accent), #ffb300); border-radius: var(--radius); padding: 14px 16px; display: flex; align-items: center; gap: 12px; cursor: pointer; }
-    .rebook-card .rc-icon { font-size: 28px; }
+    .rebook-card { background: linear-gradient(135deg,var(--accent),#ffb300); border-radius: var(--radius); padding: 14px 16px; display: flex; align-items: center; gap: 12px; cursor: pointer; }
+    .rebook-card .rci { font-size: 28px; }
     .rebook-card h4 { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 800; color: var(--dark); margin-bottom: 1px; }
     .rebook-card p { font-size: 12px; color: rgba(26,21,18,0.6); }
-    .rebook-card .rc-arrow { font-size: 18px; color: var(--dark); margin-left: auto; }
-
+    .rebook-card .rca { font-size: 18px; color: var(--dark); margin-left: auto; }
     .pcard { background: var(--card); border-radius: var(--radius); padding: 16px; border: 1px solid var(--border); box-shadow: var(--shadow); }
     .pcard h3 { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 800; margin-bottom: 14px; }
-    .dog-avatar-row { display: flex; align-items: center; gap: 14px; margin-bottom: 18px; }
-    .dog-avatar { width: 64px; height: 64px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), #ff6b35); display: flex; align-items: center; justify-content: center; font-size: 30px; flex-shrink: 0; cursor: pointer; position: relative; overflow: hidden; }
-    .dog-avatar img { width: 100%; height: 100%; object-fit: cover; }
-    .dog-avatar-edit { position: absolute; inset: 0; background: rgba(0,0,0,0.35); display: flex; align-items: center; justify-content: center; font-size: 16px; opacity: 0; transition: 0.2s; border-radius: 50%; }
-    .dog-avatar:hover .dog-avatar-edit { opacity: 1; }
+    .dog-av-row { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; }
+    .dog-av { width: 64px; height: 64px; border-radius: 50%; background: linear-gradient(135deg,var(--accent),#ff6b35); display: flex; align-items: center; justify-content: center; font-size: 30px; flex-shrink: 0; cursor: pointer; position: relative; overflow: hidden; }
+    .dog-av img { width: 100%; height: 100%; object-fit: cover; }
+    .dog-av-edit { position: absolute; inset: 0; background: rgba(0,0,0,0.35); display: flex; align-items: center; justify-content: center; font-size: 16px; opacity: 0; transition: 0.2s; border-radius: 50%; }
+    .dog-av:hover .dog-av-edit { opacity: 1; }
     .dog-name-big { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 800; }
     .dog-sub { font-size: 13px; color: var(--muted); margin-top: 2px; }
     .pfield { margin-bottom: 12px; }
     .pfield label { font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); display: block; margin-bottom: 6px; }
-    .pfield input, .pfield select, .pfield textarea { width: 100%; background: var(--bg); border: 1.5px solid var(--border); border-radius: 11px; padding: 11px 13px; font-family: 'DM Sans', sans-serif; font-size: 15px; color: var(--text); outline: none; transition: border-color 0.2s; }
+    .pfield input, .pfield select, .pfield textarea { width: 100%; background: var(--bg); border: 1.5px solid var(--border); border-radius: 11px; padding: 11px 13px; font-family: 'DM Sans', sans-serif; font-size: 15px; color: var(--text); outline: none; transition: border-color 0.2s; appearance: none; }
     .pfield input:focus, .pfield select:focus, .pfield textarea:focus { border-color: var(--accent); }
     .pfield textarea { resize: none; height: 76px; }
     .psize-row { display: flex; gap: 8px; }
     .psize-btn { flex: 1; padding: 10px; border-radius: 10px; border: 1.5px solid var(--border); background: var(--bg); font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 600; color: var(--muted); cursor: pointer; text-align: center; transition: all 0.15s; }
     .psize-btn.active { border-color: var(--accent); background: rgba(245,200,66,0.1); color: var(--dark); }
     .save-btn { width: 100%; background: var(--accent); color: var(--dark); border: none; border-radius: 12px; padding: 14px; font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 700; cursor: pointer; margin-top: 6px; }
-
-    .history-list { display: flex; flex-direction: column; }
-    .history-row { display: flex; align-items: center; gap: 10px; padding: 11px 0; border-bottom: 1px solid var(--border); }
-    .history-row:last-child { border-bottom: none; }
-    .hr-icon { width: 38px; height: 38px; border-radius: 10px; background: var(--bg); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+    .hist-row { display: flex; align-items: center; gap: 10px; padding: 11px 0; border-bottom: 1px solid var(--border); }
+    .hist-row:last-child { border-bottom: none; }
+    .hr-ic { width: 38px; height: 38px; border-radius: 10px; background: var(--bg); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
     .hr-info { flex: 1; }
     .hr-salon { font-weight: 600; font-size: 13px; }
     .hr-detail { font-size: 11px; color: var(--muted); margin-top: 1px; }
     .hr-price { font-weight: 700; font-size: 13px; }
 
     /* ══ GUIDE SCREEN ══ */
-    .guide-screen-top { background: var(--dark); padding: 14px 20px 20px; }
-    .guide-back { background: rgba(255,255,255,0.1); border: none; color: #fff; padding: 7px 13px; border-radius: 999px; font-size: 12px; cursor: pointer; margin-bottom: 12px; display: inline-flex; align-items: center; gap: 5px; font-family: 'DM Sans', sans-serif; font-weight: 600; }
-    .guide-screen-top h2 { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 800; color: #fff; margin-bottom: 3px; }
-    .guide-screen-top p { font-size: 13px; color: #777; }
+    .guide-top { background: var(--dark); padding: 14px 20px 20px; }
+    .guide-back-btn { background: rgba(255,255,255,0.1); border: none; color: #fff; padding: 7px 13px; border-radius: 999px; font-size: 12px; cursor: pointer; margin-bottom: 10px; display: inline-flex; align-items: center; gap: 5px; font-family: 'DM Sans', sans-serif; font-weight: 600; }
+    .guide-top h2 { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 800; color: #fff; margin-bottom: 3px; }
+    .guide-top p { font-size: 13px; color: #777; }
     .guide-body { padding: 16px 16px 100px; }
     .stats-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-bottom: 16px; }
     .stat-box { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 12px 10px; text-align: center; }
-    .stat-val { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 800; color: var(--dark); margin-bottom: 2px; }
+    .stat-val { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 800; color: var(--dark); margin-bottom: 2px; }
     .stat-lbl { font-size: 10px; color: var(--muted); }
-    .gsection { margin-bottom: 18px; }
-    .gsection h3 { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 800; margin-bottom: 9px; }
+    .gsect { margin-bottom: 18px; }
+    .gsect h3 { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 800; margin-bottom: 8px; }
     .gtip { background: var(--card); border: 1px solid var(--border); border-radius: 11px; padding: 11px 13px; margin-bottom: 7px; font-size: 13px; line-height: 1.5; display: flex; gap: 9px; }
     .cut-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 9px; }
     .cut-card { background: var(--card); border: 1.5px solid var(--border); border-radius: 13px; padding: 13px; text-align: center; cursor: pointer; transition: all 0.15s; }
-    .cut-card:active { transform: scale(0.96); border-color: var(--accent); }
+    .cut-card:active { transform: scale(0.96); }
     .cut-card.sel { border-color: var(--accent); background: rgba(245,200,66,0.07); }
-    .cc-emoji { font-size: 30px; margin-bottom: 7px; }
-    .cc-name { font-weight: 700; font-size: 13px; margin-bottom: 3px; }
-    .cc-desc { font-size: 11px; color: var(--muted); line-height: 1.4; }
+    .cc-e { font-size: 30px; margin-bottom: 7px; }
+    .cc-n { font-weight: 700; font-size: 13px; margin-bottom: 3px; }
+    .cc-d { font-size: 11px; color: var(--muted); line-height: 1.4; }
     .find-from-guide { width: 100%; background: var(--accent); color: var(--dark); border: none; border-radius: 13px; padding: 15px; font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 700; cursor: pointer; margin-top: 18px; }
 
     /* BOTTOM NAV */
@@ -359,107 +318,98 @@
 </head>
 <body>
 <div id="app">
-
-  <!-- STATUS BAR -->
   <div class="status-bar">
-    <div class="status-time" id="statusTime">9:41</div>
-    <div class="status-icons">
-      <span>●●●</span><span>WiFi</span><span>🔋</span>
-    </div>
+    <div class="status-time" id="stTime">9:41</div>
+    <div class="status-icons"><span>●●●</span><span>WiFi</span><span>🔋</span></div>
   </div>
-
-  <!-- HEADER -->
   <div class="app-header">
     <div class="logo">Paw<span>Status</span></div>
-    <div class="header-right">
-      <button class="icon-btn">🔔</button>
-    </div>
+    <button class="icon-btn">🔔</button>
   </div>
 
-  <!-- ══ SCREEN: SEARCH ══ -->
+  <!-- ══ SEARCH ══ -->
   <div class="screen active" id="screen-search">
     <div class="search-top">
       <div class="hero-text">
         <h1>Find a groomer<br>your dog will <em>love</em></h1>
         <p>Real prices by breed · Live slots · Pickup alerts</p>
       </div>
-
-      <!-- SEARCH CARD -->
       <div class="search-card">
-        <!-- LOCATION -->
         <div class="search-row" onclick="useMyLocation()">
           <div class="sr-icon">📍</div>
           <div class="sr-content">
             <div class="sr-label">Location</div>
-            <div class="sr-value placeholder" id="locationDisplay">Tap to use your location</div>
+            <div class="sr-value ph" id="locDisplay">Tap to use your location</div>
           </div>
           <div class="sr-arrow">›</div>
         </div>
-        <!-- BREED -->
         <div class="search-row" onclick="openPicker('breed')">
           <div class="sr-icon">🐕</div>
           <div class="sr-content">
             <div class="sr-label">Breed</div>
-            <div class="sr-value placeholder" id="breedDisplay">Select your dog's breed</div>
+            <div class="sr-value ph" id="breedDisplay">Select your dog's breed</div>
           </div>
           <div class="sr-arrow">›</div>
         </div>
-        <!-- SIZE (shown only for variable-size breeds) -->
         <div class="size-inline" id="sizeInline">
-          <div class="size-inline-label">Dog size</div>
+          <div class="size-inline-lbl">Dog size</div>
           <div class="size-pills">
             <div class="size-pill" onclick="pickSize('small',this)">Small</div>
             <div class="size-pill active" onclick="pickSize('medium',this)">Medium</div>
             <div class="size-pill" onclick="pickSize('large',this)">Large</div>
           </div>
         </div>
-        <!-- SERVICE -->
         <div class="search-row" onclick="openPicker('service')">
           <div class="sr-icon">✂️</div>
           <div class="sr-content">
             <div class="sr-label">Service</div>
-            <div class="sr-value placeholder" id="serviceDisplay">Select a service</div>
+            <div class="sr-value ph" id="svcDisplay">Select a service</div>
           </div>
           <div class="sr-arrow">›</div>
         </div>
       </div>
 
-      <button class="find-btn" id="findBtn" disabled onclick="findGroomers()">
-        Find Groomers 🐾
-      </button>
+      <!-- ESTIMATED TIME -->
+      <div class="est-time-bar" id="estTimeBar">
+        <div class="et-icon">⏱</div>
+        <div class="et-text">
+          <div class="et-main" id="etMain">Estimated: ~90 min</div>
+          <div class="et-sub" id="etSub">Based on breed + service</div>
+        </div>
+      </div>
+
+      <button class="find-btn" id="findBtn" disabled onclick="findGroomers()">Find Groomers 🐾</button>
     </div>
 
-    <!-- QUICK CHIPS -->
     <div class="quick-section">
       <div class="section-label">Popular</div>
       <div class="chip-scroll">
-        <div class="quick-chip" onclick="quickPick('goldendoodle','full_groom','medium')">🐩 Doodle full groom</div>
-        <div class="quick-chip" onclick="quickPick('frenchbulldog','bath_nail',null)">🐾 Frenchie bath + nails</div>
-        <div class="quick-chip" onclick="quickPick('yorkie','full_groom',null)">🐕 Yorkie full groom</div>
-        <div class="quick-chip" onclick="quickPick('husky','deshed_bath',null)">🐺 Husky de-shed</div>
-        <div class="quick-chip" onclick="quickPick('labrador','bath_brush',null)">🦮 Lab bath + brush</div>
-        <div class="quick-chip" onclick="quickPick('poodle','full_groom','small')">🐩 Poodle full groom</div>
-        <div class="quick-chip" onclick="quickPick('chihuahua','nail_only',null)">🐾 Chihuahua nails</div>
+        <div class="qchip" onclick="quickPick('goldendoodle','full_groom','medium')">🐩 Doodle full groom</div>
+        <div class="qchip" onclick="quickPick('frenchbulldog','bath_nail',null)">🐾 Frenchie bath + nails</div>
+        <div class="qchip" onclick="quickPick('yorkie','full_groom',null)">🐕 Yorkie full groom</div>
+        <div class="qchip" onclick="quickPick('husky','deshed_bath',null)">🐺 Husky de-shed</div>
+        <div class="qchip" onclick="quickPick('labrador','bath_brush',null)">🦮 Lab bath + brush</div>
+        <div class="qchip" onclick="quickPick('poodle','full_groom','small')">🐩 Toy Poodle groom</div>
+        <div class="qchip" onclick="quickPick('chihuahua','nail_only',null)">🐾 Chihuahua nails</div>
       </div>
     </div>
 
-    <!-- BREED GUIDES — compact cards -->
     <div class="guide-section">
       <div class="section-label">Grooming guides</div>
       <div class="guide-row" id="guideRow"></div>
     </div>
   </div>
 
-  <!-- ══ SCREEN: RESULTS ══ -->
+  <!-- ══ RESULTS ══ -->
   <div class="screen" id="screen-results">
     <div class="results-nav">
       <button class="back-btn" onclick="goToScreen('search')">←</button>
-      <div class="results-title-wrap">
-        <h2 id="resultsTitle">Groomers</h2>
-        <p id="resultsSubtitle"></p>
+      <div class="r-title-wrap">
+        <h2 id="rTitle">Groomers</h2>
+        <p id="rSub"></p>
       </div>
     </div>
-    <div class="filter-scroll-wrap">
+    <div class="filter-bar">
       <div class="filter-row" id="filterRow">
         <div class="fchip active" data-f="all">All</div>
         <div class="fchip" data-f="available">Available Today</div>
@@ -469,153 +419,107 @@
         <div class="fchip" data-f="rated">Top Rated</div>
       </div>
     </div>
-    <div class="results-meta"><strong id="resultCount">4</strong> groomers near you</div>
+    <div class="r-meta"><strong id="rCount">4</strong> groomers near you</div>
     <div class="cards-wrap" id="cardsWrap"></div>
   </div>
 
-  <!-- ══ SCREEN: PROFILE ══ -->
+  <!-- ══ PROFILE ══ -->
   <div class="screen" id="screen-profile">
     <div class="profile-top">
       <h2>My Dog</h2>
       <p>Profile, history & reminders</p>
     </div>
     <div class="profile-body">
-
       <div class="rebook-card" onclick="goToScreen('search')">
-        <div class="rc-icon">🔔</div>
-        <div>
-          <h4 id="rebookTitle">Time for a groom!</h4>
-          <p id="rebookSub">Last groom was 6 weeks ago</p>
-        </div>
-        <div class="rc-arrow">→</div>
+        <div class="rci">🔔</div>
+        <div><h4 id="rebookTitle">Time for a groom!</h4><p id="rebookSub">Last groom was 6 weeks ago</p></div>
+        <div class="rca">→</div>
       </div>
-
       <div class="pcard">
-        <div class="dog-avatar-row">
-          <div class="dog-avatar" onclick="document.getElementById('photoInput').click()">
-            <span id="dogAvatarEmoji">🐶</span>
-            <div class="dog-avatar-edit">📷</div>
+        <div class="dog-av-row">
+          <div class="dog-av" onclick="document.getElementById('photoInput').click()">
+            <span id="dogAvEmoji">🐶</span>
+            <div class="dog-av-edit">📷</div>
           </div>
           <div>
             <div class="dog-name-big" id="dogNameBig">Your Dog</div>
-            <div class="dog-sub" id="dogSubText">Add info below</div>
+            <div class="dog-sub" id="dogSub">Add info below</div>
           </div>
         </div>
         <input type="file" id="photoInput" accept="image/*" style="display:none" onchange="handlePhoto(event)" />
-
-        <div class="pfield">
-          <label>Dog's name</label>
-          <input type="text" id="dogName" placeholder="e.g. Max" oninput="updateDogPreview()" />
-        </div>
-        <div class="pfield">
-          <label>Breed</label>
+        <div class="pfield"><label>Dog's name</label><input type="text" id="dogName" placeholder="e.g. Max" oninput="updateDogPreview()" /></div>
+        <div class="pfield"><label>Breed</label>
           <select id="dogBreed" onchange="updateDogPreview()">
-            <option value="">Select breed...</option>
-            <option value="chihuahua">Chihuahua</option>
-            <option value="yorkie">Yorkie</option>
-            <option value="maltese">Maltese</option>
-            <option value="frenchbulldog">French Bulldog</option>
-            <option value="mini_schnauzer">Mini Schnauzer</option>
-            <option value="shihtzhu">Shih Tzu</option>
-            <option value="bichon">Bichon Frisé</option>
-            <option value="cavachon">Cavachon</option>
-            <option value="dachshund">Dachshund</option>
-            <option value="cockapoo">Cockapoo</option>
-            <option value="cavapoo">Cavapoo</option>
-            <option value="cocker_spaniel">Cocker Spaniel</option>
-            <option value="pomsky">Pomsky</option>
-            <option value="poodle">Poodle</option>
-            <option value="goldendoodle">Goldendoodle</option>
-            <option value="labrador">Labrador</option>
-            <option value="goldenretriever">Golden Retriever</option>
-            <option value="border_collie">Border Collie</option>
-            <option value="aussie">Australian Shepherd</option>
-            <option value="husky">Husky</option>
-            <option value="german_shepherd">German Shepherd</option>
-            <option value="bernedoodle">Bernedoodle</option>
-            <option value="boxer">Boxer</option>
-            <option value="doberman">Doberman</option>
-            <option value="shiba">Shiba Inu</option>
-            <option value="corgi">Corgi</option>
+            <option value="">Select...</option>
+            <option value="chihuahua">Chihuahua</option><option value="yorkie">Yorkie</option><option value="maltese">Maltese</option>
+            <option value="frenchbulldog">French Bulldog</option><option value="mini_schnauzer">Mini Schnauzer</option>
+            <option value="shihtzhu">Shih Tzu</option><option value="bichon">Bichon Frisé</option>
+            <option value="dachshund">Dachshund</option><option value="cockapoo">Cockapoo</option>
+            <option value="cavapoo">Cavapoo</option><option value="cocker_spaniel">Cocker Spaniel</option>
+            <option value="poodle">Poodle</option><option value="goldendoodle">Goldendoodle</option>
+            <option value="labrador">Labrador</option><option value="goldenretriever">Golden Retriever</option>
+            <option value="husky">Husky</option><option value="german_shepherd">German Shepherd</option>
+            <option value="bernedoodle">Bernedoodle</option><option value="boxer">Boxer</option>
+            <option value="corgi">Corgi</option><option value="shiba">Shiba Inu</option>
           </select>
         </div>
-        <div class="pfield">
-          <label>Size</label>
+        <div class="pfield"><label>Size</label>
           <div class="psize-row">
             <button class="psize-btn" onclick="setPSize('small',this)">Small</button>
             <button class="psize-btn active" onclick="setPSize('medium',this)">Medium</button>
             <button class="psize-btn" onclick="setPSize('large',this)">Large</button>
           </div>
         </div>
-        <div class="pfield">
-          <label>Age</label>
-          <select id="dogAge">
-            <option value="">Select age...</option>
-            <option value="puppy">Puppy (under 1 yr)</option>
-            <option value="young">Young (1–3 yrs)</option>
-            <option value="adult">Adult (3–8 yrs)</option>
-            <option value="senior">Senior (8+ yrs)</option>
-          </select>
+        <div class="pfield"><label>Age</label>
+          <select id="dogAge"><option value="">Select...</option><option value="puppy">Puppy (under 1 yr)</option><option value="young">Young (1–3 yrs)</option><option value="adult">Adult (3–8 yrs)</option><option value="senior">Senior (8+ yrs)</option></select>
         </div>
-        <div class="pfield">
-          <label>Notes for groomer</label>
-          <textarea id="groomerNotes" placeholder="e.g. Anxious around other dogs. Hates blow dryer. Loves treats."></textarea>
-        </div>
+        <div class="pfield"><label>Notes for groomer</label><textarea id="groomerNotes" placeholder="e.g. Anxious around other dogs. Hates blow dryer. Loves treats."></textarea></div>
         <button class="save-btn" onclick="saveProfile()">Save profile ✓</button>
       </div>
-
-      <div class="pcard">
-        <h3>📋 Groom history</h3>
-        <div class="history-list" id="historyList"></div>
-      </div>
+      <div class="pcard"><h3>📋 Groom history</h3><div id="histList"></div></div>
     </div>
   </div>
 
-  <!-- ══ SCREEN: GUIDE ══ -->
+  <!-- ══ GUIDE SCREEN ══ -->
   <div class="screen" id="screen-guide">
-    <div class="guide-screen-top">
-      <button class="guide-back" onclick="goToScreen('search')">← Back</button>
+    <div class="guide-top">
+      <button class="guide-back-btn" onclick="goToScreen('search')">← Back</button>
       <h2 id="guideTitle">Breed Guide</h2>
-      <p id="guideSub">Grooming tips & cut styles</p>
+      <p id="guideSub">Tips & cut styles</p>
     </div>
     <div class="guide-body" id="guideBody"></div>
   </div>
 
-  <!-- BREED PICKER SHEET -->
-  <div class="picker-overlay" id="breedPickerOverlay" onclick="closePicker('breed')"></div>
-  <div class="picker-sheet" id="breedPickerSheet">
-    <div class="picker-handle"></div>
-    <div class="picker-header">
-      <div class="picker-title">Select Breed</div>
-      <button class="picker-done" onclick="closePicker('breed')">Done</button>
-    </div>
-    <div class="picker-search"><input type="text" placeholder="Search breed..." id="breedSearchInput" oninput="filterBreedPicker()" /></div>
-    <div class="picker-list" id="breedPickerList"></div>
+  <!-- BREED PICKER -->
+  <div class="picker-overlay" id="breedPO" onclick="closePicker('breed')"></div>
+  <div class="picker-sheet" id="breedPS">
+    <div class="p-handle"></div>
+    <div class="p-header"><div class="p-title">Select Breed</div><button class="p-done" onclick="closePicker('breed')">Done</button></div>
+    <div class="p-search"><input type="text" placeholder="Search breed..." id="breedSI" oninput="filterBreeds()" /></div>
+    <div class="p-list" id="breedPL"></div>
   </div>
 
-  <!-- SERVICE PICKER SHEET -->
-  <div class="picker-overlay" id="servicePickerOverlay" onclick="closePicker('service')"></div>
-  <div class="picker-sheet" id="servicePickerSheet">
-    <div class="picker-handle"></div>
-    <div class="picker-header">
-      <div class="picker-title">Select Service</div>
-      <button class="picker-done" onclick="closePicker('service')">Done</button>
-    </div>
-    <div class="picker-list" id="servicePickerList"></div>
+  <!-- SERVICE PICKER -->
+  <div class="picker-overlay" id="svcPO" onclick="closePicker('service')"></div>
+  <div class="picker-sheet" id="svcPS">
+    <div class="p-handle"></div>
+    <div class="p-header"><div class="p-title">Select Service</div><button class="p-done" onclick="closePicker('service')">Done</button></div>
+    <div class="p-list" id="svcPL"></div>
   </div>
 
-  <!-- BOOKING SHEET -->
-  <div class="sheet-overlay" id="sheetOverlay" onclick="closeSheet()"></div>
-  <div class="booking-sheet" id="bookingSheet">
-    <div class="bs-handle"></div>
-    <div class="bs-header">
-      <div class="bs-title" id="bsTitle"></div>
-      <button class="bs-close" onclick="closeSheet()">✕</button>
+  <!-- SALON MENU SHEET -->
+  <div class="sheet-overlay" id="sheetOv" onclick="closeSheet()"></div>
+  <div class="menu-sheet" id="menuSheet">
+    <div class="ms-handle"></div>
+    <div style="position:relative">
+      <button class="ms-close" onclick="closeSheet()">✕</button>
     </div>
-    <div class="bs-scroll" id="bsScroll"></div>
-    <div class="bs-footer">
-      <button class="book-now-btn" id="bookNowBtn" disabled onclick="confirmBooking()">Select a time to book</button>
+    <div class="ms-tabs">
+      <div class="ms-tab active" data-tab="services" onclick="switchTab('services')">Services & Prices</div>
+      <div class="ms-tab" data-tab="addons" onclick="switchTab('addons')">Add-ons</div>
+      <div class="ms-tab" data-tab="book" onclick="switchTab('book')">Book</div>
     </div>
+    <div class="ms-scroll" id="msScroll"></div>
   </div>
 
   <!-- BOTTOM NAV -->
@@ -627,8 +531,7 @@
       <span class="bn-icon">🐾</span><span class="bn-label">My Dog</span>
     </button>
   </div>
-
-</div><!-- /app -->
+</div>
 
 <script>
 // ── DATA ──────────────────────────────────────────────────────────────────────
@@ -646,15 +549,15 @@ const breedData = {
   cavapoo:         {name:'Cavapoo',             emoji:'🐕', groomTime:90,  variableSize:false},
   cocker_spaniel:  {name:'Cocker Spaniel',      emoji:'🐕', groomTime:110, variableSize:false},
   pomsky:          {name:'Pomsky',              emoji:'🐺', groomTime:120, variableSize:false},
-  poodle:          {name:'Poodle',              emoji:'🐩', groomTime:120, variableSize:true},
-  goldendoodle:    {name:'Goldendoodle',        emoji:'🐩', groomTime:150, variableSize:true},
+  poodle:          {name:'Poodle',              emoji:'🐩', groomTime:120, variableSize:true },
+  goldendoodle:    {name:'Goldendoodle',        emoji:'🐩', groomTime:150, variableSize:true },
   labrador:        {name:'Labrador',            emoji:'🦮', groomTime:90,  variableSize:false},
   goldenretriever: {name:'Golden Retriever',    emoji:'🦮', groomTime:120, variableSize:false},
   border_collie:   {name:'Border Collie',       emoji:'🐕', groomTime:120, variableSize:false},
   aussie:          {name:'Australian Shepherd', emoji:'🐕', groomTime:135, variableSize:false},
   husky:           {name:'Husky',               emoji:'🐺', groomTime:180, variableSize:false},
   german_shepherd: {name:'German Shepherd',     emoji:'🐺', groomTime:120, variableSize:false},
-  bernedoodle:     {name:'Bernedoodle',         emoji:'🐩', groomTime:180, variableSize:true},
+  bernedoodle:     {name:'Bernedoodle',         emoji:'🐩', groomTime:180, variableSize:true },
   boxer:           {name:'Boxer',               emoji:'🦮', groomTime:90,  variableSize:false},
   doberman:        {name:'Doberman',            emoji:'🐕', groomTime:75,  variableSize:false},
   shiba:           {name:'Shiba Inu',           emoji:'🦊', groomTime:90,  variableSize:false},
@@ -667,31 +570,30 @@ const breedGroups = [
   {label:'Large breeds', ids:['goldendoodle','labrador','goldenretriever','border_collie','aussie','husky','german_shepherd','bernedoodle','boxer']},
 ];
 
-const serviceGroups = [
+const svcGroups = [
   {label:'Full services', items:[
-    {id:'full_groom',  name:'Full Groom',              desc:'Bath, cut, dry, brush, finish',   icon:'✂️', mult:1.0,  timeAdd:0  },
-    {id:'puppy_first', name:"Puppy's First Groom",     desc:'Gentle intro for young pups',     icon:'🐣', mult:0.9,  timeAdd:-10},
-    {id:'senior_groom',name:'Senior Dog Groom',        desc:'Slow & gentle for older dogs',    icon:'👴', mult:1.05, timeAdd:20 },
+    {id:'full_groom',   name:'Full Groom',             desc:'Bath, cut, dry, brush, finish',    icon:'✂️', mult:1.0,  timeAdd:0  },
+    {id:'puppy_first',  name:"Puppy's First Groom",    desc:'Gentle intro for young pups',      icon:'🐣', mult:0.9,  timeAdd:-10},
+    {id:'senior_groom', name:'Senior Dog Groom',       desc:'Slow & gentle for older dogs',     icon:'👴', mult:1.05, timeAdd:20 },
   ]},
   {label:'Bath services', items:[
-    {id:'bath_brush',  name:'Bath + Brush Out',        desc:'Deep bath with full brush-out',   icon:'🛁', mult:0.65, timeAdd:-20},
-    {id:'bath_nail',   name:'Bath + Nail Trim',        desc:'Bath plus nail clip & file',      icon:'💅', mult:0.6,  timeAdd:-15},
-    {id:'bath_only',   name:'Bath Only',               desc:'Shampoo, condition & dry',        icon:'🚿', mult:0.5,  timeAdd:-30},
-    {id:'deshed_bath', name:'De-shed Bath + Blow Out', desc:'High-velocity undercoat removal', icon:'🪮', mult:0.75, timeAdd:10 },
-    {id:'flea_bath',   name:'Flea & Tick Bath',        desc:'Medicated treatment shampoo',     icon:'🌿', mult:0.7,  timeAdd:0  },
+    {id:'bath_brush',   name:'Bath + Brush Out',       desc:'Deep bath with full brush-out',    icon:'🛁', mult:0.65, timeAdd:-20},
+    {id:'bath_nail',    name:'Bath + Nail Trim',       desc:'Bath plus nail clip & file',       icon:'💅', mult:0.6,  timeAdd:-15},
+    {id:'bath_only',    name:'Bath Only',              desc:'Shampoo, condition & dry',         icon:'🚿', mult:0.5,  timeAdd:-30},
+    {id:'deshed_bath',  name:'De-shed Bath + Blow Out',desc:'High-velocity undercoat removal',  icon:'🪮', mult:0.75, timeAdd:10 },
+    {id:'flea_bath',    name:'Flea & Tick Bath',       desc:'Medicated treatment shampoo',      icon:'🌿', mult:0.7,  timeAdd:0  },
   ]},
   {label:'Quick services', items:[
-    {id:'nail_only',   name:'Nail Trim Only',          desc:'Clip all nails, file smooth',     icon:'💅', mult:0.18, timeAdd:-65},
-    {id:'nail_dremel', name:'Nail Dremel',             desc:'Grind nails smooth, no sharp edges',icon:'🔧',mult:0.22,timeAdd:-60},
-    {id:'ear_clean',   name:'Ear Cleaning Only',       desc:'Gentle flush & dry',              icon:'👂', mult:0.15, timeAdd:-65},
-    {id:'teeth_clean', name:'Teeth Brushing Only',     desc:'Enzymatic toothpaste clean',      icon:'🦷', mult:0.18, timeAdd:-65},
-    {id:'dematting',   name:'De-matting Treatment',    desc:'Careful mat removal session',     icon:'🪮', mult:0.55, timeAdd:20 },
+    {id:'nail_only',    name:'Nail Trim Only',         desc:'Clip all nails, file smooth',      icon:'💅', mult:0.18, timeAdd:-65},
+    {id:'nail_dremel',  name:'Nail Dremel',            desc:'Grind nails smooth',               icon:'🔧', mult:0.22, timeAdd:-60},
+    {id:'ear_clean',    name:'Ear Cleaning Only',      desc:'Gentle flush & dry',               icon:'👂', mult:0.15, timeAdd:-65},
+    {id:'teeth_clean',  name:'Teeth Brushing Only',    desc:'Enzymatic toothpaste clean',       icon:'🦷', mult:0.18, timeAdd:-65},
+    {id:'dematting',    name:'De-matting Treatment',   desc:'Careful mat removal session',      icon:'🪮', mult:0.55, timeAdd:20 },
   ]},
 ];
 
-// Flatten services for lookup
-const serviceData = {};
-serviceGroups.forEach(g=>g.items.forEach(s=>serviceData[s.id]=s));
+const svcData = {};
+svcGroups.forEach(g=>g.items.forEach(s=>svcData[s.id]=s));
 
 const sizeMultiplier = {small:0.8, medium:1.0, large:1.25};
 const sizeTimeAdd    = {small:-20, medium:0,   large:30};
@@ -718,17 +620,16 @@ const groomers = [
 ];
 
 const breedGuides = {
-  goldendoodle:{freq:'6–8 wks',coat:'Wavy/Curly',difficulty:'High',tips:['Brush 3–4x per week to prevent matting around ears and legs','Ask for a teddy bear or puppy cut to keep coat manageable','Book early — Doodles are the most in-demand breed at every salon','Never skip brushing between grooms or the coat mats badly'],cuts:[{name:'Teddy Bear',emoji:'🧸',desc:'Round face, fluffy body, medium length. Most popular Doodle cut.'},{name:'Puppy Cut',emoji:'🐣',desc:'Uniform short length all over. Easy to maintain.'},{name:'Lion Cut',emoji:'🦁',desc:'Short body, full mane around face. Very dramatic.'},{name:'Kennel Cut',emoji:'✂️',desc:'Very short all over. Great for summer or active dogs.'}]},
-  yorkie:      {freq:'4–6 wks',coat:'Silky/Fine',difficulty:'Medium',tips:['Yorkies have hair not fur — it grows continuously like human hair','Daily brushing prevents tangles in longer styles','Ear hair grows inside the canal — ask groomer to pluck it monthly','The puppy cut keeps them tidy with minimal brushing at home'],cuts:[{name:'Puppy Cut',emoji:'🐣',desc:'Short, uniform trim. Low maintenance and adorable.'},{name:'Show Cut',emoji:'🏆',desc:'Long flowing coat parted down the middle. High maintenance.'},{name:'Schnauzer Cut',emoji:'✂️',desc:'Short body, longer beard and eyebrows. Very dapper.'}]},
-  frenchbulldog:{freq:'8–12 wks',coat:'Short/Smooth',difficulty:'Low',tips:['Frenchies are low-maintenance coat-wise — baths and nail trims are priority','Clean facial folds weekly with a damp cloth to prevent infection','Their nails grow fast — trim every 3–4 weeks','Sensitive skin — ask for hypoallergenic shampoo'],cuts:[{name:'Bath + Nail',emoji:'🛁',desc:'Most Frenchies just need a good bath and nail trim.'},{name:'Full Groom',emoji:'✂️',desc:'Bath, blow dry, nail trim, ear clean and finishing touches.'}]},
-  husky:       {freq:'8–12 wks',coat:'Double coat',difficulty:'High',tips:['NEVER shave a Husky — their double coat regulates temperature both ways','De-shed treatments 2x per year are essential','Blow-out sessions remove undercoat without any cutting','Brush 2–3x per week during heavy shedding season'],cuts:[{name:'De-shed Blow Out',emoji:'🪮',desc:'High-velocity dryer removes loose undercoat. No cutting needed.'},{name:'Bath + Brush',emoji:'🛁',desc:'Deep clean with thorough brush-out. Core maintenance.'}]},
-  poodle:      {freq:'4–6 wks',coat:'Curly/Non-shed',difficulty:'High',tips:['Poodle coats mat extremely fast — never skip brushing','Book every 4–6 weeks or the coat becomes unmanageable','Ear hair grows into the canal — groomer should pluck monthly','The puppy clip works great for non-show Poodles'],cuts:[{name:'Puppy Clip',emoji:'🐣',desc:'Even length all over with rounded pom on top.'},{name:'Continental',emoji:'👑',desc:'The iconic show-poodle look. Dramatic shaved patches with poms.'},{name:'Teddy Bear',emoji:'🧸',desc:'Fluffy and rounded face. Very popular for Miniature Poodles.'},{name:'Sporting Clip',emoji:'🏃',desc:'Short all over with a longer topknot.'}]},
-  labrador:    {freq:'8–12 wks',coat:'Short/Double',difficulty:'Low',tips:['Labs shed year-round — de-shed baths reduce indoor shedding dramatically','Their short coat only needs bathing and nail trims','High-velocity dryers remove loose undercoat effectively','Check ears after water activities — Labs are prone to ear infections'],cuts:[{name:'De-shed Bath',emoji:'🪮',desc:'Deep bath with blow-out to remove loose undercoat.'},{name:'Bath + Nail',emoji:'💅',desc:'Standard maintenance. Quick and affordable.'}]},
-  corgi:       {freq:'6–8 wks',coat:'Double coat',difficulty:'Medium',tips:['Corgis shed heavily — de-shed treatments significantly help','Brush 2–3x per week during shedding season','Their thick undercoat needs regular blow-outs','Check between paw pads regularly for debris'],cuts:[{name:'Natural Trim',emoji:'✂️',desc:'Light tidy-up keeping the natural look.'},{name:'De-shed Bath',emoji:'🪮',desc:'Blow-out to remove loose undercoat. Essential for Corgis.'}]},
-  shiba:       {freq:'6–8 wks',coat:'Double coat',difficulty:'Medium',tips:['Shiba Inus are famously clean dogs but still need regular grooming','They blow their coat 2x per year — heavy shedding seasons','Never shave a Shiba — their double coat protects against heat and cold','De-shed blow-outs are the most important treatment'],cuts:[{name:'Natural Trim',emoji:'✂️',desc:'Minimal trimming to keep the natural Shiba look.'},{name:'De-shed Blow Out',emoji:'🪮',desc:'Essential during shedding season.'}]},
+  goldendoodle:{freq:'6–8 wks',coat:'Wavy/Curly',difficulty:'High',tips:['Brush 3–4x per week to prevent matting around ears and legs','Ask for a teddy bear or puppy cut to keep coat manageable','Book early — Doodles are the most in-demand breed at every NYC salon','Never skip brushing between grooms or the coat mats badly'],cuts:[{name:'Teddy Bear',emoji:'🧸',desc:'Round face, fluffy body, medium length. Most popular Doodle cut.'},{name:'Puppy Cut',emoji:'🐣',desc:'Uniform short length all over. Easy to maintain.'},{name:'Lion Cut',emoji:'🦁',desc:'Short body, full mane around face.'},{name:'Kennel Cut',emoji:'✂️',desc:'Very short all over. Great for summer.'}]},
+  yorkie:      {freq:'4–6 wks',coat:'Silky/Fine',difficulty:'Medium',tips:['Yorkies have hair not fur — grows continuously like human hair','Daily brushing prevents tangles in longer styles','Ear hair grows inside the canal — ask groomer to pluck it monthly','Puppy cut keeps them tidy with minimal brushing at home'],cuts:[{name:'Puppy Cut',emoji:'🐣',desc:'Short, uniform. Low maintenance.'},{name:'Show Cut',emoji:'🏆',desc:'Long flowing coat parted down the middle.'},{name:'Schnauzer Cut',emoji:'✂️',desc:'Short body, longer beard and eyebrows.'}]},
+  frenchbulldog:{freq:'8–12 wks',coat:'Short/Smooth',difficulty:'Low',tips:['Low-maintenance coat — baths and nail trims are the priority','Clean facial folds weekly to prevent infection','Nails grow fast — trim every 3–4 weeks','Sensitive skin — ask for hypoallergenic shampoo'],cuts:[{name:'Bath + Nail',emoji:'🛁',desc:'Most Frenchies just need a bath and nail trim.'},{name:'Full Groom',emoji:'✂️',desc:'Bath, dry, nail trim, ear clean and finish.'}]},
+  husky:       {freq:'8–12 wks',coat:'Double coat',difficulty:'High',tips:['NEVER shave a Husky — double coat regulates temperature both ways','De-shed treatments 2x per year are essential','Blow-out sessions remove undercoat without cutting','Brush 2–3x per week during shedding season'],cuts:[{name:'De-shed Blow Out',emoji:'🪮',desc:'High-velocity dryer removes loose undercoat. No cutting.'},{name:'Bath + Brush',emoji:'🛁',desc:'Deep clean with thorough brush-out.'}]},
+  poodle:      {freq:'4–6 wks',coat:'Curly/Non-shed',difficulty:'High',tips:['Poodle coats mat extremely fast — never skip brushing','Book every 4–6 weeks or coat becomes unmanageable','Ear hair grows into canal — groomer should pluck monthly','Puppy clip works great for non-show Poodles'],cuts:[{name:'Puppy Clip',emoji:'🐣',desc:'Even length with rounded pom on top.'},{name:'Continental',emoji:'👑',desc:'Iconic show-poodle look. Dramatic poms.'},{name:'Teddy Bear',emoji:'🧸',desc:'Fluffy and rounded. Popular for Mini Poodles.'},{name:'Sporting Clip',emoji:'🏃',desc:'Short all over with longer topknot.'}]},
+  labrador:    {freq:'8–12 wks',coat:'Short/Double',difficulty:'Low',tips:['Labs shed year-round — de-shed baths reduce indoor shedding dramatically','Short coat only needs bathing and nail trims','High-velocity dryers remove loose undercoat effectively','Check ears after water — Labs are prone to ear infections'],cuts:[{name:'De-shed Bath',emoji:'🪮',desc:'Deep bath with blow-out. Best for Labs.'},{name:'Bath + Nail',emoji:'💅',desc:'Standard maintenance. Quick and affordable.'}]},
+  corgi:       {freq:'6–8 wks',coat:'Double coat',difficulty:'Medium',tips:['Corgis shed heavily — de-shed treatments help a lot','Brush 2–3x per week during shedding season','Regular blow-outs keep the undercoat managed','Check between paw pads regularly'],cuts:[{name:'Natural Trim',emoji:'✂️',desc:'Light tidy-up keeping the natural look.'},{name:'De-shed Bath',emoji:'🪮',desc:'Essential blow-out for Corgis.'}]},
+  shiba:       {freq:'6–8 wks',coat:'Double coat',difficulty:'Medium',tips:['Shiba Inus are famously clean dogs but need regular grooming','They blow their coat 2x per year — heavy shedding','Never shave a Shiba — double coat protects against heat and cold','De-shed blow-outs are the most important treatment'],cuts:[{name:'Natural Trim',emoji:'✂️',desc:'Minimal trimming to keep the natural Shiba look.'},{name:'De-shed Blow Out',emoji:'🪮',desc:'Essential during shedding season.'}]},
 };
 
-// Add-ons
 function getAddons(groomTime) {
   const big = groomTime >= 120;
   return [
@@ -745,407 +646,403 @@ function getAddons(groomTime) {
 
 function getSvcPrice(gid, bid, sid, size) {
   const base = basePricing[gid][bid] || 0;
-  const svc = serviceData[sid];
+  const s = svcData[sid];
   const sm = (breedData[bid]?.variableSize && size) ? sizeMultiplier[size] : 1.0;
-  return Math.round(base * svc.mult * sm);
+  return Math.round(base * s.mult * sm);
 }
 
 function getSvcTime(bid, sid, size) {
   const base = breedData[bid]?.groomTime || 60;
-  const sa = serviceData[sid]?.timeAdd || 0;
+  const sa = svcData[sid]?.timeAdd || 0;
   const ta = (breedData[bid]?.variableSize && size) ? sizeTimeAdd[size] : 0;
   return Math.max(15, base + sa + ta);
 }
 
+// More slots — salons have multiple groomers, so we generate slots every 30 min regardless of service length
 const slotCache = {};
 function getSlots(gid, bid, sid, size, dayIdx) {
   const k = `${gid}-${bid}-${sid}-${size}-${dayIdx}`;
   if (!slotCache[k]) {
-    const t = getSvcTime(bid, sid, size);
     const slots = [];
-    for (let m = 9*60; m + t <= 19*60; m += t+15) {
+    for (let m = 9*60; m <= 18*60; m += 30) {
       const h = Math.floor(m/60), min = m%60;
       slots.push(`${h>12?h-12:h}:${min===0?'00':min} ${h>=12?'PM':'AM'}`);
     }
-    const rate = [0.5,0.3,0.2,0.4,0.25][dayIdx%5];
+    const rate = [0.45,0.25,0.15,0.35,0.2][dayIdx%5];
     slotCache[k] = slots.filter(()=>Math.random()>rate);
   }
   return slotCache[k];
 }
 
 // ── STATE ─────────────────────────────────────────────────────────────────────
-let selBreedId = null, selSvcId = null, selSize = 'medium';
+let selBreed = null, selSvc = null, selSize = 'medium', locSet = false;
 let selGroomer = null, selDay = 'Today', selDayIdx = 0, selTime = null;
-let selAddons = new Set(), sheetMode = 'booking';
-let locationSet = false;
-let activeFilter = 'all';
-const DAYS = ['Today','Tomorrow','Wed','Thu','Fri'];
+let selAddons = new Set(), activeTab = 'services', activeFilter = 'all';
+let sheetConfirm = false;
 let groomHistory = [
   {salon:'Groomingdales',service:'Full Groom',date:'Feb 12, 2026',price:120},
   {salon:'Doggy Stylez', service:'Bath + Nail',date:'Dec 28, 2025',price:78},
 ];
+const DAYS = ['Today','Tomorrow','Wed','Thu','Fri'];
 
 // ── CLOCK ─────────────────────────────────────────────────────────────────────
-function updateClock() {
-  const now = new Date();
-  const h = now.getHours(), m = now.getMinutes();
-  document.getElementById('statusTime').textContent = `${h>12?h-12:h}:${m<10?'0'+m:m} ${h>=12?'PM':'AM'}`;
+function tick() {
+  const n=new Date(),h=n.getHours(),m=n.getMinutes();
+  document.getElementById('stTime').textContent=`${h>12?h-12:h}:${m<10?'0'+m:m} ${h>=12?'PM':'AM'}`;
 }
-updateClock(); setInterval(updateClock, 1000);
+tick(); setInterval(tick,1000);
 
 // ── LOCATION ──────────────────────────────────────────────────────────────────
 function useMyLocation() {
-  const el = document.getElementById('locationDisplay');
-  el.textContent = '📡 Getting location...';
-  el.classList.remove('placeholder');
-  const set = (txt) => { el.textContent = txt; locationSet = true; checkForm(); };
+  const el = document.getElementById('locDisplay');
+  el.textContent = '📡 Locating...'; el.classList.remove('ph');
+  const set = t => { el.textContent = t; locSet = true; checkForm(); };
   if (navigator.geolocation) navigator.geolocation.getCurrentPosition(()=>set('Upper East Side, NYC'),()=>set('Upper East Side, NYC'));
   else set('Upper East Side, NYC');
 }
 
-// ── PICKERS ───────────────────────────────────────────────────────────────────
+// ── BREED PICKER ──────────────────────────────────────────────────────────────
 function openPicker(type) {
   if (type==='breed') {
-    renderBreedPicker('');
-    document.getElementById('breedPickerOverlay').classList.add('open');
-    document.getElementById('breedPickerSheet').classList.add('open');
-    setTimeout(()=>document.getElementById('breedSearchInput').focus(), 350);
+    renderBreedList('');
+    document.getElementById('breedPO').classList.add('open');
+    document.getElementById('breedPS').classList.add('open');
+    setTimeout(()=>document.getElementById('breedSI').focus(),350);
   } else {
-    renderServicePicker();
-    document.getElementById('servicePickerOverlay').classList.add('open');
-    document.getElementById('servicePickerSheet').classList.add('open');
+    renderSvcList();
+    document.getElementById('svcPO').classList.add('open');
+    document.getElementById('svcPS').classList.add('open');
   }
 }
-
 function closePicker(type) {
-  document.getElementById(`${type}PickerOverlay`).classList.remove('open');
-  document.getElementById(`${type}PickerSheet`).classList.remove('open');
+  document.getElementById(`${type==='breed'?'breed':'svc'}PO`).classList.remove('open');
+  document.getElementById(`${type==='breed'?'breed':'svc'}PS`).classList.remove('open');
 }
-
-function renderBreedPicker(filter) {
-  const q = filter.toLowerCase();
-  const html = breedGroups.map(g => {
-    const items = g.ids.filter(id => !q || breedData[id].name.toLowerCase().includes(q));
-    if (!items.length) return '';
-    return `<div class="picker-group-label">${g.label}</div>` +
-      items.map(id => {
-        const bd = breedData[id];
-        return `<div class="picker-item ${selBreedId===id?'selected':''}" onclick="pickBreed('${id}')">
-          <div class="pi-emoji">${bd.emoji}</div>
-          <div class="pi-info"><div class="pi-name">${bd.name}</div><div class="pi-sub">~${bd.groomTime} min full groom${bd.variableSize?' · size varies':''}</div></div>
-          ${selBreedId===id?'<div class="pi-check">✓</div>':''}
-        </div>`;
-      }).join('');
-  }).join('');
-  document.getElementById('breedPickerList').innerHTML = html || '<div style="padding:20px;text-align:center;color:var(--muted)">No breeds found</div>';
+function renderBreedList(q) {
+  q = q.toLowerCase();
+  document.getElementById('breedPL').innerHTML = breedGroups.map(g=>{
+    const ids = g.ids.filter(id=>!q||breedData[id].name.toLowerCase().includes(q));
+    if (!ids.length) return '';
+    return `<div class="p-group-lbl">${g.label}</div>` + ids.map(id=>{
+      const bd=breedData[id];
+      return `<div class="p-item ${selBreed===id?'sel':''}" onclick="pickBreed('${id}')">
+        <div class="pi-emoji">${bd.emoji}</div>
+        <div class="pi-info"><div class="pi-name">${bd.name}</div><div class="pi-sub">Full groom ~${bd.groomTime} min${bd.variableSize?' · size varies':''}</div></div>
+        ${selBreed===id?'<div class="pi-check">✓</div>':''}
+      </div>`;
+    }).join('');
+  }).join('') || '<div style="padding:20px;text-align:center;color:var(--muted)">No breeds found</div>';
 }
-
-function filterBreedPicker() {
-  renderBreedPicker(document.getElementById('breedSearchInput').value);
-}
-
+function filterBreeds() { renderBreedList(document.getElementById('breedSI').value); }
 function pickBreed(id) {
-  selBreedId = id;
+  selBreed = id;
   const bd = breedData[id];
   const el = document.getElementById('breedDisplay');
   el.textContent = `${bd.emoji} ${bd.name}${bd.variableSize?' (size varies)':''}`;
-  el.classList.remove('placeholder');
-  document.getElementById('sizeInline').classList.toggle('visible', bd.variableSize);
-  checkForm();
-  closePicker('breed');
+  el.classList.remove('ph');
+  document.getElementById('sizeInline').classList.toggle('vis', bd.variableSize);
+  updateEstTime(); checkForm(); closePicker('breed');
 }
-
 function pickSize(size, btn) {
   selSize = size;
   document.querySelectorAll('.size-pill').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
+  updateEstTime();
 }
-
-function renderServicePicker() {
-  const html = serviceGroups.map(g =>
-    `<div class="picker-group-label">${g.label}</div>` +
-    g.items.map(s => `
-      <div class="picker-item ${selSvcId===s.id?'selected':''}" onclick="pickService('${s.id}')">
+function renderSvcList() {
+  document.getElementById('svcPL').innerHTML = svcGroups.map(g=>
+    `<div class="p-group-lbl">${g.label}</div>` + g.items.map(s=>`
+      <div class="p-item ${selSvc===s.id?'sel':''}" onclick="pickSvc('${s.id}')">
         <div class="pi-emoji">${s.icon}</div>
         <div class="pi-info"><div class="pi-name">${s.name}</div><div class="pi-sub">${s.desc}</div></div>
-        ${selSvcId===s.id?'<div class="pi-check">✓</div>':''}
+        ${selSvc===s.id?'<div class="pi-check">✓</div>':''}
       </div>`).join('')
   ).join('');
-  document.getElementById('servicePickerList').innerHTML = html;
+}
+function pickSvc(id) {
+  selSvc = id;
+  const s = svcData[id];
+  const el = document.getElementById('svcDisplay');
+  el.textContent = `${s.icon} ${s.name}`;
+  el.classList.remove('ph');
+  updateEstTime(); checkForm(); closePicker('service');
 }
 
-function pickService(id) {
-  selSvcId = id;
-  const s = serviceData[id];
-  const el = document.getElementById('serviceDisplay');
-  el.textContent = `${s.icon} ${s.name}`;
-  el.classList.remove('placeholder');
-  checkForm();
-  closePicker('service');
+function updateEstTime() {
+  const bar = document.getElementById('estTimeBar');
+  if (selBreed && selSvc) {
+    const t = getSvcTime(selBreed, selSvc, selSize);
+    const bd = breedData[selBreed];
+    const s = svcData[selSvc];
+    document.getElementById('etMain').textContent = `Estimated: ~${t} min`;
+    document.getElementById('etSub').textContent = `${bd.name} · ${s.name}`;
+    bar.classList.add('vis');
+  } else {
+    bar.classList.remove('vis');
+  }
 }
 
 function checkForm() {
-  document.getElementById('findBtn').disabled = !(selBreedId && selSvcId && locationSet);
+  document.getElementById('findBtn').disabled = !(selBreed && selSvc && locSet);
 }
 
 function quickPick(bid, sid, size) {
-  selBreedId = bid; selSvcId = sid;
-  if (size) selSize = size;
-  const bd = breedData[bid];
-  const s = serviceData[sid];
-  const bEl = document.getElementById('breedDisplay');
-  bEl.textContent = `${bd.emoji} ${bd.name}`;
-  bEl.classList.remove('placeholder');
-  const sEl = document.getElementById('serviceDisplay');
-  sEl.textContent = `${s.icon} ${s.name}`;
-  sEl.classList.remove('placeholder');
-  const lEl = document.getElementById('locationDisplay');
-  lEl.textContent = 'Upper East Side, NYC';
-  lEl.classList.remove('placeholder');
-  locationSet = true;
-  document.getElementById('sizeInline').classList.toggle('visible', bd.variableSize);
-  checkForm();
+  selBreed=bid; selSvc=sid; if(size) selSize=size;
+  const bd=breedData[bid], s=svcData[sid];
+  const bEl=document.getElementById('breedDisplay');
+  bEl.textContent=`${bd.emoji} ${bd.name}`; bEl.classList.remove('ph');
+  const sEl=document.getElementById('svcDisplay');
+  sEl.textContent=`${s.icon} ${s.name}`; sEl.classList.remove('ph');
+  const lEl=document.getElementById('locDisplay');
+  lEl.textContent='Upper East Side, NYC'; lEl.classList.remove('ph');
+  locSet=true;
+  document.getElementById('sizeInline').classList.toggle('vis', bd.variableSize);
+  if(size) { document.querySelectorAll('.size-pill').forEach(b=>b.classList.toggle('active',b.textContent.toLowerCase()===size)); }
+  updateEstTime(); checkForm();
   setTimeout(findGroomers, 80);
 }
 
-// ── FIND GROOMERS ─────────────────────────────────────────────────────────────
+// ── RESULTS ───────────────────────────────────────────────────────────────────
 function findGroomers() {
-  const bd = breedData[selBreedId];
-  const s = serviceData[selSvcId];
-  const szLbl = bd.variableSize ? ` (${selSize})` : '';
-  document.getElementById('resultsTitle').textContent = `${bd.emoji} ${bd.name}${szLbl}`;
-  document.getElementById('resultsSubtitle').textContent = `${s.icon} ${s.name} · Upper East Side`;
-  activeFilter = 'all';
+  const bd=breedData[selBreed], s=svcData[selSvc];
+  const szLbl=bd.variableSize?` (${selSize})`:'';
+  document.getElementById('rTitle').textContent=`${bd.emoji} ${bd.name}${szLbl}`;
+  document.getElementById('rSub').textContent=`${s.icon} ${s.name} · UES`;
+  activeFilter='all';
   document.querySelectorAll('.fchip').forEach(c=>c.classList.toggle('active',c.dataset.f==='all'));
-  renderCards();
-  goToScreen('results');
+  renderCards(); goToScreen('results');
 }
 
-// ── AVAILABILITY ──────────────────────────────────────────────────────────────
 function getAvail(gid) {
-  const s = getSlots(gid,selBreedId,selSvcId,selSize,0);
-  return s.length===0?'full':s.length<=1?'limited':'available';
+  const s=getSlots(gid,selBreed,selSvc,selSize,0);
+  return s.length===0?'full':s.length<=2?'limited':'available';
 }
 
-// ── RENDER CARDS ──────────────────────────────────────────────────────────────
 function renderCards() {
-  let list = [...groomers];
-  if (activeFilter==='available') list=list.filter(g=>getAvail(g.id)!=='full');
-  else if (activeFilter==='specialist') list=list.filter(g=>specialtyBreeds[g.id].includes(selBreedId));
-  else if (activeFilter==='budget') list=[...list].sort((a,b)=>getSvcPrice(a.id,selBreedId,selSvcId,selSize)-getSvcPrice(b.id,selBreedId,selSvcId,selSize));
-  else if (activeFilter==='nearby') list=[...list].sort((a,b)=>a.distance-b.distance);
-  else if (activeFilter==='rated') list=[...list].sort((a,b)=>b.rating-a.rating);
-  document.getElementById('resultCount').textContent = list.length;
+  let list=[...groomers];
+  if(activeFilter==='available') list=list.filter(g=>getAvail(g.id)!=='full');
+  else if(activeFilter==='specialist') list=list.filter(g=>specialtyBreeds[g.id].includes(selBreed));
+  else if(activeFilter==='budget') list=[...list].sort((a,b)=>getSvcPrice(a.id,selBreed,selSvc,selSize)-getSvcPrice(b.id,selBreed,selSvc,selSize));
+  else if(activeFilter==='nearby') list=[...list].sort((a,b)=>a.distance-b.distance);
+  else if(activeFilter==='rated') list=[...list].sort((a,b)=>b.rating-a.rating);
+  document.getElementById('rCount').textContent=list.length;
 
-  const bd = breedData[selBreedId];
-  const s = serviceData[selSvcId];
-  const szLbl = bd.variableSize ? ` (${selSize})` : '';
+  const bd=breedData[selBreed], s=svcData[selSvc];
+  const szLbl=bd.variableSize?` (${selSize})`:'';
+  const time=getSvcTime(selBreed,selSvc,selSize);
 
-  document.getElementById('cardsWrap').innerHTML = list.map(g => {
-    const price = getSvcPrice(g.id,selBreedId,selSvcId,selSize);
-    const time = getSvcTime(selBreedId,selSvcId,selSize);
-    const avail = getAvail(g.id);
-    const isFull = avail==='full';
-    const isSpec = specialtyBreeds[g.id].includes(selBreedId);
-    const slots = getSlots(g.id,selBreedId,selSvcId,selSize,0);
-    const allSvcs = Object.entries(serviceData).map(([sid,sv])=>({...sv,sid,price:getSvcPrice(g.id,selBreedId,sid,selSize),isMatch:sid===selSvcId}));
+  document.getElementById('cardsWrap').innerHTML=list.map(g=>{
+    const price=getSvcPrice(g.id,selBreed,selSvc,selSize);
+    const avail=getAvail(g.id);
+    const isFull=avail==='full';
+    const isSpec=specialtyBreeds[g.id].includes(selBreed);
+    const slots=getSlots(g.id,selBreed,selSvc,selSize,0);
 
-    return `
-      <div class="g-card" onclick="openSheet(${g.id})">
-        <div class="g-card-img" style="background:${g.gradient}">
-          <div class="bg-emoji">${g.emoji}</div>
-          <div class="g-card-img-overlay"></div>
-          <div class="g-badges">
-            ${isFull?`<div class="g-badge g-badge-full">Fully Booked</div>`:avail==='limited'?`<div class="g-badge g-badge-ltd">⚡ 1 slot left</div>`:`<div class="g-badge g-badge-avail">● Open Today</div>`}
-            ${isSpec?`<div class="g-badge g-badge-spec">🏅 ${bd.name} specialist</div>`:''}
-          </div>
-          ${!isFull&&slots.length>0?`<div class="g-slots-row">${slots.slice(0,3).map(sl=>`<div class="g-slot">${sl}</div>`).join('')}${slots.length>3?`<div class="g-slot">+${slots.length-3}</div>`:''}</div>`:''}
+    return `<div class="g-card" onclick="openSheet(${g.id})">
+      <div class="g-img" style="background:${g.gradient}">
+        <div class="bg-e">${g.emoji}</div>
+        <div class="g-img-ov"></div>
+        <div class="g-badges">
+          ${isFull?`<div class="gbadge gb-full">Fully Booked</div>`:avail==='limited'?`<div class="gbadge gb-ltd">⚡ Few slots left</div>`:`<div class="gbadge gb-avail">● Open Today</div>`}
+          ${isSpec?`<div class="gbadge gb-spec">🏅 ${bd.name} specialist</div>`:''}
         </div>
-        <div class="g-price-bar">
-          <div><div class="gpb-left">${bd.emoji} ${bd.name}${szLbl} · ${s.name}</div><div class="gpb-time">⏱ ~${time} min</div></div>
-          <div class="gpb-price">$${price}</div>
-        </div>
-        <div class="g-body">
-          <div class="g-body-top">
-            <div class="g-name">${g.name}</div>
-            <div class="g-rating">⭐ ${g.rating} <span>(${g.reviews})</span></div>
-          </div>
-          <div class="g-meta"><span>📍 ${g.address}</span><span>🚶 ${g.distance} mi</span></div>
-          <div class="prices-toggle" onclick="event.stopPropagation();togglePrices(${g.id})">
-            <span id="ptog-${g.id}">▸</span> All service prices
-          </div>
-          <div class="prices-grid" id="pgrid-${g.id}">
-            ${allSvcs.map(sv=>`<div class="pg-item ${sv.isMatch?'match':''}"><div class="pg-name">${sv.name}</div><div class="pg-price">$${sv.price}</div>${sv.isMatch?`<div class="pg-match-tag">selected</div>`:''}</div>`).join('')}
-          </div>
-          <button class="g-book-btn ${isFull?'full':''}" onclick="event.stopPropagation();${!isFull?`openSheet(${g.id})`:''}">
-            ${isFull?'😔 Fully Booked':`📅 Book for $${price}`}
-          </button>
-        </div>
-      </div>`;
+      </div>
+      <div class="g-price-row">
+        <div class="gpr-left"><div class="gpr-svc">${bd.emoji} ${bd.name}${szLbl} · ${s.name}</div><div class="gpr-time">⏱ ~${time} min</div></div>
+        <div class="gpr-price">$${price}</div>
+      </div>
+      <div class="g-body">
+        <div class="g-top"><div class="g-name">${g.name}</div><div class="g-rating">⭐ ${g.rating} <span>(${g.reviews})</span></div></div>
+        <div class="g-meta"><span>📍 ${g.address}</span><span>🚶 ${g.distance} mi</span></div>
+        <button class="g-menu-btn ${isFull?'full':''}" onclick="event.stopPropagation();${!isFull?`openSheet(${g.id})`:''}">
+          ${isFull?'😔 Fully Booked':`📋 See full menu & book →`}
+        </button>
+      </div>
+    </div>`;
   }).join('');
 }
 
-function togglePrices(id) {
-  const g = document.getElementById(`pgrid-${id}`);
-  const i = document.getElementById(`ptog-${id}`);
-  g.classList.toggle('open');
-  i.textContent = g.classList.contains('open')?'▾':'▸';
-}
+document.getElementById('filterRow').addEventListener('click',e=>{
+  const c=e.target.closest('.fchip'); if(!c) return;
+  document.querySelectorAll('.fchip').forEach(x=>x.classList.remove('active'));
+  c.classList.add('active'); activeFilter=c.dataset.f; renderCards();
+});
 
-// ── BOOKING SHEET ─────────────────────────────────────────────────────────────
+// ── SALON MENU SHEET ──────────────────────────────────────────────────────────
 function openSheet(id) {
-  selGroomer = groomers.find(g=>g.id===id);
-  selDay='Today'; selDayIdx=0; selTime=null; selAddons=new Set(); sheetMode='booking';
-  document.getElementById('bsTitle').textContent = selGroomer.name;
-  renderBsScroll();
-  document.getElementById('sheetOverlay').classList.add('open');
-  document.getElementById('bookingSheet').classList.add('open');
+  selGroomer=groomers.find(g=>g.id===id);
+  selDay='Today'; selDayIdx=0; selTime=null; selAddons=new Set(); activeTab='services'; sheetConfirm=false;
+  renderSheet();
+  document.getElementById('sheetOv').classList.add('open');
+  document.getElementById('menuSheet').classList.add('open');
 }
 function closeSheet() {
-  document.getElementById('sheetOverlay').classList.remove('open');
-  document.getElementById('bookingSheet').classList.remove('open');
+  document.getElementById('sheetOv').classList.remove('open');
+  document.getElementById('menuSheet').classList.remove('open');
+}
+function switchTab(tab) {
+  activeTab=tab;
+  document.querySelectorAll('.ms-tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===tab));
+  renderSheet();
 }
 
 function calcTotal() {
-  const base = getSvcPrice(selGroomer.id,selBreedId,selSvcId,selSize);
-  const time = getSvcTime(selBreedId,selSvcId,selSize);
-  const addons = getAddons(time);
-  const at = addons.filter(a=>selAddons.has(a.id)).reduce((s,a)=>s+a.price,0);
+  const base=getSvcPrice(selGroomer.id,selBreed,selSvc,selSize);
+  const time=getSvcTime(selBreed,selSvc,selSize);
+  const addons=getAddons(time);
+  const at=addons.filter(a=>selAddons.has(a.id)).reduce((s,a)=>s+a.price,0);
   return {base,addonTotal:at,total:base+at,addons};
 }
-function tapAddon(id){selAddons.has(id)?selAddons.delete(id):selAddons.add(id);renderBsScroll();}
-function tapDay(d,i){selDay=d;selDayIdx=i;selTime=null;renderBsScroll();}
-function tapTime(t){selTime=t;renderBsScroll();updateBookBtn();}
 
-function updateBookBtn() {
-  const btn = document.getElementById('bookNowBtn');
-  const {total} = calcTotal();
-  btn.disabled = !selTime;
-  btn.textContent = selTime ? `Book ${selTime} — $${total} →` : 'Select a time to book';
-}
+function renderSheet() {
+  const g=selGroomer;
+  const bd=breedData[selBreed], s=svcData[selSvc];
+  const szLbl=bd.variableSize?` (${selSize})`:'';
+  const time=getSvcTime(selBreed,selSvc,selSize);
+  const {base,addonTotal,total,addons}=calcTotal();
 
-function renderBsScroll() {
-  const g = selGroomer;
-  const bd = breedData[selBreedId];
-  const s = serviceData[selSvcId];
-  const time = getSvcTime(selBreedId,selSvcId,selSize);
-  const {base,addonTotal,total,addons} = calcTotal();
-  const szLbl = bd.variableSize ? ` (${selSize})` : '';
-  const slots = getSlots(g.id,selBreedId,selSvcId,selSize,selDayIdx);
+  if (sheetConfirm) {
+    const addonNames=addons.filter(a=>selAddons.has(a.id)).map(a=>a.name).join(', ');
+    document.getElementById('msScroll').innerHTML=`
+      <div class="confirm-view">
+        <div class="ci">🎉</div>
+        <h2>You're booked!</h2>
+        <p>Real-time updates as your dog goes through grooming — plus a 15-min heads-up when they're ready.</p>
+        <div class="confirm-rows">
+          <div class="cr"><span class="cl">Salon</span><span class="cv">${g.name}</span></div>
+          <div class="cr"><span class="cl">Dog</span><span class="cv">${bd.name}${szLbl}</span></div>
+          <div class="cr"><span class="cl">Service</span><span class="cv">${s.name}</span></div>
+          <div class="cr"><span class="cl">Service</span><span class="cv">$${base}</span></div>
+          ${addonTotal>0?`<div class="cr"><span class="cl">Add-ons</span><span class="cv">$${addonTotal}</span></div>`:''}
+          <div class="cr"><span class="cl">Total</span><span class="cv" style="font-size:16px">$${total}</span></div>
+          <div class="cr"><span class="cl">Day</span><span class="cv">${selDay}</span></div>
+          <div class="cr"><span class="cl">Time</span><span class="cv">${selTime}</span></div>
+          ${addonNames?`<div class="cr"><span class="cl">Add-ons</span><span class="cv" style="text-align:right;max-width:55%">${addonNames}</span></div>`:''}
+        </div>
+        <div class="notif-box"><span style="font-size:20px">🔔</span><div>Updates at every step: <strong>checked in → bathing → drying → ready</strong>. 15-min heads-up before pickup.</div></div>
+        <button class="done-btn" onclick="closeSheet();addHistory('${g.name}','${s.name}',${total})">Done ✓</button>
+      </div>`;
+    return;
+  }
 
-  document.getElementById('bsScroll').innerHTML = `
-    <div class="bs-section">
-      <div style="font-size:12px;color:var(--muted);margin-bottom:12px">⭐ ${g.rating} · 📍 ${g.distance} mi away</div>
-      <div class="price-hero">
-        <div><div class="ph-label">${s.name}</div><div class="ph-service">${bd.emoji} ${bd.name}${szLbl}</div></div>
-        <div style="text-align:right"><div class="ph-price">$${base}</div><div class="ph-time">⏱ ~${time} min</div></div>
+  if (activeTab==='services') {
+    document.getElementById('msScroll').innerHTML=`
+      <div style="padding:16px 18px 0">
+        <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:4px">${g.name}</div>
+        <div style="font-size:12px;color:var(--muted);display:flex;gap:12px;margin-bottom:4px"><span>⭐ ${g.rating} (${g.reviews})</span><span>📍 ${g.distance} mi</span></div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:2px">Showing prices for <strong>${bd.name}${szLbl}</strong> — tap any service to book it</div>
       </div>
-    </div>
-    <div class="bs-section">
-      <div class="bs-section-title">Add-ons</div>
+      ${svcGroups.map(grp=>`
+        <div class="svc-group-lbl">${grp.label}</div>
+        ${grp.items.map(sv=>{
+          const p=getSvcPrice(g.id,selBreed,sv.id,selSize);
+          const t=getSvcTime(selBreed,sv.id,selSize);
+          const isMatch=sv.id===selSvc;
+          return `<div class="svc-row ${isMatch?'highlighted':''}" onclick="selectSvcFromMenu('${sv.id}')">
+            <div class="svc-row-left">
+              <span class="svc-row-icon">${sv.icon}</span>
+              <div>
+                <div class="svc-row-name">${sv.name}</div>
+                <div class="svc-row-desc">${sv.desc}</div>
+                ${isMatch?`<div class="svc-selected-tag">your selection</div>`:''}
+              </div>
+            </div>
+            <div class="svc-row-right">
+              <div class="svc-row-price">$${p}</div>
+              <div class="svc-row-time">⏱ ~${t} min</div>
+            </div>
+          </div>`;
+        }).join('')}
+      `).join('')}
+      <button class="book-this-svc" onclick="switchTab('book')">Book ${s.name} — $${base} →</button>
+    `;
+  } else if (activeTab==='addons') {
+    document.getElementById('msScroll').innerHTML=`
+      <div style="padding:14px 18px 0">
+        <div style="font-size:13px;color:var(--muted);margin-bottom:2px">Add extras to your <strong>${s.name}</strong> appointment</div>
+      </div>
       <div class="addon-list">
         ${addons.map(a=>`
           <div class="addon-row ${selAddons.has(a.id)?'on':''}" onclick="tapAddon('${a.id}')">
-            <div class="ar-left"><div class="ar-icon">${a.icon}</div><div><div class="ar-name">${a.name}</div><div class="ar-desc">${a.desc}</div></div></div>
-            <div class="ar-right"><div class="ar-price">+$${a.price}</div><div class="ar-check">${selAddons.has(a.id)?'✓':''}</div></div>
+            <div class="ar-l"><div class="ar-icon">${a.icon}</div><div><div class="ar-name">${a.name}</div><div class="ar-desc">${a.desc}</div></div></div>
+            <div class="ar-r"><div class="ar-price">+$${a.price}</div><div class="ar-check">${selAddons.has(a.id)?'✓':''}</div></div>
           </div>`).join('')}
       </div>
       <div class="total-pill">
-        <div><div class="tp-label">Total</div><div class="tp-sub">${selAddons.size>0?`${s.name} + ${selAddons.size} add-on${selAddons.size>1?'s':''}`:s.name+' only'}</div></div>
-        <div class="tp-amount">$${total}</div>
+        <div class="tp-l"><div class="tp-lbl">Running total</div><div class="tp-sub">${selAddons.size>0?`${s.name} + ${selAddons.size} add-on${selAddons.size>1?'s':''}`:s.name+' only'}</div></div>
+        <div class="tp-amt">$${total}</div>
       </div>
-    </div>
-    <div class="bs-section" style="padding-bottom:10px">
-      <div class="bs-section-title">Pick a day & time</div>
-      <div style="font-size:11px;color:var(--muted);font-style:italic;margin-bottom:10px">⏱ Slots based on ~${time} min for ${bd.name}${szLbl}</div>
-      <div class="day-row">
-        ${DAYS.map((d,i)=>{const sl=getSlots(g.id,selBreedId,selSvcId,selSize,i);return`<div class="day-chip ${d===selDay?'active':''}" onclick="tapDay('${d}',${i})">${d} ${sl.length===0?'🔴':sl.length<=1?'🟡':'🟢'}</div>`;}).join('')}
+      <div style="padding:14px 18px 0"><button class="book-this-svc" onclick="switchTab('book')">Continue to book →</button></div>
+    `;
+  } else if (activeTab==='book') {
+    const slots=getSlots(g.id,selBreed,selSvc,selSize,selDayIdx);
+    document.getElementById('msScroll').innerHTML=`
+      <div class="book-tab-wrap">
+        <div class="price-hero">
+          <div class="ph-l"><div class="ph-lbl">${s.name}</div><div class="ph-svc">${bd.emoji} ${bd.name}${szLbl}</div></div>
+          <div class="ph-r"><div class="ph-price">$${total}</div><div class="ph-time">⏱ ~${time} min${addonTotal>0?` + add-ons`:''}</div></div>
+        </div>
+        <div class="bt-section-lbl">Pick a day</div>
+        <div class="day-row">
+          ${DAYS.map((d,i)=>{const sl=getSlots(g.id,selBreed,selSvc,selSize,i);return`<div class="day-chip ${d===selDay?'active':''}" onclick="tapDay('${d}',${i})">${d} ${sl.length===0?'🔴':sl.length<=2?'🟡':'🟢'}</div>`;}).join('')}
+        </div>
+        <div class="bt-section-lbl">Pick a time</div>
+        <div style="font-size:11px;color:var(--muted);font-style:italic;margin-bottom:10px">Slots available every 30 min · ${slots.length} open ${selDay==='Today'?'today':'this day'}</div>
+        <div class="time-grid">
+          ${slots.length===0
+            ?`<div style="grid-column:1/-1;text-align:center;padding:20px;color:var(--muted);font-size:13px">😔 No slots — try another day</div>`
+            :slots.map(t=>`<div class="time-cell ${selTime===t?'active':''}" onclick="tapTime('${t}')"><div class="tc-t">${t}</div><div class="tc-l">Open</div></div>`).join('')}
+        </div>
+        <button class="confirm-book-btn" ${selTime?'':'disabled'} id="confirmBookBtn" onclick="doConfirm()">
+          ${selTime?`Confirm ${selTime} — $${total} →`:'Select a time to book'}
+        </button>
       </div>
-      <div class="time-grid">
-        ${slots.length===0
-          ?`<div style="grid-column:1/-1;text-align:center;padding:20px;color:var(--muted);font-size:13px">😔 No slots — try another day</div>`
-          :slots.map(t=>`<div class="time-cell ${selTime===t?'active':''}" onclick="tapTime('${t}')"><div class="tc-time">${t}</div><div class="tc-label">Open</div></div>`).join('')}
-      </div>
-    </div>
-  `;
-  updateBookBtn();
+    `;
+  }
 }
 
-function confirmBooking() {
-  const {base,addonTotal,total,addons} = calcTotal();
-  const bd = breedData[selBreedId];
-  const s = serviceData[selSvcId];
-  const g = selGroomer;
-  const addonNames = addons.filter(a=>selAddons.has(a.id)).map(a=>a.name).join(', ');
-  const szLbl = bd.variableSize ? ` (${selSize})` : '';
-  document.getElementById('bsScroll').innerHTML = `
-    <div class="confirm-body">
-      <div class="confirm-icon">🎉</div>
-      <h2>You're booked!</h2>
-      <p>Real-time updates as your dog goes through grooming — plus a 15-min heads-up when they're ready for pickup.</p>
-      <div class="confirm-rows">
-        <div class="cr"><span class="cl">Salon</span><span class="cv">${g.name}</span></div>
-        <div class="cr"><span class="cl">Dog</span><span class="cv">${bd.name}${szLbl}</span></div>
-        <div class="cr"><span class="cl">Service</span><span class="cv">${s.name}</span></div>
-        <div class="cr"><span class="cl">Service price</span><span class="cv">$${base}</span></div>
-        ${addonTotal>0?`<div class="cr"><span class="cl">Add-ons</span><span class="cv">$${addonTotal}</span></div>`:''}
-        <div class="cr"><span class="cl">Total</span><span class="cv" style="font-size:16px">$${total}</span></div>
-        <div class="cr"><span class="cl">Day</span><span class="cv">${selDay}</span></div>
-        <div class="cr"><span class="cl">Time</span><span class="cv">${selTime}</span></div>
-        ${addonNames?`<div class="cr"><span class="cl">Add-ons</span><span class="cv" style="text-align:right;max-width:55%">${addonNames}</span></div>`:''}
-      </div>
-      <div class="notif-box"><span style="font-size:20px">🔔</span><div>You'll get notified at every step: <strong>checked in → bathing → drying → ready</strong>. No more waiting outside!</div></div>
-    </div>
-  `;
-  document.getElementById('bookNowBtn').textContent = 'Done ✓';
-  document.getElementById('bookNowBtn').disabled = false;
-  document.getElementById('bookNowBtn').onclick = () => { closeSheet(); addHistory(g.name,s.name,total); };
+function selectSvcFromMenu(id) {
+  selSvc=id;
+  const s=svcData[id];
+  const el=document.getElementById('svcDisplay');
+  el.textContent=`${s.icon} ${s.name}`; el.classList.remove('ph');
+  updateEstTime(); checkForm();
+  switchTab('book');
 }
 
-function addHistory(salon,svc,price) {
-  const d = new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
-  groomHistory.unshift({salon,service:svc,date:d,price});
-  renderHistory();
-}
+function tapAddon(id){selAddons.has(id)?selAddons.delete(id):selAddons.add(id);renderSheet();}
+function tapDay(d,i){selDay=d;selDayIdx=i;selTime=null;renderSheet();}
+function tapTime(t){selTime=t;renderSheet();}
+function doConfirm(){sheetConfirm=true;renderSheet();}
 
-// ── GUIDE ─────────────────────────────────────────────────────────────────────
+// ── GUIDES ────────────────────────────────────────────────────────────────────
 function renderGuideRow() {
-  const ids = ['goldendoodle','yorkie','frenchbulldog','husky','poodle','labrador','corgi','shiba'];
-  document.getElementById('guideRow').innerHTML = ids.map(bid => {
-    const bd = breedData[bid];
-    const g = breedGuides[bid];
-    if (!g) return '';
-    const diffClass = g.difficulty==='High'?'high':g.difficulty==='Medium'?'medium':'low';
-    return `<div class="guide-card" onclick="openGuide('${bid}')">
+  const ids=['goldendoodle','yorkie','frenchbulldog','husky','poodle','labrador','corgi','shiba'];
+  document.getElementById('guideRow').innerHTML=ids.map(bid=>{
+    const bd=breedData[bid], g=breedGuides[bid]; if(!g) return '';
+    const dc=g.difficulty==='High'?'high':g.difficulty==='Medium'?'medium':'low';
+    return `<div class="gcard" onclick="openGuide('${bid}')">
       <div class="gc-emoji">${bd.emoji}</div>
-      <div class="gc-breed">${bd.name}</div>
+      <div class="gc-name">${bd.name}</div>
       <div class="gc-freq">${g.freq}</div>
-      <div class="gc-tag ${diffClass}">${g.difficulty} maintenance</div>
+      <div class="gc-tag ${dc}">${g.difficulty}</div>
     </div>`;
   }).join('');
 }
 
 function openGuide(bid) {
-  const bd = breedData[bid];
-  const g = breedGuides[bid];
-  if (!g) return;
-  document.getElementById('guideTitle').textContent = `${bd.emoji} ${bd.name}`;
-  document.getElementById('guideSub').textContent = 'Grooming guide & cut styles';
-  document.getElementById('guideBody').innerHTML = `
+  const bd=breedData[bid], g=breedGuides[bid]; if(!g) return;
+  document.getElementById('guideTitle').textContent=`${bd.emoji} ${bd.name}`;
+  document.getElementById('guideSub').textContent='Grooming guide & cut styles';
+  document.getElementById('guideBody').innerHTML=`
     <div class="stats-row">
-      <div class="stat-box"><div class="stat-val">${g.freq}</div><div class="stat-lbl">Groom freq.</div></div>
+      <div class="stat-box"><div class="stat-val">${g.freq}</div><div class="stat-lbl">How often</div></div>
       <div class="stat-box"><div class="stat-val">${g.coat.split('/')[0]}</div><div class="stat-lbl">Coat type</div></div>
       <div class="stat-box"><div class="stat-val">${g.difficulty}</div><div class="stat-lbl">Maintenance</div></div>
     </div>
-    <div class="gsection">
-      <h3>💡 Pro tips</h3>
-      ${g.tips.map(t=>`<div class="gtip"><span>•</span><span>${t}</span></div>`).join('')}
-    </div>
-    <div class="gsection">
-      <h3>✂️ Popular cut styles</h3>
-      <div class="cut-grid">
-        ${g.cuts.map(c=>`<div class="cut-card" onclick="this.classList.toggle('sel')"><div class="cc-emoji">${c.emoji}</div><div class="cc-name">${c.name}</div><div class="cc-desc">${c.desc}</div></div>`).join('')}
-      </div>
+    <div class="gsect"><h3>💡 Pro tips</h3>${g.tips.map(t=>`<div class="gtip"><span>•</span><span>${t}</span></div>`).join('')}</div>
+    <div class="gsect"><h3>✂️ Popular cut styles</h3>
+      <div class="cut-grid">${g.cuts.map(c=>`<div class="cut-card" onclick="this.classList.toggle('sel')"><div class="cc-e">${c.emoji}</div><div class="cc-n">${c.name}</div><div class="cc-d">${c.desc}</div></div>`).join('')}</div>
     </div>
     <button class="find-from-guide" onclick="quickPick('${bid}','full_groom','medium')">Find ${bd.name} groomers →</button>
   `;
@@ -1154,54 +1051,25 @@ function openGuide(bid) {
 
 // ── PROFILE ───────────────────────────────────────────────────────────────────
 function updateDogPreview() {
-  const name = document.getElementById('dogName').value || 'Your Dog';
-  const bid = document.getElementById('dogBreed').value;
-  const bd = breedData[bid];
-  document.getElementById('dogNameBig').textContent = name;
-  document.getElementById('dogSubText').textContent = bd ? bd.name : 'Add info below';
-  if (bd) document.getElementById('dogAvatarEmoji').textContent = bd.emoji;
-  document.getElementById('rebookTitle').textContent = `Time for ${name}'s groom!`;
+  const n=document.getElementById('dogName').value||'Your Dog';
+  const bid=document.getElementById('dogBreed').value;
+  const bd=breedData[bid];
+  document.getElementById('dogNameBig').textContent=n;
+  document.getElementById('dogSub').textContent=bd?bd.name:'Add info below';
+  if(bd) document.getElementById('dogAvEmoji').textContent=bd.emoji;
+  document.getElementById('rebookTitle').textContent=`Time for ${n}'s groom!`;
 }
-function setPSize(size,btn) { document.querySelectorAll('.psize-btn').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); }
-function saveProfile() { const btn=document.querySelector('.save-btn'); btn.textContent='✅ Saved!'; setTimeout(()=>btn.textContent='Save profile ✓',2000); }
-function handlePhoto(e) {
-  const file=e.target.files[0]; if (!file) return;
-  const r=new FileReader(); r.onload=ev=>{
-    const wrap=document.querySelector('.dog-avatar');
-    const old=document.getElementById('dogAvatarEmoji');
-    old.style.display='none';
-    let img=wrap.querySelector('img'); if(!img){img=document.createElement('img');wrap.insertBefore(img,old);}
-    img.src=ev.target.result;
-  }; r.readAsDataURL(file);
-}
-function renderHistory() {
-  document.getElementById('historyList').innerHTML = groomHistory.length===0
-    ? `<div style="text-align:center;padding:16px;color:var(--muted);font-size:13px">No grooms yet — book your first!</div>`
-    : groomHistory.map(h=>`<div class="history-row"><div class="hr-icon">✂️</div><div class="hr-info"><div class="hr-salon">${h.salon}</div><div class="hr-detail">${h.service} · ${h.date}</div></div><div class="hr-price">$${h.price}</div></div>`).join('');
-}
+function setPSize(size,btn){document.querySelectorAll('.psize-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');}
+function saveProfile(){const btn=document.querySelector('.save-btn');btn.textContent='✅ Saved!';setTimeout(()=>btn.textContent='Save profile ✓',2000);}
+function handlePhoto(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{const w=document.querySelector('.dog-av');const old=document.getElementById('dogAvEmoji');old.style.display='none';let img=w.querySelector('img');if(!img){img=document.createElement('img');w.insertBefore(img,old);}img.src=ev.target.result;};r.readAsDataURL(f);}
+function addHistory(salon,svc,price){const d=new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});groomHistory.unshift({salon,service:svc,date:d,price});renderHistory();}
+function renderHistory(){document.getElementById('histList').innerHTML=groomHistory.length===0?'<div style="text-align:center;padding:16px;color:var(--muted);font-size:13px">No grooms yet!</div>':groomHistory.map(h=>`<div class="hist-row"><div class="hr-ic">✂️</div><div class="hr-info"><div class="hr-salon">${h.salon}</div><div class="hr-detail">${h.service} · ${h.date}</div></div><div class="hr-price">$${h.price}</div></div>`).join('');}
 
 // ── NAV ───────────────────────────────────────────────────────────────────────
-function switchNav(name) {
-  document.querySelectorAll('.bn-btn').forEach(b=>b.classList.remove('active'));
-  document.getElementById(`nav-${name}`).classList.add('active');
-  goToScreen(name==='profile'?'profile':'search');
-}
-function goToScreen(name) {
-  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
-  document.getElementById(`screen-${name}`).classList.add('active');
-}
+function switchNav(name){document.querySelectorAll('.bn-btn').forEach(b=>b.classList.remove('active'));document.getElementById(`nav-${name}`).classList.add('active');goToScreen(name==='profile'?'profile':'search');}
+function goToScreen(name){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(`screen-${name}`).classList.add('active');}
 
-document.getElementById('filterRow').addEventListener('click', e=>{
-  const chip = e.target.closest('.fchip'); if (!chip) return;
-  document.querySelectorAll('.fchip').forEach(c=>c.classList.remove('active'));
-  chip.classList.add('active');
-  activeFilter = chip.dataset.f;
-  renderCards();
-});
-
-// ── INIT ──────────────────────────────────────────────────────────────────────
-renderGuideRow();
-renderHistory();
+renderGuideRow(); renderHistory();
 </script>
 </body>
 </html>
