@@ -382,22 +382,20 @@
       <button class="find-btn" id="findBtn" disabled onclick="findGroomers()">Find Groomers 🐾</button>
     </div>
 
-    <div class="quick-section">
-      <div class="section-label">Popular</div>
-      <div class="chip-scroll">
-        <div class="qchip" onclick="quickPick('goldendoodle','full_groom','medium')">🐩 Doodle full groom</div>
-        <div class="qchip" onclick="quickPick('frenchbulldog','bath_nail',null)">🐾 Frenchie bath + nails</div>
-        <div class="qchip" onclick="quickPick('yorkie','full_groom',null)">🐕 Yorkie full groom</div>
-        <div class="qchip" onclick="quickPick('husky','deshed_bath',null)">🐺 Husky de-shed</div>
-        <div class="qchip" onclick="quickPick('labrador','bath_brush',null)">🦮 Lab bath + brush</div>
-        <div class="qchip" onclick="quickPick('poodle','full_groom','small')">🐩 Toy Poodle groom</div>
-        <div class="qchip" onclick="quickPick('chihuahua','nail_only',null)">🐾 Chihuahua nails</div>
-      </div>
-    </div>
-
-    <div class="guide-section">
-      <div class="section-label">Grooming guides</div>
-      <div class="guide-row" id="guideRow"></div>
+    <div style="padding:16px 20px 20px">
+      <div class="section-label" style="margin-bottom:8px">Grooming guides</div>
+      <select onchange="if(this.value)openGuide(this.value);this.value=''"
+        style="width:100%;background:var(--card);border:1.5px solid var(--border);border-radius:12px;padding:11px 14px;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--text);outline:none;appearance:none;-webkit-appearance:none;cursor:pointer;">
+        <option value="">🐾 Browse breed guides...</option>
+        <option value="goldendoodle">🐩 Goldendoodle</option>
+        <option value="yorkie">🐕 Yorkie</option>
+        <option value="frenchbulldog">🐾 French Bulldog</option>
+        <option value="husky">🐺 Husky</option>
+        <option value="poodle">🐩 Poodle</option>
+        <option value="labrador">🦮 Labrador</option>
+        <option value="corgi">🐕 Corgi</option>
+        <option value="shiba">🦊 Shiba Inu</option>
+      </select>
     </div>
   </div>
 
@@ -413,7 +411,8 @@
     <div class="filter-bar">
       <div class="filter-row" id="filterRow">
         <div class="fchip active" data-f="all">All</div>
-        <div class="fchip" data-f="available">Available Today</div>
+        <div class="fchip" data-f="soonest">⚡ Soonest</div>
+        <div class="fchip" data-f="available">Open Today</div>
         <div class="fchip" data-f="specialist">Specialists</div>
         <div class="fchip" data-f="budget">Lowest Price</div>
         <div class="fchip" data-f="nearby">Nearest</div>
@@ -927,6 +926,11 @@ function miniAvailBar(gid) {
 function renderCards() {
   let list=[...groomers];
   if(activeFilter==='available') list=list.filter(g=>getAvail(g.id)!=='full');
+  else if(activeFilter==='soonest') list=[...list].sort((a,b)=>{
+    const da=firstAvailableDay(a.id), db=firstAvailableDay(b.id);
+    if(!da&&!db) return 0; if(!da) return 1; if(!db) return -1;
+    return da-db;
+  });
   else if(activeFilter==='specialist') list=list.filter(g=>specialtyBreeds[g.id].includes(selBreed));
   else if(activeFilter==='budget') list=[...list].sort((a,b)=>getSvcPrice(a.id,selBreed,selSvc,selSize)-getSvcPrice(b.id,selBreed,selSvc,selSize));
   else if(activeFilter==='nearby') list=[...list].sort((a,b)=>a.distance-b.distance);
