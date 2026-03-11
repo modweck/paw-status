@@ -335,13 +335,14 @@
         <p>Real prices by breed · Live slots · Pickup alerts</p>
       </div>
       <div class="search-card">
-        <div class="search-row" onclick="useMyLocation()">
+        <div class="search-row" style="cursor:default">
           <div class="sr-icon">📍</div>
           <div class="sr-content">
-            <div class="sr-label">Location</div>
-            <div class="sr-value ph" id="locDisplay">Tap to use your location</div>
+            <div class="sr-label">Your address</div>
+            <input type="text" id="locInput" placeholder="e.g. 515 E 72nd St, New York" oninput="onLocInput()"
+              style="width:100%;background:none;border:none;outline:none;font-family:'DM Sans',sans-serif;font-size:15px;color:var(--text);padding:0;" />
           </div>
-          <div class="sr-arrow">›</div>
+          <div style="font-size:18px;cursor:pointer;flex-shrink:0" onclick="useMyLocation()" title="Use my location">🎯</div>
         </div>
         <div class="search-row" onclick="openPicker('breed')">
           <div class="sr-icon">🐕</div>
@@ -717,12 +718,22 @@ function tick() {
 tick(); setInterval(tick,1000);
 
 // ── LOCATION ──────────────────────────────────────────────────────────────────
+function onLocInput() {
+  locSet = document.getElementById('locInput').value.trim().length > 0;
+  checkForm();
+}
+
 function useMyLocation() {
-  const el = document.getElementById('locDisplay');
-  el.textContent = '📡 Locating...'; el.classList.remove('ph');
-  const set = t => { el.textContent = t; locSet = true; checkForm(); };
-  if (navigator.geolocation) navigator.geolocation.getCurrentPosition(()=>set('Upper East Side, NYC'),()=>set('Upper East Side, NYC'));
-  else set('Upper East Side, NYC');
+  const el = document.getElementById('locInput');
+  el.value = '📡 Getting location...';
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      () => { el.value = 'Upper East Side, NYC'; locSet=true; checkForm(); },
+      () => { el.value = 'Upper East Side, NYC'; locSet=true; checkForm(); }
+    );
+  } else {
+    el.value = 'Upper East Side, NYC'; locSet=true; checkForm();
+  }
 }
 
 // ── BREED PICKER ──────────────────────────────────────────────────────────────
@@ -808,7 +819,8 @@ function updateEstTime() {
 }
 
 function checkForm() {
-  document.getElementById('findBtn').disabled = !(selBreed && selSvc && locSet);
+  const hasLoc = document.getElementById('locInput').value.trim().length > 0;
+  document.getElementById('findBtn').disabled = !(selBreed && selSvc && hasLoc);
 }
 
 function quickPick(bid, sid, size) {
@@ -818,8 +830,8 @@ function quickPick(bid, sid, size) {
   bEl.textContent=`${bd.emoji} ${bd.name}`; bEl.classList.remove('ph');
   const sEl=document.getElementById('svcDisplay');
   sEl.textContent=`${s.icon} ${s.name}`; sEl.classList.remove('ph');
-  const lEl=document.getElementById('locDisplay');
-  lEl.textContent='Upper East Side, NYC'; lEl.classList.remove('ph');
+  const lEl=document.getElementById('locInput');
+  lEl.value='Upper East Side, NYC';
   locSet=true;
   document.getElementById('sizeInline').classList.toggle('vis', bd.variableSize);
   if(size) { document.querySelectorAll('.size-pill').forEach(b=>b.classList.toggle('active',b.textContent.toLowerCase()===size)); }
