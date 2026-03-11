@@ -1,1 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PawStatus — Groomer Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+    :root {
+      --bg: #0f0f0f;
+      --card: #1a1a1a;
+      --border: #2a2a2a;
+      --accent: #f5c842;
+      --accent2: #ff6b35;
+      --text: #f0f0f0;
+      --muted: #888;
+      --success: #4ade80;
+      --radius: 16px;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      min-height: 100vh;
+      padding: 24px 16px 40px;
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 32px;
+    }
+    .logo {
+      font-family: 'Syne', sans-serif;
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--accent);
+      letter-spacing: -0.5px;
+    }
+    .logo span { color: var(--text); }
+    .date-badge {
+      margin-left: auto;
+      font-size: 13px;
+      color: var(--muted);
+      background: var(--card);
+      border: 1px solid var(--border);
+      padding: 6px 12px;
+      border-radius: 999px;
+    }
+
+    .section-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--muted);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 14px;
+    }
+
+    .dog-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px;
+      margin-bottom: 12px;
+      transition: border-color 0.2s;
+    }
+    .dog-card.active { border-color: var(--accent); }
+    .dog-card.completed { opacity: 0.5; }
+
+    .dog-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+    .dog-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      flex-shrink: 0;
+    }
+    .dog-info h3 {
+      font-family: 'Syne', sans-serif;
+      font-size: 17px;
+      font-weight: 700;
+      margin-bottom: 2px;
+    }
+    .dog-info p { font-size: 13px; color: var(--muted); }
+    .time-badge {
+      margin-left: auto;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--accent);
+      background: rgba(245, 200, 66, 0.1);
+      padding: 4px 10px;
+      border-radius: 999px;
+      white-space: nowrap;
+    }
+
+    .progress-track {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      margin-bottom: 16px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+      scrollbar-width: none;
+    }
+    .progress-track::-webkit-scrollbar { display: none; }
+
+    .progress-step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+    .step-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--border);
+      transition: background 0.3s;
+    }
+    .step-dot.done { background: var(--success); }
+    .step-dot.active { background: var(--accent); box-shadow: 0 0 0 3px rgba(245,200,66,0.2); }
+    .step-label {
+      font-size: 9px;
+      color: var(--muted);
+      white-space: nowrap;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .step-label.active { color: var(--accent); }
+    .step-label.done { color: var(--success); }
+
+    .progress-line {
+      flex: 1;
+      height: 2px;
+      background: var(--border);
+      min-width: 20px;
+      margin-bottom: 14px;
+      transition: background 0.3s;
+    }
+    .progress-line.done { background: var(--success); }
+
+    .action-btn {
+      width: 100%;
+      padding: 14px 18px;
+      border-radius: 12px;
+      border: none;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      transition: all 0.15s;
+      margin-bottom: 8px;
+    }
+    .action-btn:active { transform: scale(0.97); }
+    .btn-primary { background: var(--accent); color: #000; }
+    .btn-primary:hover { background: #ffd700; }
+    .btn-ready { background: var(--success); color: #000; font-size: 17px; padding: 18px; }
+    .btn-secondary { background: var(--card); color: var(--text); border: 1px solid var(--border); }
+    .btn-disabled { background: var(--border); color: var(--muted); cursor: not-allowed; }
+
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: #1f1f1f;
+      border: 1px solid var(--success);
+      color: var(--success);
+      padding: 12px 24px;
+      border-radius: 999px;
+      font-size: 14px;
+      font-weight: 500;
+      transition: transform 0.3s ease;
+      white-space: nowrap;
+      z-index: 999;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+
+    .log-section { margin-top: 32px; }
+    .log-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .log-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+    .log-text { font-size: 13px; color: var(--muted); line-height: 1.5; }
+    .log-text strong { color: var(--text); font-weight: 600; }
+    .log-time { margin-left: auto; font-size: 11px; color: var(--muted); white-space: nowrap; flex-shrink: 0; }
+
+    .empty-state { text-align: center; padding: 48px 0; color: var(--muted); }
+    .empty-state .emoji { font-size: 48px; margin-bottom: 12px; }
+    .empty-state p { font-size: 15px; }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <div class="logo">Paw<span>Status</span></div>
+    <div class="date-badge" id="todayDate"></div>
+  </div>
+
+  <div class="section-title">Today's Appointments</div>
+  <div id="appointmentsList"></div>
+
+  <div class="log-section">
+    <div class="section-title">Notifications Sent</div>
+    <div id="notificationLog">
+      <div class="empty-state">
+        <div class="emoji">🔔</div>
+        <p>Notifications you send will appear here</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast">✅ Notification sent!</div>
+
+<script>
+const appointments = [
+  {
+    id: 'appt_001',
+    dogName: 'Max',
+    breed: 'Goldendoodle',
+    ownerName: 'Sarah',
+    time: '10:00 AM',
+    service: 'Full Groom',
+    playerId: 'OWNER_ONESIGNAL_PLAYER_ID_HERE',
+    currentStatus: 0,
+    emoji: '🐩',
+  },
+  {
+    id: 'appt_002',
+    dogName: 'Bella',
+    breed: 'French Bulldog',
+    ownerName: 'Mike',
+    time: '12:30 PM',
+    service: 'Bath + Nail Trim',
+    playerId: 'OWNER_ONESIGNAL_PLAYER_ID_HERE_2',
+    currentStatus: 0,
+    emoji: '🐾',
+  },
+  {
+    id: 'appt_003',
+    dogName: 'Cooper',
+    breed: 'Golden Retriever',
+    ownerName: 'Jessica',
+    time: '2:00 PM',
+    service: 'Full Groom',
+    playerId: 'OWNER_ONESIGNAL_PLAYER_ID_HERE_3',
+    currentStatus: 0,
+    emoji: '🦮',
+  },
+];
+
+const STAGES = [
+  { key: 'booked',           label: 'Booked',     icon: '📅' },
+  { key: 'checked_in',       label: 'Checked In', icon: '✅' },
+  { key: 'bathing',          label: 'Bathing',    icon: '🛁' },
+  { key: 'drying',           label: 'Drying',     icon: '💨' },
+  { key: 'almost_ready',     label: 'Almost!',    icon: '✂️' },
+  { key: 'ready_for_pickup', label: 'Ready!',     icon: '🎉' },
+];
+
+const NEXT_ACTION = [
+  { label: 'Check In Dog',                        type: 'checked_in',      style: 'btn-primary' },
+  { label: 'Start Bathing 🛁',                    type: 'bathing',         style: 'btn-primary' },
+  { label: 'Start Drying 💨',                     type: 'drying',          style: 'btn-primary' },
+  { label: 'Almost Ready — Notify Owner ✂️',      type: 'almost_ready',    style: 'btn-primary' },
+  { label: '🎉 Dog is Ready for Pickup!',         type: 'ready_for_pickup',style: 'btn-ready'   },
+];
+
+let notificationLog = [];
+
+function renderAppointments() {
+  const container = document.getElementById('appointmentsList');
+
+  container.innerHTML = appointments.map((appt, idx) => {
+    const isCompleted = appt.currentStatus >= STAGES.length - 1;
+    const isActive = appt.currentStatus > 0 && !isCompleted;
+    const cardClass = isCompleted ? 'completed' : isActive ? 'active' : '';
+
+    const progressBar = STAGES.map((stage, i) => {
+      const isDone = i < appt.currentStatus;
+      const isCurrent = i === appt.currentStatus;
+      const dotClass = isDone ? 'done' : isCurrent ? 'active' : '';
+      const labelClass = isDone ? 'done' : isCurrent ? 'active' : '';
+      const lineClass = isDone ? 'done' : '';
+      return `
+        <div class="progress-step">
+          <div class="step-dot ${dotClass}"></div>
+          <div class="step-label ${labelClass}">${stage.label}</div>
+        </div>
+        ${i < STAGES.length - 1 ? `<div class="progress-line ${lineClass}"></div>` : ''}
+      `;
+    }).join('');
+
+    const nextAction = NEXT_ACTION[appt.currentStatus];
+    const actionBtn = isCompleted
+      ? `<button class="action-btn btn-disabled" disabled>✅ Picked Up</button>`
+      : nextAction
+        ? `<button class="action-btn ${nextAction.style}" onclick="updateStatus(${idx}, '${nextAction.type}')">${nextAction.label}</button>`
+        : '';
+
+    return `
+      <div class="dog-card ${cardClass}" id="card-${idx}">
+        <div class="dog-header">
+          <div class="dog-avatar">${appt.emoji}</div>
+          <div class="dog-info">
+            <h3>${appt.dogName}</h3>
+            <p>${appt.breed} · ${appt.service}</p>
+          </div>
+          <div class="time-badge">${appt.time}</div>
+        </div>
+        <div class="progress-track">${progressBar}</div>
+        ${actionBtn}
+      </div>
+    `;
+  }).join('');
+}
+
+async function updateStatus(apptIdx, notificationType) {
+  const appt = appointments[apptIdx];
+  appt.currentStatus += 1;
+  renderAppointments();
+
+  try {
+    const response = await fetch('/.netlify/functions/send-notification', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        type: notificationType,
+        playerId: appt.playerId,
+        dogName: appt.dogName,
+        salonName: 'Groomingdales',
+        appointmentTime: appt.time,
+      }),
+    });
+    const result = await response.json();
+    if (result.success) {
+      showToast(`✅ ${appt.ownerName} notified!`);
+      addToLog(appt, notificationType);
+    } else {
+      showToast('⚠️ Notification failed — try again');
+    }
+  } catch (err) {
+    showToast(`📱 ${appt.ownerName} would be notified!`);
+    addToLog(appt, notificationType);
+  }
+}
+
+function addToLog(appt, type) {
+  const stage = STAGES.find(s => s.key === type);
+  const now = new Date();
+  const timeStr = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+  notificationLog.unshift({
+    icon: stage?.icon || '🔔',
+    dogName: appt.dogName,
+    ownerName: appt.ownerName,
+    type: stage?.label || type,
+    time: timeStr,
+  });
+  renderLog();
+}
+
+function renderLog() {
+  const container = document.getElementById('notificationLog');
+  if (notificationLog.length === 0) {
+    container.innerHTML = `<div class="empty-state"><div class="emoji">🔔</div><p>Notifications you send will appear here</p></div>`;
+    return;
+  }
+  container.innerHTML = notificationLog.map(entry => `
+    <div class="log-item">
+      <div class="log-icon">${entry.icon}</div>
+      <div class="log-text"><strong>${entry.ownerName}</strong> notified — ${entry.dogName} status updated to <strong>${entry.type}</strong></div>
+      <div class="log-time">${entry.time}</div>
+    </div>
+  `).join('');
+}
+
+function showToast(message) {
+  const toast = document.getElementById('toast');
+  toast.textContent = message;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 2500);
+}
+
+document.getElementById('todayDate').textContent = new Date().toLocaleDateString('en-US', {
+  weekday: 'long', month: 'short', day: 'numeric'
+});
+
+renderAppointments();
+</script>
+</body>
+</html>
