@@ -536,30 +536,31 @@
 <script>
 // ── DATA ──────────────────────────────────────────────────────────────────────
 const breedData = {
+  // groomTime = realistic full groom duration in minutes at a NYC salon
   chihuahua:       {name:'Chihuahua',          emoji:'🐾', groomTime:45,  variableSize:false},
-  yorkie:          {name:'Yorkie',              emoji:'🐕', groomTime:75,  variableSize:false},
-  maltese:         {name:'Maltese',             emoji:'🐶', groomTime:75,  variableSize:false},
+  yorkie:          {name:'Yorkie',              emoji:'🐕', groomTime:90,  variableSize:false},
+  maltese:         {name:'Maltese',             emoji:'🐶', groomTime:90,  variableSize:false},
   frenchbulldog:   {name:'French Bulldog',      emoji:'🐾', groomTime:60,  variableSize:false},
-  mini_schnauzer:  {name:'Mini Schnauzer',      emoji:'🐶', groomTime:80,  variableSize:false},
-  shihtzhu:        {name:'Shih Tzu',            emoji:'🐶', groomTime:90,  variableSize:false},
-  bichon:          {name:'Bichon Frisé',        emoji:'🐶', groomTime:75,  variableSize:false},
-  cavachon:        {name:'Cavachon',            emoji:'🐶', groomTime:80,  variableSize:false},
-  dachshund:       {name:'Dachshund',           emoji:'🌭', groomTime:60,  variableSize:false},
-  cockapoo:        {name:'Cockapoo',            emoji:'🐕', groomTime:100, variableSize:false},
-  cavapoo:         {name:'Cavapoo',             emoji:'🐕', groomTime:90,  variableSize:false},
-  cocker_spaniel:  {name:'Cocker Spaniel',      emoji:'🐕', groomTime:110, variableSize:false},
-  pomsky:          {name:'Pomsky',              emoji:'🐺', groomTime:120, variableSize:false},
+  mini_schnauzer:  {name:'Mini Schnauzer',      emoji:'🐶', groomTime:90,  variableSize:false},
+  shihtzhu:        {name:'Shih Tzu',            emoji:'🐶', groomTime:105, variableSize:false},
+  bichon:          {name:'Bichon Frisé',        emoji:'🐶', groomTime:90,  variableSize:false},
+  cavachon:        {name:'Cavachon',            emoji:'🐶', groomTime:90,  variableSize:false},
+  dachshund:       {name:'Dachshund',           emoji:'🌭', groomTime:50,  variableSize:false},
+  cockapoo:        {name:'Cockapoo',            emoji:'🐕', groomTime:120, variableSize:false},
+  cavapoo:         {name:'Cavapoo',             emoji:'🐕', groomTime:105, variableSize:false},
+  cocker_spaniel:  {name:'Cocker Spaniel',      emoji:'🐕', groomTime:120, variableSize:false},
+  pomsky:          {name:'Pomsky',              emoji:'🐺', groomTime:135, variableSize:false},
   poodle:          {name:'Poodle',              emoji:'🐩', groomTime:120, variableSize:true },
-  goldendoodle:    {name:'Goldendoodle',        emoji:'🐩', groomTime:150, variableSize:true },
-  labrador:        {name:'Labrador',            emoji:'🦮', groomTime:90,  variableSize:false},
+  goldendoodle:    {name:'Goldendoodle',        emoji:'🐩', groomTime:180, variableSize:true },
+  labrador:        {name:'Labrador',            emoji:'🦮', groomTime:75,  variableSize:false},
   goldenretriever: {name:'Golden Retriever',    emoji:'🦮', groomTime:120, variableSize:false},
   border_collie:   {name:'Border Collie',       emoji:'🐕', groomTime:120, variableSize:false},
-  aussie:          {name:'Australian Shepherd', emoji:'🐕', groomTime:135, variableSize:false},
-  husky:           {name:'Husky',               emoji:'🐺', groomTime:180, variableSize:false},
+  aussie:          {name:'Australian Shepherd', emoji:'🐕', groomTime:150, variableSize:false},
+  husky:           {name:'Husky',               emoji:'🐺', groomTime:210, variableSize:false},
   german_shepherd: {name:'German Shepherd',     emoji:'🐺', groomTime:120, variableSize:false},
-  bernedoodle:     {name:'Bernedoodle',         emoji:'🐩', groomTime:180, variableSize:true },
-  boxer:           {name:'Boxer',               emoji:'🦮', groomTime:90,  variableSize:false},
-  doberman:        {name:'Doberman',            emoji:'🐕', groomTime:75,  variableSize:false},
+  bernedoodle:     {name:'Bernedoodle',         emoji:'🐩', groomTime:210, variableSize:true },
+  boxer:           {name:'Boxer',               emoji:'🦮', groomTime:60,  variableSize:false},
+  doberman:        {name:'Doberman',            emoji:'🐕', groomTime:60,  variableSize:false},
   shiba:           {name:'Shiba Inu',           emoji:'🦊', groomTime:90,  variableSize:false},
   corgi:           {name:'Corgi',               emoji:'🐕', groomTime:90,  variableSize:false},
 };
@@ -652,10 +653,33 @@ function getSvcPrice(gid, bid, sid, size) {
 }
 
 function getSvcTime(bid, sid, size) {
-  const base = breedData[bid]?.groomTime || 60;
-  const sa = svcData[sid]?.timeAdd || 0;
-  const ta = (breedData[bid]?.variableSize && size) ? sizeTimeAdd[size] : 0;
-  return Math.max(15, base + sa + ta);
+  const bd = breedData[bid];
+  if (!bd) return 60;
+  const fullTime = bd.groomTime;
+  // Size adjustment for variable-size breeds
+  const szAdj = (bd.variableSize && size) ? sizeTimeAdd[size] : 0;
+  // Nail-only and quick services are flat times regardless of breed
+  const flatTimes = {
+    nail_only:   15,
+    nail_dremel: 20,
+    ear_clean:   15,
+    teeth_clean: 15,
+  };
+  if (flatTimes[sid]) return flatTimes[sid];
+  // All other services scale from full groom time
+  const ratios = {
+    full_groom:   1.0,
+    puppy_first:  1.1,   // gentler, takes a bit longer
+    senior_groom: 1.2,   // very slow and careful
+    bath_brush:   0.5,   // no cut, just bath + brush
+    bath_nail:    0.45,  // bath + just nails
+    bath_only:    0.35,  // bath + dry only
+    deshed_bath:  0.65,  // bath + high-velocity blow, heavy coats take longer
+    flea_bath:    0.4,
+    dematting:    0.6,   // depends on severity, estimate moderate
+  };
+  const ratio = ratios[sid] || 1.0;
+  return Math.max(15, Math.round((fullTime * ratio) + szAdj));
 }
 
 // More slots — salons have multiple groomers, so we generate slots every 30 min regardless of service length
@@ -774,8 +798,9 @@ function updateEstTime() {
     const t = getSvcTime(selBreed, selSvc, selSize);
     const bd = breedData[selBreed];
     const s = svcData[selSvc];
-    document.getElementById('etMain').textContent = `Estimated: ~${t} min`;
-    document.getElementById('etSub').textContent = `${bd.name} · ${s.name}`;
+    const szLbl = bd.variableSize ? ` (${selSize})` : '';
+    document.getElementById('etMain').textContent = `Estimated time: ~${t} min`;
+    document.getElementById('etSub').textContent = `${bd.name}${szLbl} · ${s.name}`;
     bar.classList.add('vis');
   } else {
     bar.classList.remove('vis');
