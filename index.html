@@ -719,179 +719,238 @@ function continueBooking() {
   const picked = document.querySelector('.cal-day.picked');
   const slot = document.querySelector('.slot.selected');
   if(!picked || !slot) { alert('Please select a date and time.'); return; }
-  const groomerName = document.querySelector('.booking-title') ? 
-    (window._currentGroomer || 'Happy Tails Grooming') : 'Happy Tails Grooming';
-  const serviceName = selectedService ? selectedService.name : 'Full Groom';
-  const slotText = slot.textContent;
+  const timeSlot = slot.textContent;
   closeBooking();
-  setTimeout(() => openLiveStatus(groomerName, serviceName, slotText), 350);
+  setTimeout(() => openGroomTracker({
+    dogName: 'Bella',
+    breed: selectedBreed || 'Golden Retriever',
+    service: selectedService ? selectedService.name : 'Full Groom',
+    groomer: window._currentGroomer || 'Happy Tails Grooming',
+    timeSlot
+  }), 380);
 }
 
-function openLiveStatus(groomerName, serviceName, timeSlot) {
-  const existing = document.getElementById('liveStatusOverlay');
-  if(existing) existing.remove();
 
-  const overlay = document.createElement('div');
-  overlay.id = 'liveStatusOverlay';
+
+// ── GROOM TRACKER ──────────────────────────────────────────
+function openGroomTracker(opts) {
+  const existing = document.getElementById('groomTracker');
+  if (existing) existing.remove();
 
   const STAGES = [
-    { id:'booked',    icon:'📅', label:'Appointment Confirmed',  sub:'Groomer has your booking',         done:true  },
-    { id:'checkin',   icon:'🚗', label:'Checked In',             sub:'Your dog arrived at the salon',     done:false },
-    { id:'wash',      icon:'🛁', label:'Washing',                sub:'Bath & shampoo in progress',        done:false },
-    { id:'groom',     icon:'✂️', label:'Grooming',               sub:'Haircut & styling underway',        done:false },
-    { id:'dry',       icon:'💨', label:'Drying',                 sub:'Blow-dry & brush out',              done:false },
-    { id:'extra',     icon:'💅', label:'Finishing Touches',      sub:'Nails, ears, spritz',               done:false },
-    { id:'ready',     icon:'🐾', label:'Ready in ~15 min',       sub:'Almost there! Pickup soon',         done:false },
+    { id:'bath',    label:'Bath',              msg:`${opts.dogName} is getting a bubbly bath 🛁`,          eta:45 },
+    { id:'dry',     label:'Blow Dry',          msg:`${opts.dogName} is getting fluffed up 💨`,             eta:30 },
+    { id:'cut',     label:'Haircut',           msg:`Scissor time! Looking fab already ✂️`,                 eta:25 },
+    { id:'finish',  label:'Finishing Touches', msg:`Almost done — nails, ears & a spritz 💅`,              eta:15 },
+    { id:'ready',   label:'Ready for Pickup',  msg:`${opts.dogName} is clean, fluffy & waiting for you!`,  eta:0  },
+  ];
+
+  const ADDONS = [
+    { id:'nail',  icon:'💅', label:'Nail Trim',      price:20, added:false },
+    { id:'teeth', icon:'🦷', label:'Teeth Cleaning', price:18, added:false },
+    { id:'flea',  icon:'🌿', label:'Flea Treatment', price:35, added:false },
   ];
 
   let currentStage = 0;
-  let chatMessages = [
-    { from:'groomer', text:`Hi! We got your booking for ${serviceName}. We'll send updates as we go 🐾`, time:'Just now' }
-  ];
+  let dogsAhead = 2;
+  let addedServices = {};
 
-  function stagesHTML() {
-    return STAGES.map((s, i) => {
-      const isDone = i < currentStage;
-      const isActive = i === currentStage;
-      return `<div class="ls-stage ${isDone?'done':''} ${isActive?'active':''}">
-        <div class="ls-stage-dot">${isDone ? '✓' : s.icon}</div>
-        <div class="ls-stage-info">
-          <div class="ls-stage-label">${s.label}</div>
-          <div class="ls-stage-sub">${s.sub}</div>
-        </div>
-        ${isActive ? '<div class="ls-active-pulse"></div>' : ''}
-      </div>`;
-    }).join('');
-  }
-
-  function chatHTML() {
-    return chatMessages.map(m => `
-      <div class="ls-msg ${m.from==='me'?'me':'groomer'}">
-        ${m.from==='groomer' ? '<div class="ls-msg-avatar">✂️</div>' : ''}
-        <div class="ls-msg-bubble">
-          <div class="ls-msg-text">${m.text}</div>
-          <div class="ls-msg-time">${m.time}</div>
-        </div>
-      </div>`).join('');
-  }
+  const SVGS = {
+    bath: `<svg viewBox="0 0 220 180" xmlns="http://www.w3.org/2000/svg">
+      <rect x="20" y="110" width="180" height="55" rx="18" fill="#b8e4f9"/>
+      <rect x="20" y="110" width="180" height="16" rx="8" fill="#8dd0f0"/>
+      <rect x="10" y="120" width="12" height="42" rx="6" fill="#c8b4a0"/>
+      <rect x="198" y="120" width="12" height="42" rx="6" fill="#c8b4a0"/>
+      <ellipse cx="110" cy="116" rx="78" ry="9" fill="#6ec6ef" opacity=".35"/>
+      <ellipse cx="110" cy="112" rx="52" ry="20" fill="#e8c97a"/>
+      <circle cx="152" cy="96" r="26" fill="#e8c97a"/>
+      <ellipse cx="136" cy="79" rx="10" ry="15" fill="#d4a84b" transform="rotate(-15 136 79)"/>
+      <ellipse cx="169" cy="79" rx="10" ry="15" fill="#d4a84b" transform="rotate(15 169 79)"/>
+      <circle cx="145" cy="94" r="4.5" fill="#2a1a0a"/><circle cx="158" cy="94" r="4.5" fill="#2a1a0a"/>
+      <circle cx="146" cy="92" r="1.5" fill="white"/><circle cx="159" cy="92" r="1.5" fill="white"/>
+      <ellipse cx="152" cy="101" rx="7" ry="5" fill="#c07060"/>
+      <path d="M146 104 Q152 109 158 104" stroke="#2a1a0a" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+      <ellipse cx="72" cy="106" rx="14" ry="10" fill="#e8c97a"/>
+      <circle cx="66" cy="101" r="5" fill="#e8c97a"/><circle cx="74" cy="99" r="5" fill="#e8c97a"/><circle cx="81" cy="102" r="4" fill="#e8c97a"/>
+      <circle cx="88" cy="70" r="9" fill="none" stroke="#a0d8f0" stroke-width="2.5" opacity=".9"/>
+      <circle cx="112" cy="54" r="14" fill="none" stroke="#a0d8f0" stroke-width="2.5" opacity=".8"/>
+      <circle cx="136" cy="64" r="7" fill="none" stroke="#a0d8f0" stroke-width="2.5" opacity=".85"/>
+      <circle cx="160" cy="48" r="10" fill="none" stroke="#b8e8f8" stroke-width="2" opacity=".7"/>
+      <circle cx="76" cy="50" r="6" fill="none" stroke="#b8e8f8" stroke-width="2" opacity=".6"/>
+      <circle cx="108" cy="49" r="3" fill="white" opacity=".6"/>
+      <circle cx="133" cy="60" r="2" fill="white" opacity=".6"/>
+    </svg>`,
+    dry: `<svg viewBox="0 0 220 180" xmlns="http://www.w3.org/2000/svg">
+      <ellipse cx="100" cy="148" rx="42" ry="24" fill="#e8c97a"/>
+      <circle cx="100" cy="106" r="30" fill="#e8c97a"/>
+      <circle cx="78" cy="86" r="12" fill="#f5e0a0" opacity=".6"/>
+      <circle cx="66" cy="98" r="9" fill="#f5e0a0" opacity=".5"/>
+      <circle cx="72" cy="114" r="11" fill="#f5e0a0" opacity=".55"/>
+      <ellipse cx="82" cy="85" rx="11" ry="17" fill="#d4a84b" transform="rotate(-12 82 85)"/>
+      <ellipse cx="118" cy="85" rx="11" ry="17" fill="#d4a84b" transform="rotate(12 118 85)"/>
+      <circle cx="92" cy="102" r="5" fill="#2a1a0a"/><circle cx="108" cy="102" r="5" fill="#2a1a0a"/>
+      <circle cx="93" cy="100" r="1.8" fill="white"/><circle cx="109" cy="100" r="1.8" fill="white"/>
+      <ellipse cx="100" cy="112" rx="7" ry="5" fill="#c07060"/>
+      <path d="M93 115 Q100 122 107 115" stroke="#2a1a0a" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+      <rect x="144" y="74" width="54" height="36" rx="12" fill="#ff8a65"/>
+      <ellipse cx="171" cy="92" rx="12" ry="12" fill="#ff6b35"/>
+      <ellipse cx="171" cy="92" rx="6" ry="6" fill="#ff4500"/>
+      <rect x="192" y="83" width="20" height="4" rx="2" fill="#e07050"/>
+      <rect x="192" y="91" width="16" height="4" rx="2" fill="#e07050"/>
+      <rect x="192" y="99" width="18" height="4" rx="2" fill="#e07050"/>
+      <path d="M140 80 Q124 76 108 82" stroke="#b8e4f9" stroke-width="3" fill="none" stroke-linecap="round" opacity=".8"/>
+      <path d="M140 91 Q120 89 106 94" stroke="#b8e4f9" stroke-width="3.5" fill="none" stroke-linecap="round" opacity=".9"/>
+      <path d="M140 102 Q122 102 108 108" stroke="#b8e4f9" stroke-width="3" fill="none" stroke-linecap="round" opacity=".8"/>
+    </svg>`,
+    cut: `<svg viewBox="0 0 220 180" xmlns="http://www.w3.org/2000/svg">
+      <ellipse cx="95" cy="148" rx="44" ry="24" fill="#e8c97a"/>
+      <circle cx="95" cy="108" r="32" fill="#e8c97a"/>
+      <ellipse cx="80" cy="87" rx="11" ry="16" fill="#d4a84b" transform="rotate(-12 80 87)"/>
+      <ellipse cx="110" cy="87" rx="11" ry="16" fill="#d4a84b" transform="rotate(12 110 87)"/>
+      <circle cx="87" cy="104" r="5" fill="#2a1a0a"/><circle cx="103" cy="104" r="5" fill="#2a1a0a"/>
+      <circle cx="88" cy="102" r="1.8" fill="white"/><circle cx="104" cy="102" r="1.8" fill="white"/>
+      <ellipse cx="95" cy="113" rx="7" ry="5" fill="#c07060"/>
+      <path d="M89 116 Q95 123 101 116" stroke="#2a1a0a" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+      <g transform="translate(148,52) rotate(-25)">
+        <circle cx="0" cy="0" r="9" fill="none" stroke="#999" stroke-width="2.5"/>
+        <circle cx="22" cy="0" r="9" fill="none" stroke="#999" stroke-width="2.5"/>
+        <line x1="8" y1="6" x2="50" y2="34" stroke="#bbb" stroke-width="3" stroke-linecap="round"/>
+        <line x1="14" y1="-6" x2="50" y2="-34" stroke="#bbb" stroke-width="3" stroke-linecap="round"/>
+      </g>
+      <text x="170" y="42" font-size="16" opacity=".85">✨</text>
+      <ellipse cx="58" cy="162" rx="6" ry="3" fill="#e0c070" opacity=".5" transform="rotate(-20 58 162)"/>
+      <ellipse cx="76" cy="169" rx="5" ry="2" fill="#e0c070" opacity=".4" transform="rotate(10 76 169)"/>
+      <ellipse cx="114" cy="166" rx="7" ry="3" fill="#e0c070" opacity=".5" transform="rotate(-10 114 166)"/>
+    </svg>`,
+    finish: `<svg viewBox="0 0 220 180" xmlns="http://www.w3.org/2000/svg">
+      <ellipse cx="100" cy="150" rx="44" ry="22" fill="#e8c97a"/>
+      <circle cx="100" cy="110" r="30" fill="#e8c97a"/>
+      <ellipse cx="84" cy="89" rx="11" ry="16" fill="#d4a84b" transform="rotate(-12 84 89)"/>
+      <ellipse cx="116" cy="89" rx="11" ry="16" fill="#d4a84b" transform="rotate(12 116 89)"/>
+      <ellipse cx="84" cy="78" rx="11" ry="6" fill="#ff6b9d" transform="rotate(-30 84 78)"/>
+      <ellipse cx="96" cy="72" rx="11" ry="6" fill="#ff6b9d" transform="rotate(30 96 72)"/>
+      <circle cx="90" cy="75" r="5.5" fill="#ff4080"/>
+      <circle cx="90" cy="75" r="2.5" fill="#ff8ab0"/>
+      <circle cx="92" cy="106" r="5" fill="#2a1a0a"/><circle cx="108" cy="106" r="5" fill="#2a1a0a"/>
+      <circle cx="93" cy="104" r="1.8" fill="white"/><circle cx="109" cy="104" r="1.8" fill="white"/>
+      <ellipse cx="100" cy="116" rx="7" ry="5" fill="#c07060"/>
+      <path d="M93 120 Q100 127 107 120" stroke="#2a1a0a" stroke-width="2" fill="none" stroke-linecap="round"/>
+      <rect x="146" y="88" width="40" height="14" rx="7" fill="#c8a870"/>
+      <rect x="146" y="91" width="40" height="8" rx="4" fill="#e8d090"/>
+      <line x1="150" y1="102" x2="150" y2="112" stroke="#888" stroke-width="1.5"/>
+      <line x1="156" y1="102" x2="156" y2="113" stroke="#888" stroke-width="1.5"/>
+      <line x1="162" y1="102" x2="162" y2="112" stroke="#888" stroke-width="1.5"/>
+      <line x1="168" y1="102" x2="168" y2="113" stroke="#888" stroke-width="1.5"/>
+      <line x1="174" y1="102" x2="174" y2="112" stroke="#888" stroke-width="1.5"/>
+      <text x="32" y="76" font-size="17">✨</text>
+      <text x="158" y="58" font-size="13">⭐</text>
+      <text x="44" y="112" font-size="11">💫</text>
+    </svg>`,
+    ready: `<svg viewBox="0 0 220 180" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="110" cy="86" r="12" fill="#f8e8a8" opacity=".6"/>
+      <circle cx="80" cy="100" r="14" fill="#f8e8a8" opacity=".65"/>
+      <circle cx="140" cy="100" r="14" fill="#f8e8a8" opacity=".65"/>
+      <ellipse cx="110" cy="152" rx="50" ry="24" fill="#f0d880"/>
+      <circle cx="110" cy="110" r="35" fill="#f0d880"/>
+      <ellipse cx="89" cy="86" rx="14" ry="20" fill="#e8c870" transform="rotate(-12 89 86)"/>
+      <ellipse cx="131" cy="86" rx="14" ry="20" fill="#e8c870" transform="rotate(12 131 86)"/>
+      <ellipse cx="89" cy="88" rx="8" ry="13" fill="#f0d880" transform="rotate(-12 89 88)"/>
+      <ellipse cx="131" cy="88" rx="8" ry="13" fill="#f0d880" transform="rotate(12 131 88)"/>
+      <path d="M86 122 Q110 136 134 122 L128 138 Q110 150 92 138 Z" fill="#ff5252"/>
+      <path d="M86 122 Q110 132 134 122" stroke="#e03030" stroke-width="1.5" fill="none"/>
+      <circle cx="110" cy="129" r="4.5" fill="#ff7070"/>
+      <circle cx="100" cy="106" r="7" fill="#2a1a0a"/><circle cx="120" cy="106" r="7" fill="#2a1a0a"/>
+      <circle cx="102" cy="103" r="2.5" fill="white"/><circle cx="122" cy="103" r="2.5" fill="white"/>
+      <ellipse cx="110" cy="116" rx="8" ry="6" fill="#c07060"/>
+      <path d="M101 120 Q110 130 119 120" stroke="#2a1a0a" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+      <ellipse cx="110" cy="127" rx="5" ry="7" fill="#ff7070"/>
+      <text x="26" y="74" font-size="19">✨</text>
+      <text x="172" y="68" font-size="17">🌟</text>
+      <text x="36" y="134" font-size="15">💫</text>
+      <text x="164" y="138" font-size="15">✨</text>
+      <text x="98" y="40" font-size="22">🎉</text>
+    </svg>`
+  };
 
   function render() {
-    const cs = STAGES[currentStage];
-    overlay.innerHTML = `
-      <div class="ls-page">
-        <div class="ls-header">
-          <button class="ls-back" onclick="document.getElementById('liveStatusOverlay').remove()">←</button>
-          <div class="ls-header-info">
-            <div class="ls-header-name">${groomerName}</div>
-            <div class="ls-header-sub">${serviceName} · ${timeSlot}</div>
+    const stage = STAGES[currentStage];
+    const stageId = ['bath','dry','cut','finish','ready'][currentStage];
+    const el = document.getElementById('groomTracker');
+    el.innerHTML = `
+      <div class="gt-wrap">
+        <div class="gt-header">
+          <button class="gt-back" onclick="document.getElementById('groomTracker').classList.remove('gt-visible');setTimeout(()=>{const e=document.getElementById('groomTracker');if(e)e.remove();},320)">←</button>
+          <div class="gt-header-center">
+            <div class="gt-dog-name">${opts.dogName} 🐾</div>
+            <div class="gt-eta">${stage.eta > 0 ? 'Ready in about ' + stage.eta + ' min' : '🎉 Ready for pickup!'}</div>
           </div>
-          <div class="ls-status-dot-wrap"><span class="ls-live-dot"></span><span class="ls-live-text">LIVE</span></div>
-        </div>
-
-        <!-- Current status hero -->
-        <div class="ls-hero">
-          <div class="ls-hero-icon">${cs.icon}</div>
-          <div class="ls-hero-label">${cs.label}</div>
-          <div class="ls-hero-sub">${cs.sub}</div>
-          <div class="ls-progress-bar"><div class="ls-progress-fill" style="width:${Math.round((currentStage/6)*100)}%"></div></div>
-          <div class="ls-progress-label">Step ${currentStage+1} of ${STAGES.length}</div>
-        </div>
-
-        <!-- Tab bar -->
-        <div class="ls-tabs">
-          <div class="ls-tab active" onclick="lsShowTab('timeline',this)">📋 Timeline</div>
-          <div class="ls-tab" onclick="lsShowTab('chat',this)">💬 Chat</div>
-        </div>
-
-        <!-- Timeline -->
-        <div class="ls-panel" id="ls-timeline">
-          <div class="ls-stages">${stagesHTML()}</div>
-          <div style="padding:16px 16px 8px;">
-            <div class="ls-demo-label">⚡ Demo — advance stage:</div>
-            <div class="ls-demo-btns">
-              ${currentStage < STAGES.length-1 ? `<button class="ls-demo-btn" onclick="lsAdvance()">Next Stage →</button>` : '<div style="color:#5cb85c;font-weight:700;padding:10px 0">🎉 Your dog is ready!</div>'}
-            </div>
+          <div class="gt-queue ${dogsAhead===0?'gt-queue-none':''}">
+            <div class="gt-queue-num">${dogsAhead}</div>
+            <div class="gt-queue-lbl">ahead</div>
           </div>
         </div>
 
-        <!-- Chat -->
-        <div class="ls-panel" id="ls-chat" style="display:none">
-          <div class="ls-chat-messages" id="lsChatMessages">${chatHTML()}</div>
-          <div class="ls-chat-input-row">
-            <input id="lsChatInput" class="ls-chat-input" placeholder="Message your groomer..." />
-            <button class="ls-chat-send" onclick="lsSend()">↑</button>
+        <div class="gt-stages-bar">
+          ${STAGES.map((s,i) => `
+            <div class="gt-stage-item ${i<currentStage?'gt-done':''} ${i===currentStage?'gt-active':''}">
+              <div class="gt-stage-node">${i<currentStage?'✓':i===currentStage?'●':''}</div>
+              <div class="gt-stage-name">${s.label}</div>
+            </div>${i<STAGES.length-1?`<div class="gt-stage-line ${i<currentStage?'gt-done':''}"></div>`:''}
+          `).join('')}
+        </div>
+
+        <div class="gt-scene">
+          <div class="gt-scene-bg gt-bg-${stageId}"></div>
+          <div class="gt-illustration" id="gtIll">${SVGS[stageId]}</div>
+        </div>
+
+        <div class="gt-status-msg">${stage.msg}</div>
+
+        ${currentStage < STAGES.length-1
+          ? `<button class="gt-advance-btn" onclick="gtAdvance()">Demo: Next Stage →</button>`
+          : `<div class="gt-ready-banner">🎉 ${opts.dogName} is fresh & fabulous — time to come get her!</div>`}
+
+        <div class="gt-addons-section">
+          <div class="gt-addons-title">✨ Add while you wait</div>
+          <div class="gt-addons-row">
+            ${ADDONS.map(a => `
+              <button class="gt-addon ${addedServices[a.id]?'gt-addon-added':''}" onclick="gtToggleAddon('${a.id}')">
+                <span class="gt-addon-icon">${a.icon}</span>
+                <span class="gt-addon-label">${a.label}</span>
+                <span class="gt-addon-price">${addedServices[a.id]?'✓ Added':'+$'+a.price}</span>
+              </button>
+            `).join('')}
           </div>
         </div>
       </div>`;
 
-    // scroll chat to bottom
     setTimeout(() => {
-      const cm = document.getElementById('lsChatMessages');
-      if(cm) cm.scrollTop = cm.scrollHeight;
-    }, 50);
+      const ill = document.getElementById('gtIll');
+      if(ill){ ill.style.transition='none'; ill.style.opacity='0'; ill.style.transform='scale(0.82) translateY(10px)';
+        requestAnimationFrame(()=>{ ill.style.transition='opacity .4s ease, transform .4s ease'; ill.style.opacity='1'; ill.style.transform='scale(1) translateY(0)'; });
+      }
+    }, 30);
   }
 
-  window.lsAdvance = function() {
-    if(currentStage >= STAGES.length - 1) return;
+  window.gtAdvance = function() {
+    if(currentStage >= STAGES.length-1) return;
+    if(dogsAhead > 0) dogsAhead--;
     currentStage++;
-    const updates = [
-      null,
-      `${selectedBreed||'Your pup'} just checked in! We'll get started soon 🐕`,
-      `Bath time! ${selectedBreed||'Pup'} is getting shampooed 🛁`,
-      `Scissor time ✂️ Looking fab already!`,
-      `Almost done — drying now 💨`,
-      `Just the finishing touches left 💅`,
-      `Ready in about 15 minutes! Come on over 🐾`
-    ];
-    if(updates[currentStage]) {
-      chatMessages.push({ from:'groomer', text: updates[currentStage], time:'Just now' });
-    }
     render();
-    requestAnimationFrame(() => overlay.classList.add('visible'));
   };
 
-  window.lsSend = function() {
-    const inp = document.getElementById('lsChatInput');
-    const val = inp.value.trim();
-    if(!val) return;
-    chatMessages.push({ from:'me', text: val, time:'Just now' });
-    inp.value = '';
+  window.gtToggleAddon = function(id) {
+    addedServices[id] = !addedServices[id];
     render();
-    requestAnimationFrame(() => overlay.classList.add('visible'));
-    lsShowTab('chat', document.querySelectorAll('.ls-tab')[1]);
-    // Auto-reply after short delay
-    const replies = [
-      'Got it, thanks! 🐾','On it!','Sure thing!','No problem at all 😊','Will do!'];
-    setTimeout(() => {
-      chatMessages.push({ from:'groomer', text: replies[Math.floor(Math.random()*replies.length)], time:'Just now' });
-      render();
-      requestAnimationFrame(() => overlay.classList.add('visible'));
-      lsShowTab('chat', document.querySelectorAll('.ls-tab')[1]);
-    }, 1200);
   };
 
-  window.lsShowTab = function(tab, el) {
-    document.querySelectorAll('.ls-tab').forEach(t => t.classList.remove('active'));
-    el.classList.add('active');
-    document.getElementById('ls-timeline').style.display = tab==='timeline' ? 'block' : 'none';
-    document.getElementById('ls-chat').style.display = tab==='chat' ? 'flex' : 'none';
-    if(tab==='chat') {
-      setTimeout(() => {
-        const cm = document.getElementById('lsChatMessages');
-        if(cm) cm.scrollTop = cm.scrollHeight;
-      }, 50);
-    }
-  };
-
-  // Enter key to send
-  overlay.addEventListener('keydown', e => {
-    if(e.key === 'Enter' && document.activeElement.id === 'lsChatInput') lsSend();
-  });
-
+  const el = document.createElement('div');
+  el.id = 'groomTracker';
+  document.body.appendChild(el);
   render();
-  document.body.appendChild(overlay);
-  requestAnimationFrame(() => overlay.classList.add('visible'));
+  requestAnimationFrame(() => el.classList.add('gt-visible'));
 }
+
 </script>
 
 <style>
@@ -992,144 +1051,140 @@ function openLiveStatus(groomerName, serviceName, timeSlot) {
 }
 .continue-btn:hover { background:#3a8fc4; }
 </style>
-
 <style>
-/* ── LIVE STATUS OVERLAY ── */
-#liveStatusOverlay {
-  position:fixed; inset:0; background:var(--white);
-  z-index:2000; display:flex; flex-direction:column;
+/* ── GROOM TRACKER ── */
+#groomTracker {
+  position:fixed; inset:0; z-index:3000;
+  background:#fff9f2;
   max-width:430px; margin:0 auto;
-  opacity:0; transform:translateY(30px);
-  transition:opacity 0.3s ease, transform 0.3s ease;
+  display:flex; flex-direction:column;
+  opacity:0; transform:translateY(32px);
+  transition:opacity .32s ease, transform .32s ease;
   pointer-events:none;
+  font-family:'DM Sans',sans-serif;
+  overflow:hidden;
 }
-#liveStatusOverlay.visible { opacity:1; transform:translateY(0); pointer-events:all; }
+#groomTracker.gt-visible { opacity:1; transform:translateY(0); pointer-events:all; }
 
-.ls-page { display:flex; flex-direction:column; height:100%; overflow:hidden; }
+.gt-wrap { display:flex; flex-direction:column; height:100%; overflow-y:auto; -webkit-overflow-scrolling:touch; }
 
-.ls-header {
-  padding:52px 16px 14px; background:var(--white);
-  border-bottom:1px solid #f0f0f0;
-  display:flex; align-items:center; gap:12px;
+/* Header */
+.gt-header {
+  padding:52px 16px 12px;
+  background:linear-gradient(160deg,#fff8ed,#fff3e0);
+  border-bottom:2px solid #ffe0b0;
+  display:flex; align-items:center; gap:12px; flex-shrink:0;
+}
+.gt-back { background:none; border:none; font-size:22px; cursor:pointer; color:#8b7320; padding:4px 6px; font-weight:700; }
+.gt-header-center { flex:1; }
+.gt-dog-name { font-family:'DM Serif Display',serif; font-size:20px; color:#3a2a0a; }
+.gt-eta { font-size:12px; color:#b08030; font-weight:600; margin-top:2px; }
+.gt-queue {
+  text-align:center; background:#fff3dc; border:2px solid #ffd080;
+  border-radius:12px; padding:6px 12px; min-width:52px;
+}
+.gt-queue-none { background:#e8fce8; border-color:#90d890; }
+.gt-queue-num { font-family:'DM Serif Display',serif; font-size:22px; color:#8b7320; line-height:1; }
+.gt-queue-lbl { font-size:9px; color:#b09040; font-weight:700; text-transform:uppercase; letter-spacing:.06em; }
+.gt-queue-none .gt-queue-num { color:#3a9040; }
+
+/* Stage progress strip */
+.gt-stages-bar {
+  display:flex; align-items:center;
+  padding:14px 12px 10px;
+  background:#fff; border-bottom:1px solid #f0e8d8;
+  flex-shrink:0; overflow-x:auto;
+}
+.gt-stage-item { display:flex; flex-direction:column; align-items:center; gap:4px; min-width:58px; }
+.gt-stage-node {
+  width:26px; height:26px; border-radius:50%;
+  background:#f0e8d8; border:2px solid #e0d0b8;
+  display:flex; align-items:center; justify-content:center;
+  font-size:10px; font-weight:800; color:#c0a060;
+  transition:all .3s;
+}
+.gt-stage-item.gt-done .gt-stage-node { background:#f0d870; border-color:#c8a820; color:#7a6010; }
+.gt-stage-item.gt-active .gt-stage-node {
+  background:#f0a830; border-color:#c87810; color:white;
+  box-shadow:0 0 0 4px rgba(240,168,48,.2);
+  animation:gtPulse 1.4s ease infinite;
+}
+@keyframes gtPulse { 0%,100%{box-shadow:0 0 0 4px rgba(240,168,48,.2)} 50%{box-shadow:0 0 0 8px rgba(240,168,48,.08)} }
+.gt-stage-name { font-size:9px; font-weight:700; color:#b09050; text-align:center; line-height:1.2; }
+.gt-stage-item.gt-active .gt-stage-name { color:#c07820; }
+.gt-stage-item.gt-done .gt-stage-name { color:#a08020; }
+.gt-stage-line { flex:1; height:3px; background:#f0e8d8; border-radius:2px; min-width:10px; transition:background .3s; }
+.gt-stage-line.gt-done { background:linear-gradient(90deg,#f0d870,#f0c040); }
+
+/* Scene */
+.gt-scene {
+  position:relative; height:210px; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center; overflow:hidden;
+}
+.gt-scene-bg {
+  position:absolute; inset:0;
+  transition:background .5s ease;
+}
+.gt-bg-bath   { background:radial-gradient(ellipse at center bottom,#d0f0ff 0%,#e8f8ff 55%,#fff9f2 100%); }
+.gt-bg-dry    { background:radial-gradient(ellipse at center bottom,#ffecd0 0%,#fff5e8 55%,#fff9f2 100%); }
+.gt-bg-cut    { background:radial-gradient(ellipse at center bottom,#f0ffe0 0%,#f8fff0 55%,#fff9f2 100%); }
+.gt-bg-finish { background:radial-gradient(ellipse at center bottom,#ffe0f0 0%,#fff0f8 55%,#fff9f2 100%); }
+.gt-bg-ready  { background:radial-gradient(ellipse at center bottom,#fff8c0 0%,#fffde8 55%,#fff9f2 100%); }
+
+.gt-illustration {
+  position:relative; z-index:2;
+  width:220px; height:180px;
+  filter:drop-shadow(0 8px 20px rgba(0,0,0,.12));
+  transition:opacity .4s ease, transform .4s ease;
+}
+.gt-illustration svg { width:100%; height:100%; }
+
+/* Status message */
+.gt-status-msg {
+  text-align:center; padding:14px 20px 8px;
+  font-family:'DM Serif Display',serif; font-size:18px; color:#3a2a0a;
+  line-height:1.3; flex-shrink:0;
+}
+
+/* Advance demo btn */
+.gt-advance-btn {
+  display:block; margin:6px 20px 0; padding:12px;
+  background:linear-gradient(135deg,#f0a830,#c87818);
+  color:white; border:none; border-radius:14px;
+  font-family:'DM Sans',sans-serif; font-size:14px; font-weight:700;
+  cursor:pointer; transition:transform .1s, filter .2s; text-align:center;
   flex-shrink:0;
 }
-.ls-back { background:none; border:none; font-size:22px; cursor:pointer; color:var(--text); padding:4px; }
-.ls-header-info { flex:1; }
-.ls-header-name { font-size:16px; font-weight:700; color:var(--text); }
-.ls-header-sub { font-size:11px; color:var(--muted); margin-top:1px; }
-.ls-status-dot-wrap { display:flex; align-items:center; gap:5px; }
-.ls-live-dot {
-  width:8px; height:8px; background:#e03535; border-radius:50%;
-  animation:lsPulse 1.2s ease infinite;
-}
-@keyframes lsPulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(1.4)} }
-.ls-live-text { font-size:10px; font-weight:800; color:#e03535; letter-spacing:0.08em; }
-
-/* Hero */
-.ls-hero {
-  background:linear-gradient(160deg,var(--gold-pale),#fff);
-  border-bottom:1.5px solid var(--gold-border);
-  padding:18px 20px 14px; text-align:center; flex-shrink:0;
-}
-.ls-hero-icon { font-size:40px; margin-bottom:6px; }
-.ls-hero-label { font-family:'DM Serif Display',serif; font-size:20px; color:var(--text); margin-bottom:3px; }
-.ls-hero-sub { font-size:12px; color:var(--muted); margin-bottom:12px; }
-.ls-progress-bar { background:#eee; border-radius:20px; height:6px; margin:0 20px 5px; overflow:hidden; }
-.ls-progress-fill { height:100%; background:linear-gradient(90deg,var(--gold-light),var(--gold)); border-radius:20px; transition:width 0.6s ease; }
-.ls-progress-label { font-size:10px; color:var(--muted); }
-
-/* Tabs */
-.ls-tabs {
-  display:flex; border-bottom:1.5px solid #f0f0f0;
-  background:var(--white); flex-shrink:0;
-}
-.ls-tab {
-  flex:1; text-align:center; padding:12px 0;
-  font-size:13px; font-weight:600; color:#aaa; cursor:pointer;
-  border-bottom:2.5px solid transparent; transition:all 0.15s;
-}
-.ls-tab.active { color:var(--gold); border-bottom-color:var(--gold); }
-
-/* Panels */
-.ls-panel { flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; }
-
-/* Timeline stages */
-.ls-stages { padding:10px 16px; }
-.ls-stage {
-  display:flex; align-items:center; gap:12px; padding:11px 0;
-  border-bottom:1px solid #f9f9f9; position:relative; opacity:0.35;
-  transition:opacity 0.3s;
-}
-.ls-stage:last-child { border-bottom:none; }
-.ls-stage.done, .ls-stage.active { opacity:1; }
-.ls-stage-dot {
-  width:38px; height:38px; border-radius:50%;
-  background:#f5f5f5; border:2px solid #eee;
-  display:flex; align-items:center; justify-content:center;
-  font-size:17px; flex-shrink:0; transition:all 0.3s;
-}
-.ls-stage.done .ls-stage-dot { background:var(--gold-pale); border-color:var(--gold-light); color:var(--gold); font-size:16px; font-weight:700; }
-.ls-stage.active .ls-stage-dot { background:var(--gold); border-color:var(--gold); color:white; box-shadow:0 0 0 4px rgba(139,115,32,0.15); }
-.ls-stage-label { font-size:13px; font-weight:600; color:var(--text); }
-.ls-stage-sub { font-size:11px; color:var(--muted); margin-top:1px; }
-.ls-active-pulse {
-  position:absolute; right:0; width:8px; height:8px;
-  background:var(--gold); border-radius:50%;
-  animation:lsPulse 1.2s ease infinite;
+.gt-advance-btn:hover { filter:brightness(1.08); }
+.gt-advance-btn:active { transform:scale(.97); }
+.gt-ready-banner {
+  margin:6px 20px 0; padding:14px;
+  background:linear-gradient(135deg,#e8f8c8,#c8f0a0);
+  border:2px solid #a0d860; border-radius:14px;
+  font-family:'DM Serif Display',serif; font-size:16px; color:#3a6020;
+  text-align:center; line-height:1.4; flex-shrink:0;
 }
 
-/* Demo buttons */
-.ls-demo-label { font-size:10px; color:#bbb; letter-spacing:0.06em; text-transform:uppercase; margin-bottom:7px; }
-.ls-demo-btn {
-  background:var(--gold); color:white; border:none; border-radius:10px;
-  padding:10px 20px; font-family:'DM Sans',sans-serif; font-size:13px;
-  font-weight:700; cursor:pointer; transition:background 0.2s;
+/* Add-ons */
+.gt-addons-section { padding:16px 16px 32px; flex-shrink:0; }
+.gt-addons-title {
+  font-size:11px; font-weight:800; letter-spacing:.1em; text-transform:uppercase;
+  color:#c8a030; margin-bottom:10px;
 }
-.ls-demo-btn:hover { background:#7a651c; }
+.gt-addons-row { display:flex; gap:8px; }
+.gt-addon {
+  flex:1; display:flex; flex-direction:column; align-items:center; gap:4px;
+  padding:12px 6px; background:#fff; border:2px solid #eeddb8;
+  border-radius:14px; cursor:pointer; transition:all .2s;
+  font-family:'DM Sans',sans-serif;
+}
+.gt-addon:hover { border-color:#f0c050; background:#fffbef; transform:translateY(-2px); }
+.gt-addon.gt-addon-added { background:#fff8d0; border-color:#e0b830; }
+.gt-addon-icon { font-size:22px; }
+.gt-addon-label { font-size:10px; font-weight:700; color:#6a5020; text-align:center; line-height:1.2; }
+.gt-addon-price { font-size:11px; font-weight:800; color:#b08020; }
+.gt-addon.gt-addon-added .gt-addon-price { color:#6a9020; }
 
-/* Chat */
-#ls-chat { flex-direction:column; }
-.ls-chat-messages {
-  flex:1; overflow-y:auto; padding:14px 16px;
-  display:flex; flex-direction:column; gap:12px;
-  -webkit-overflow-scrolling:touch;
-}
-.ls-msg { display:flex; align-items:flex-end; gap:8px; }
-.ls-msg.me { flex-direction:row-reverse; }
-.ls-msg-avatar {
-  width:32px; height:32px; border-radius:50%;
-  background:var(--gold-pale); border:1.5px solid var(--gold-border);
-  display:flex; align-items:center; justify-content:center;
-  font-size:15px; flex-shrink:0;
-}
-.ls-msg-bubble { max-width:72%; }
-.ls-msg-text {
-  padding:10px 13px; border-radius:16px; font-size:13px; line-height:1.4;
-  background:#f3f3f3; color:var(--text);
-}
-.ls-msg.me .ls-msg-text { background:var(--gold); color:white; border-radius:16px 16px 4px 16px; }
-.ls-msg.groomer .ls-msg-text { border-radius:16px 16px 16px 4px; }
-.ls-msg-time { font-size:10px; color:#bbb; margin-top:3px; text-align:right; }
-.ls-msg.groomer .ls-msg-time { text-align:left; }
-
-.ls-chat-input-row {
-  display:flex; align-items:center; gap:8px;
-  padding:10px 16px 28px; border-top:1px solid #f0f0f0;
-  background:var(--white); flex-shrink:0;
-}
-.ls-chat-input {
-  flex:1; border:1.5px solid #eee; border-radius:22px;
-  padding:10px 16px; font-family:'DM Sans',sans-serif; font-size:14px;
-  color:var(--text); outline:none; background:#fafafa;
-}
-.ls-chat-input:focus { border-color:var(--gold-light); background:var(--white); }
-.ls-chat-send {
-  width:38px; height:38px; border-radius:50%; background:var(--gold);
-  color:white; border:none; font-size:17px; font-weight:700;
-  cursor:pointer; display:flex; align-items:center; justify-content:center;
-  flex-shrink:0; transition:background 0.2s;
-}
-.ls-chat-send:hover { background:#7a651c; }
 </style>
 </body>
 </html>
