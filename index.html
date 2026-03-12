@@ -287,18 +287,16 @@
 
 /* ── BOOKINGS SCREEN ── */
 .bookings-screen {
+  display:none;
   position:fixed; inset:0;
   max-width:430px; margin:0 auto;
   background:#f5f2ec;
   overflow-y:auto;
   padding-bottom:80px;
   font-family:'DM Sans',sans-serif;
-  transform:translateX(100%);
-  transition:transform 0.28s cubic-bezier(0.4,0,0.2,1);
-  pointer-events:none;
   z-index:1500;
 }
-.bookings-screen.active { transform:translateX(0); pointer-events:all; }
+.bookings-screen.active { display:block; }
 .bookings-header {
   background:#fff;
   padding:52px 20px 16px;
