@@ -198,9 +198,9 @@
   /* Push all page content above the nav */
   .app-shell, .results-page, .booking-page { padding-bottom:72px; }
 
-  .sort-bar { display:flex; gap:6px; padding:8px 14px; border-bottom:1px solid #f0f0f0; background:var(--white); overflow-x:auto; scrollbar-width:none; -webkit-overflow-scrolling:touch; flex-shrink:0; }
+  .sort-bar { display:flex; gap:5px; padding:7px 10px; border-bottom:1px solid #f0f0f0; background:var(--white); overflow-x:auto; scrollbar-width:none; -webkit-overflow-scrolling:touch; flex-shrink:0; }
   .sort-bar::-webkit-scrollbar { display:none; }
-  .sort-pill { background:#f5f5f5; border:1.5px solid #eee; border-radius:20px; padding:7px 14px; font-family:'DM Sans',sans-serif; font-size:12px; font-weight:600; color:#666; cursor:pointer; transition:all 0.15s; white-space:nowrap; }
+  .sort-pill { background:#f5f5f5; border:1.5px solid #eee; border-radius:20px; padding:5px 10px; font-family:'DM Sans',sans-serif; font-size:11px; font-weight:600; color:#666; cursor:pointer; transition:all 0.15s; white-space:nowrap; }
   .sort-pill:hover { border-color:var(--gold-light); color:var(--gold); }
   .sort-pill.active { background:var(--gold-pale); border-color:var(--gold-light); color:var(--gold); }
   .deals-pill { border-color:#e0f0e0; color:#3a7a3a; }
@@ -406,10 +406,10 @@
     <div class="rp-count" id="rpCount"></div>
   </div>
   <div class="sort-bar">
-    <button class="sort-pill active" onclick="sortResults('rating', this)">⭐ Rating</button>
-    <button class="sort-pill" onclick="sortResults('distance', this)">📍 Distance</button>
-    <button class="sort-pill" onclick="sortResults('price', this)">💰 Price</button>
-    <button class="sort-pill" onclick="sortResults('soonest', this)">🕐 Soonest</button>
+    <button class="sort-pill active" onclick="sortResults('rating', this)">Rating</button>
+    <button class="sort-pill" onclick="sortResults('distance', this)">Distance</button>
+    <button class="sort-pill" onclick="sortResults('price', this)">Price</button>
+    <button class="sort-pill" onclick="sortResults('soonest', this)">Soonest</button>
     <button class="sort-pill deals-pill" onclick="sortResults('deals', this)">🏷️ Deals</button>
   </div>
   <div class="deals-header" id="dealsNote">🏷️ Showing groomers with 10% off your first groom</div>
