@@ -629,7 +629,7 @@
   background:#f8f5ef;
   flex-direction:column;
   font-family:'DM Sans',sans-serif;
-  z-index:3500;
+  z-index:4000;
   opacity:0; transform:translateY(40px);
   transition:opacity .28s ease, transform .28s ease;
   pointer-events:none;
@@ -1604,7 +1604,7 @@ function openGroomTracker(opts) {
       <ellipse cx="120" cy="62" rx="16" ry="12" fill="white" opacity=".95"/>
       <ellipse cx="142" cy="54" rx="13" ry="10" fill="white" opacity=".9"/>
       <ellipse cx="160" cy="64" rx="11" ry="9"  fill="white" opacity=".88"/>
-      <ellipse cx="132" cy="50" rx="9"  cy="50" ry="7"  fill="white" opacity=".85"/>
+      <ellipse cx="132" cy="50" rx="9"  ry="7"  fill="white" opacity=".85"/>
 
       <!-- raised paw over tub edge -->
       <ellipse cx="64" cy="153" rx="20" ry="14" fill="#d4952a"/>
@@ -2318,7 +2318,7 @@ function openGroomTracker(opts) {
 
 /* ── GROOM TRACKER ── */
 #groomTracker {
-  position:fixed; inset:0; z-index:3000;
+  position:fixed; inset:0; z-index:4000;
   background:#fff9f2;
   max-width:430px; margin:0 auto;
   overflow-y:auto; overflow-x:hidden;
@@ -2937,7 +2937,7 @@ function rebookAppointment(groomerName) {
     <div class="account-avatar">M</div>
     <div class="account-header-info">
       <div class="account-name">Maurice W.</div>
-      <div class="account-email">maurice@email.com</div>
+      <div class="account-email"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="0964687c7b606a6c496c64686065276a6664">[email&#160;protected]</a></div>
       <div class="account-badge">🐾 PawStatus Member</div>
     </div>
   </div>
@@ -2958,7 +2958,7 @@ function rebookAppointment(groomerName) {
         <div class="mydog-row-icon">📧</div>
         <div class="mydog-row-body">
           <div class="mydog-row-label">Email</div>
-          <div class="mydog-row-val">maurice@email.com</div>
+          <div class="mydog-row-val"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="80ede1f5f2e9e3e5c0e5ede1e9ecaee3efed">[email&#160;protected]</a></div>
         </div>
         <div class="mydog-row-edit">Edit</div>
       </div>
@@ -3070,9 +3070,4 @@ function rebookAppointment(groomerName) {
     <div class="chat-qr" onclick="sendQuickReply('How long will the groom take?')">How long?</div>
   </div>
   <div class="chat-input-row">
-    <input class="chat-input" id="chatInput" type="text" placeholder="Message Happy Tails..." onkeydown="if(event.key==='Enter')sendChatMessage()">
-    <button class="chat-send-btn" onclick="sendChatMessage()">➤</button>
-  </div>
-</div>
-</body>
-</html>
+    <input clas
