@@ -1102,6 +1102,10 @@ function continueBooking() {
   if(!picked || !slot) { alert('Please select a date and time.'); return; }
   window._confirmedSlot = slot.textContent;
   window._confirmedDate = picked.textContent.replace(/[^0-9]/g,'');
+  // Store month label for bell pill (get from cal header)
+  var calMonthEl = document.querySelector('.cal-month-label') || document.querySelector('.cal-nav span');
+  var monthStr = calMonthEl ? calMonthEl.textContent.trim() : '';
+  window._confirmedMonthLabel = monthStr;
   showBookingConfirm();
 }
 
@@ -1173,6 +1177,21 @@ function addNote(text) {
 
 function confirmAndBook() {
   var notes = document.getElementById('groomerNotes') ? document.getElementById('groomerNotes').value : '';
+  // Update bell pill with new booking time
+  if (window._confirmedSlot && window._confirmedDate) {
+    var slotStr = window._confirmedSlot.replace(' AM','').replace(' PM','');
+    var isPM = window._confirmedSlot.indexOf('PM') > -1;
+    var parts = slotStr.split(':');
+    var h = parseInt(parts[0]); var m = parts[1] || '00';
+    if (isPM && h < 12) h += 12;
+    var dayNum = parseInt(window._confirmedDate) || 20;
+    var months = {Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11};
+    var monthLabel = (window._confirmedMonthLabel||'March 2026').split(' ')[0];
+    var monthIdx = months[monthLabel.substring(0,3)] || 2;
+    var apptDate = new Date(2026, monthIdx, dayNum, h, parseInt(m));
+    var shortMonth = monthLabel.substring(0,3);
+    setUpcomingAppt(apptDate.toISOString(), shortMonth + ' ' + dayNum + ' · ' + window._confirmedSlot);
+  }
   var confirm = document.getElementById('bookingConfirm');
   if(confirm) confirm.remove();
   closeBooking();
@@ -2315,11 +2334,56 @@ function minimizeTracker() {
     setTimeout(function() { el.style.display = 'none'; }, 320);
   }
   var bell = document.getElementById('livebell');
-  if (bell) bell.classList.add('on');
+  if (bell) { bell.classList.add('on'); bell.dataset.mode = 'live'; }
   var reminder = document.getElementById('reminderCard');
   if (reminder) reminder.style.display = 'none';
 }
 
+
+
+// ── BELL PILL COUNTDOWN ──
+var _upcomingAppt = { date: new Date('2026-03-20T11:00:00'), label: 'Mar 20 · 11AM' };
+
+function updateBellPill() {
+  var bell = document.getElementById('livebell');
+  var etaEl = document.getElementById('lbEta');
+  if (!bell || !etaEl) return;
+
+  // If live groom is active, keep showing live eta (handled by minimizeTracker)
+  if (bell.classList.contains('on') && bell.dataset.mode === 'live') return;
+
+  var now = new Date();
+  var appt = _upcomingAppt.date;
+  var diff = appt - now;
+
+  if (diff <= 0) {
+    etaEl.textContent = 'Now!';
+  } else {
+    var days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    var hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    var mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    if (days > 0) {
+      etaEl.textContent = days + 'd · 11AM';
+    } else if (hours > 0) {
+      etaEl.textContent = hours + 'h ' + mins + 'm';
+    } else {
+      etaEl.textContent = mins + ' min';
+    }
+  }
+  bell.dataset.mode = 'upcoming';
+  bell.classList.add('on');
+}
+
+function setUpcomingAppt(dateStr, timeLabel) {
+  _upcomingAppt = { date: new Date(dateStr), label: timeLabel };
+  updateBellPill();
+}
+
+// Start countdown on load
+window.addEventListener('load', function() {
+  updateBellPill();
+  setInterval(updateBellPill, 60000);
+});
 
 function handleBellTap() {
   var dot = document.getElementById('liveBellDot');
@@ -2330,7 +2394,7 @@ function handleBellTap() {
 
 function reopenTracker() {
   var bell = document.getElementById('livebell');
-  if (bell) bell.classList.remove('on');
+  if (bell) { bell.dataset.mode = 'upcoming'; updateBellPill(); }
   var el = _trackerEl || document.getElementById('groomTracker');
   if (el) {
     el.style.display = '';
