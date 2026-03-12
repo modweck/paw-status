@@ -718,8 +718,146 @@ function continueBooking() {
   const picked = document.querySelector('.cal-day.picked');
   const slot = document.querySelector('.slot.selected');
   if(!picked || !slot) { alert('Please select a date and time.'); return; }
+  const slotText = slot.textContent;
+  const serviceName = selectedService?.name || 'Full Groom';
+  const price = selectedService ? Math.round(selectedService.base * (SIZE_MULT[selectedBreed]||1)) : 85;
+  const breed = selectedBreed || 'your dog';
   closeBooking();
-  setTimeout(() => alert(`✅ Booking requested!\n${slot.textContent} · ${selectedService?.name||'Full Groom'}`), 350);
+  setTimeout(() => showTracker(slotText, serviceName, price, breed), 350);
+}
+
+function showTracker(time, service, price, breed) {
+  const existing = document.getElementById('trackerScreen');
+  if (existing) existing.remove();
+
+  const steps = [
+    { icon:'✅', label:'Booking Confirmed', sub:'We've reserved your spot!', done: true, active: false },
+    { icon:'🚗', label:'Groomer En Route', sub:'Your groomer is heading to the salon', done: false, active: false },
+    { icon:'🛁', label:'Check-In & Wash', sub:'Bath time — getting squeaky clean', done: false, active: false },
+    { icon:'💨', label:'Blow Dry', sub:'Fluffing up and drying off', done: false, active: false },
+    { icon:'✂️', label:'Cut & Style', sub:'The main event — looking sharp', done: false, active: false },
+    { icon:'🎀', label:'Finishing Touches', sub:'Bow, nails, spritz of cologne', done: false, active: false },
+    { icon:'🐾', label:'Your Dog Is Ready!', sub:'Come pick up your perfect pup!', done: false, active: false },
+  ];
+
+  const screen = document.createElement('div');
+  screen.id = 'trackerScreen';
+  screen.innerHTML = `
+    <div class="tracker-bg">
+      <div class="tracker-header">
+        <div class="tracker-logo">PawStatus</div>
+        <div class="tracker-booking-ref">REF #PS${Math.floor(Math.random()*90000)+10000}</div>
+      </div>
+
+      <div class="tracker-hero">
+        <div class="tracker-pup-wrap">
+          <div class="tracker-pup" id="trackerPup">🐶</div>
+          <div class="tracker-pulse"></div>
+        </div>
+        <div class="tracker-status-label" id="trackerStatusLabel">Booking Confirmed!</div>
+        <div class="tracker-status-sub" id="trackerStatusSub">Get ready — your pup is going to look amazing</div>
+      </div>
+
+      <div class="tracker-card">
+        <div class="tracker-card-row">
+          <div>
+            <div class="tracker-card-tiny">Service</div>
+            <div class="tracker-card-val">${service}</div>
+          </div>
+          <div>
+            <div class="tracker-card-tiny">Appointment</div>
+            <div class="tracker-card-val">${time}</div>
+          </div>
+          <div>
+            <div class="tracker-card-tiny">Total</div>
+            <div class="tracker-card-val gold">$${price}</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tracker-steps" id="trackerSteps">
+        ${steps.map((s,i) => `
+          <div class="tracker-step" id="step-${i}">
+            <div class="step-icon-wrap">
+              <div class="step-icon">${s.icon}</div>
+              ${i < steps.length-1 ? '<div class="step-line"></div>' : ''}
+            </div>
+            <div class="step-body">
+              <div class="step-label">${s.label}</div>
+              <div class="step-sub">${s.sub}</div>
+            </div>
+            <div class="step-check" id="check-${i}">✓</div>
+          </div>
+        `).join('')}
+      </div>
+
+      <div class="tracker-footer">
+        <button class="tracker-close-btn" onclick="closeTracker()">← Back to Search</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(screen);
+  requestAnimationFrame(() => screen.classList.add('visible'));
+
+  // Mark step 0 as done immediately, then auto-advance every few seconds (demo mode)
+  const pups = ['🐶','🐕','🛁','💨','✂️','🎀','🐾'];
+  const labels = ['Booking Confirmed!','Groomer En Route','Bath Time!','Blow Dry Time','Styling in Progress...','Almost Done!','Your Dog Is Ready! 🎉'];
+  const subs = [
+    'Get ready — your pup is going to look amazing',
+    'Your groomer is heading to the salon now',
+    'Suds and scrubs — getting squeaky clean',
+    'Fluffing up that beautiful coat',
+    `${breed} is getting the full treatment ✂️`,
+    'Bow, nails, and a spritz of cologne — chef's kiss',
+    'Come pick up your perfect pup!'
+  ];
+
+  let current = 0;
+  function advanceTo(i) {
+    // Mark all up to i as done
+    for(let j=0;j<=i;j++) {
+      const el = document.getElementById(`step-${j}`);
+      if(el) {
+        el.classList.remove('active');
+        el.classList.add('done');
+        document.getElementById(`check-${j}`).style.opacity='1';
+      }
+    }
+    // Mark i as active
+    const active = document.getElementById(`step-${i}`);
+    if(active) active.classList.add('active');
+
+    const label = document.getElementById('trackerStatusLabel');
+    const sub = document.getElementById('trackerStatusSub');
+    const pup = document.getElementById('trackerPup');
+    if(label) label.textContent = labels[i];
+    if(sub) sub.textContent = subs[i];
+    if(pup) pup.textContent = pups[i];
+
+    // Scroll step into view
+    if(active) active.scrollIntoView({behavior:'smooth', block:'nearest'});
+  }
+
+  advanceTo(0);
+
+  // Auto-demo: advance through steps every 2.5s
+  let stepIdx = 0;
+  const interval = setInterval(() => {
+    stepIdx++;
+    if(stepIdx >= steps.length) { clearInterval(interval); return; }
+    advanceTo(stepIdx);
+  }, 2500);
+
+  screen._interval = interval;
+}
+
+function closeTracker() {
+  const screen = document.getElementById('trackerScreen');
+  if(screen) {
+    if(screen._interval) clearInterval(screen._interval);
+    screen.classList.remove('visible');
+    setTimeout(() => screen.remove(), 350);
+  }
 }
 </script>
 
@@ -820,6 +958,177 @@ function continueBooking() {
   cursor:pointer; transition:background 0.2s;
 }
 .continue-btn:hover { background:#3a8fc4; }
+</style>
+
+<style>
+/* ── TRACKER SCREEN ── */
+#trackerScreen {
+  position: fixed; inset: 0;
+  z-index: 2000;
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.35s ease, transform 0.35s ease;
+  pointer-events: none;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+#trackerScreen.visible {
+  opacity: 1; transform: translateY(0); pointer-events: all;
+}
+
+.tracker-bg {
+  min-height: 100vh;
+  background: #0e0c08;
+  display: flex; flex-direction: column;
+  max-width: 430px; margin: 0 auto;
+  padding-bottom: 40px;
+}
+
+.tracker-header {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 52px 20px 16px;
+}
+.tracker-logo {
+  font-family: 'DM Serif Display', serif;
+  font-size: 20px; color: #c8a84b;
+}
+.tracker-booking-ref {
+  font-size: 11px; color: #555; font-weight: 600; letter-spacing: 0.06em;
+}
+
+/* Hero pup */
+.tracker-hero {
+  display: flex; flex-direction: column; align-items: center;
+  padding: 20px 20px 24px;
+}
+.tracker-pup-wrap {
+  position: relative; width: 110px; height: 110px;
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 16px;
+}
+.tracker-pup {
+  font-size: 60px;
+  z-index: 1; position: relative;
+  transition: all 0.4s ease;
+  animation: pup-bounce 2s ease-in-out infinite;
+}
+@keyframes pup-bounce {
+  0%,100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+.tracker-pulse {
+  position: absolute; inset: 0; border-radius: 50%;
+  background: radial-gradient(circle, rgba(200,168,75,0.18) 0%, transparent 70%);
+  animation: pulse-ring 2s ease-in-out infinite;
+}
+@keyframes pulse-ring {
+  0%,100% { transform: scale(1); opacity: 0.6; }
+  50% { transform: scale(1.15); opacity: 1; }
+}
+.tracker-status-label {
+  font-family: 'DM Serif Display', serif;
+  font-size: 26px; color: #fff;
+  text-align: center; margin-bottom: 6px;
+  transition: all 0.3s ease;
+}
+.tracker-status-sub {
+  font-size: 13px; color: #888;
+  text-align: center; line-height: 1.4;
+  transition: all 0.3s ease;
+  padding: 0 16px;
+}
+
+/* Info card */
+.tracker-card {
+  background: #1a1710; border: 1px solid #2a2418;
+  border-radius: 16px; margin: 0 16px 24px;
+  padding: 14px 16px;
+}
+.tracker-card-row {
+  display: flex; justify-content: space-between; gap: 8px;
+}
+.tracker-card-tiny {
+  font-size: 9px; font-weight: 700; letter-spacing: 0.08em;
+  text-transform: uppercase; color: #555; margin-bottom: 3px;
+}
+.tracker-card-val {
+  font-size: 13px; font-weight: 600; color: #ccc;
+}
+.tracker-card-val.gold { color: #c8a84b; font-family: 'DM Serif Display', serif; font-size: 16px; }
+
+/* Steps */
+.tracker-steps {
+  padding: 0 16px;
+  display: flex; flex-direction: column; gap: 0;
+}
+.tracker-step {
+  display: flex; align-items: flex-start; gap: 12px;
+  opacity: 0.3;
+  transition: opacity 0.4s ease;
+}
+.tracker-step.done, .tracker-step.active { opacity: 1; }
+
+.step-icon-wrap {
+  display: flex; flex-direction: column; align-items: center;
+  flex-shrink: 0; width: 36px;
+}
+.step-icon {
+  width: 36px; height: 36px;
+  background: #1a1710; border: 1.5px solid #2a2418;
+  border-radius: 50%; display: flex; align-items: center;
+  justify-content: center; font-size: 16px;
+  transition: all 0.35s ease;
+}
+.tracker-step.done .step-icon {
+  background: #1e1a0e; border-color: #c8a84b;
+}
+.tracker-step.active .step-icon {
+  background: #c8a84b; border-color: #c8a84b;
+  animation: icon-pop 0.4s ease;
+}
+@keyframes icon-pop {
+  0% { transform: scale(0.7); }
+  60% { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+.step-line {
+  width: 2px; flex: 1; min-height: 24px;
+  background: #2a2418; margin: 4px 0;
+  transition: background 0.4s ease;
+}
+.tracker-step.done .step-line { background: #c8a84b; }
+
+.step-body {
+  flex: 1; padding-top: 6px; padding-bottom: 20px;
+}
+.step-label {
+  font-size: 14px; font-weight: 600; color: #ccc;
+  transition: color 0.3s;
+}
+.tracker-step.active .step-label { color: #fff; }
+.tracker-step.done .step-label { color: #c8a84b; }
+.step-sub {
+  font-size: 11px; color: #555; margin-top: 2px; line-height: 1.4;
+}
+.step-check {
+  font-size: 13px; color: #c8a84b; font-weight: 700;
+  opacity: 0; transition: opacity 0.35s ease;
+  padding-top: 8px;
+  flex-shrink: 0;
+}
+
+/* Footer */
+.tracker-footer {
+  padding: 20px 16px 0;
+}
+.tracker-close-btn {
+  width: 100%; background: transparent;
+  border: 1.5px solid #2a2418; border-radius: 14px;
+  padding: 14px; color: #666; font-family: 'DM Sans', sans-serif;
+  font-size: 14px; font-weight: 600; cursor: pointer;
+  transition: all 0.2s;
+}
+.tracker-close-btn:hover { border-color: #555; color: #aaa; }
 </style>
 </body>
 </html>
