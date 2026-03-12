@@ -1924,16 +1924,16 @@ function openGroomTracker(opts) {
   position:fixed; inset:0; z-index:3000;
   background:#fff9f2;
   max-width:430px; margin:0 auto;
-  display:flex; flex-direction:column; overflow:hidden;
+  overflow-y:auto; overflow-x:hidden;
+  -webkit-overflow-scrolling:touch;
   opacity:0; transform:translateY(32px);
   transition:opacity .32s ease, transform .32s ease;
   pointer-events:none;
   font-family:'DM Sans',sans-serif;
-  overflow:hidden;
 }
 #groomTracker.gt-visible { opacity:1; transform:translateY(0); pointer-events:all; }
 
-.gt-wrap { display:block; overflow-y:auto; -webkit-overflow-scrolling:touch; background:#fff9f2; padding-bottom:80px; }
+.gt-wrap { display:block; background:#fff9f2; padding-bottom:80px; }
 
 /* Header */
 .gt-header {
