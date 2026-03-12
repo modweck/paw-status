@@ -870,7 +870,7 @@ function continueBooking() {
 
 // ── GROOM TRACKER ──────────────────────────────────────────
 function openGroomTracker(opts) {
-  document.getElementById('bottomNav').style.display = 'none';
+  // nav stays visible
   const existing = document.getElementById('groomTracker');
   if (existing) existing.remove();
 
@@ -1452,7 +1452,7 @@ function openGroomTracker(opts) {
     el.innerHTML = `
       <div class="gt-wrap">
         <div class="gt-header">
-          <button class="gt-back" onclick="document.getElementById('groomTracker').classList.remove('gt-visible');setTimeout(()=>{const e=document.getElementById('groomTracker');if(e)e.remove();},320);document.getElementById('bottomNav').style.display='';">←</button>
+          <button class="gt-back" onclick="document.getElementById('groomTracker').classList.remove('gt-visible');setTimeout(()=>{const e=document.getElementById('groomTracker');if(e)e.remove();},320);">←</button>
           <div class="gt-header-center">
             <div class="gt-dog-name">${opts.dogName} 🐾</div>
             <div class="gt-eta">${stage.eta > 0 ? 'Ready in about ' + stage.eta + ' min' : '🎉 Ready for pickup!'}</div>
@@ -1681,7 +1681,7 @@ function openGroomTracker(opts) {
 
 /* ── GROOM TRACKER ── */
 #groomTracker {
-  position:fixed; inset:0; z-index:3000;
+  position:fixed; inset:0; z-index:1999;
   background:#fff9f2;
   max-width:430px; margin:0 auto;
   display:flex; flex-direction:column; overflow:hidden;
@@ -1693,7 +1693,7 @@ function openGroomTracker(opts) {
 }
 #groomTracker.gt-visible { opacity:1; transform:translateY(0); pointer-events:all; }
 
-.gt-wrap { display:flex; flex-direction:column; flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; background:#fff9f2; }
+.gt-wrap { display:flex; flex-direction:column; flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; background:#fff9f2; padding-bottom:72px; }
 
 /* Header */
 .gt-header {
