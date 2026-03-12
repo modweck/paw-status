@@ -1489,6 +1489,8 @@ function confirmAndBook() {
 
 // ── GROOM TRACKER ──────────────────────────────────────────
 function openGroomTracker(opts) {
+  // hide bell pill while tracker is fullscreen
+  var b = document.getElementById('livebell'); if(b) b.style.display='none';
   // nav stays visible
   // reset tab highlight to explore
   document.querySelectorAll('.nav-item').forEach(function(n){n.classList.remove('active');});
@@ -2612,6 +2614,8 @@ function minimizeTracker() {
     _trackerEl = el;
     setTimeout(function() { el.style.display = 'none'; }, 320);
   }
+  // Show bell pill again
+  document.getElementById('livebell').style.display = '';
   var bell = document.getElementById('livebell');
   var etaEl = document.getElementById('lbEta');
   var stages = window._trackerStages;
@@ -2781,6 +2785,13 @@ function sendQuickReply(text) {
 }
 
 function switchTab(tab) {
+  // Dismiss booking confirm sheet if open
+  var bc = document.getElementById('bookingConfirm');
+  if (bc) bc.remove();
+  // Dismiss booking overlay if open
+  var bo = document.getElementById('bookingOverlay');
+  if (bo) { bo.classList.remove('visible'); setTimeout(function(){ bo.style.display='none'; }, 300); }
+
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.getElementById('nav-' + (tab === 'appointments' ? 'appointments' : tab)).classList.add('active');
 
