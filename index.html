@@ -630,7 +630,7 @@ function bookGroomer(groomerName) {
     const d = new Date(blockedUntil); d.setDate(d.getDate());
     return d.toLocaleDateString('default',{month:'short',day:'numeric'});
   })();
-  const waitlistBanner = `<div class="waitlist-banner" onclick="joinWaitlist(13)">
+  const waitlistBanner = `<div class="waitlist-banner" onclick="joinWaitlist()">
     <span>🔔</span>
     <span>Dates before ${blockedEndLabel} are fully booked — <strong>join waitlist</strong> for a sooner opening</span>
     <span class="waitlist-banner-arrow">›</span>
@@ -652,7 +652,7 @@ function bookGroomer(groomerName) {
     const dots = isFirstAvail ? '<span class="avail-dot"></span>'
                : (!isPast && !isBlocked) ? '<span class="avail-dot"></span>'
                : isBlocked ? '<span class="waitlist-dot">🔔</span>' : '';
-    const clickHandler = isPast ? '' : isBlocked ? `onclick="joinWaitlist(${d})"` : `onclick="selectDay(this,${d})"`;
+    const clickHandler = isPast ? '' : isBlocked ? `onclick="joinWaitlist()"` : `onclick="selectDay(this,${d})"`;
     calHTML += `<div class="${cls}" ${clickHandler}>${d}${dots}</div>`;
   }
   calHTML += `</div>`;
@@ -722,14 +722,9 @@ function bookGroomer(groomerName) {
   });
 }
 
-function joinWaitlist(day) {
-  // Remove any existing waitlist toast
+function joinWaitlist() {
   const existing = document.getElementById('waitlistToast');
   if(existing) existing.remove();
-
-  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  const today = new Date();
-  const dateLabel = `${months[today.getMonth()]} ${day}`;
 
   const toast = document.createElement('div');
   toast.id = 'waitlistToast';
@@ -738,25 +733,44 @@ function joinWaitlist(day) {
     <div class="waitlist-sheet">
       <div class="waitlist-handle"></div>
       <div class="waitlist-icon">🔔</div>
-      <h3 class="waitlist-title">Join Waitlist for ${dateLabel}?</h3>
-      <p class="waitlist-desc">We'll notify you instantly if a spot opens up sooner than your booked date. No commitment needed.</p>
-      <button class="waitlist-confirm-btn" onclick="confirmWaitlist('${dateLabel}')">Yes, notify me!</button>
-      <button class="waitlist-cancel-btn" onclick="document.getElementById('waitlistToast').remove()">No thanks</button>
+      <h3 class="waitlist-title">Want an earlier appointment?</h3>
+      <p class="waitlist-desc">We'll text you the moment any earlier slot opens up — like <em>"Tuesday Mar 17 at 11am just opened, want it?"</em> Just reply YES and it's yours.</p>
+      <div class="waitlist-phone-row">
+        <span class="waitlist-phone-flag">📱</span>
+        <input class="waitlist-phone-input" id="waitlistPhone" type="tel" placeholder="Your phone number" maxlength="14" oninput="formatWaitlistPhone(this)"/>
+      </div>
+      <button class="waitlist-confirm-btn" onclick="confirmWaitlist()">🔔 Notify me of earlier slots</button>
+      <button class="waitlist-cancel-btn" onclick="document.getElementById('waitlistToast').remove()">No thanks, keep my date</button>
     </div>
   `;
   document.body.appendChild(toast);
-  requestAnimationFrame(() => toast.querySelector('.waitlist-sheet').classList.add('up'));
+  requestAnimationFrame(() => {
+    toast.querySelector('.waitlist-sheet').classList.add('up');
+    setTimeout(() => { const inp = document.getElementById('waitlistPhone'); if(inp) inp.focus(); }, 350);
+  });
 }
 
-function confirmWaitlist(dateLabel) {
+function formatWaitlistPhone(input) {
+  let v = input.value.replace(/\D/g,'');
+  if(v.length >= 6) v = '(' + v.slice(0,3) + ') ' + v.slice(3,6) + '-' + v.slice(6,10);
+  else if(v.length >= 3) v = '(' + v.slice(0,3) + ') ' + v.slice(3);
+  input.value = v;
+}
+
+function confirmWaitlist() {
+  const phone = document.getElementById('waitlistPhone');
+  const val = phone ? phone.value.replace(/\D/g,'') : '';
+  if(val.length < 10) {
+    if(phone) { phone.style.borderColor='#e05050'; phone.placeholder='Enter a valid number'; phone.focus(); }
+    return;
+  }
   document.getElementById('waitlistToast').remove();
-  // Show success snackbar
   const snack = document.createElement('div');
   snack.className = 'waitlist-snack';
-  snack.innerHTML = `✅ You're on the waitlist! We'll text you if ${dateLabel} opens up.`;
+  snack.innerHTML = `🔔 You're on the waitlist! We'll text you the moment an earlier slot opens up.`;
   document.body.appendChild(snack);
   setTimeout(() => snack.classList.add('show'), 50);
-  setTimeout(() => { snack.classList.remove('show'); setTimeout(()=>snack.remove(),400); }, 3500);
+  setTimeout(() => { snack.classList.remove('show'); setTimeout(()=>snack.remove(),400); }, 4000);
 }
 
 function selectGroomer(el) {
@@ -1592,6 +1606,18 @@ function openGroomTracker(opts) {
   display:block; width:100%; padding:12px; background:none; color:#888;
   border:none; font-size:14px; cursor:pointer;
 }
+.waitlist-phone-row {
+  display:flex; align-items:center; gap:10px;
+  background:#f8f4ee; border:1.5px solid #e0d0a0; border-radius:12px;
+  padding:10px 14px; margin-bottom:16px;
+}
+.waitlist-phone-flag { font-size:22px; }
+.waitlist-phone-input {
+  flex:1; border:none; background:none; font-size:16px; color:#2d1f00;
+  outline:none; font-family:'DM Sans',sans-serif;
+}
+.waitlist-phone-input::placeholder { color:#b0a080; }
+.waitlist-desc em { font-style:normal; background:#fff8e0; padding:1px 4px; border-radius:4px; font-weight:500; }
 .waitlist-snack {
   position:fixed; bottom:90px; left:50%; transform:translateX(-50%) translateY(20px);
   background:#2d1f00; color:white; padding:14px 20px; border-radius:12px;
