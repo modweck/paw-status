@@ -1189,8 +1189,13 @@ function sortResults(by, btn) {
   btn.classList.add('active');
   let sorted = [...renderedGroomers];
 
-  if (by === 'rating') sorted.sort((a, b) => parseFloat(b.rating) - parseFloat(a.rating));
-  else if (by === 'distance') sorted.sort((a, b) => a.distanceVal - b.distanceVal);
+  if (by === 'rating') {
+    sorted.sort((a, b) => parseFloat(b.rating) - parseFloat(a.rating));
+    // Pin Happy Tails first regardless of rating
+    const jill = sorted.find(g => g.isJill);
+    const rest = sorted.filter(g => !g.isJill);
+    sorted = jill ? [jill, ...rest] : sorted;
+  } else if (by === 'distance') sorted.sort((a, b) => a.distanceVal - b.distanceVal);
   else if (by === 'price') sorted.sort((a, b) => a.price - b.price);
   else if (by === 'soonest') sorted.sort((a, b) => new Date(a.nextAvail + ' 2026') - new Date(b.nextAvail + ' 2026'));
   else if (by === 'deals') {
@@ -1201,16 +1206,15 @@ function sortResults(by, btn) {
     sorted = jill ? [jill, ...rest] : rest;
   }
 
-  // For non-deals sorts: shuffle to give fresh feel, no pinning
-  if (by !== 'deals') {
-    // Fisher-Yates shuffle
+  // For non-rating, non-deals sorts: shuffle to give fresh feel
+  if (by !== 'deals' && by !== 'rating') {
     for (let i = sorted.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [sorted[i], sorted[j]] = [sorted[j], sorted[i]];
     }
   }
 
-  const toRender = (by === 'deals') ? sorted : sorted;
+  const toRender = sorted;
   const dealsNote = document.getElementById('dealsNote');
   if(dealsNote) dealsNote.style.display = (by==='deals' && toRender.length) ? 'flex' : 'none';
   renderGroomerCards(toRender);
