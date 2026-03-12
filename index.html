@@ -1933,7 +1933,7 @@ function openGroomTracker(opts) {
 }
 #groomTracker.gt-visible { opacity:1; transform:translateY(0); pointer-events:all; }
 
-.gt-wrap { display:flex; flex-direction:column; overflow-y:auto; -webkit-overflow-scrolling:touch; background:#fff9f2; padding-bottom:80px; min-height:100%; }
+.gt-wrap { display:block; overflow-y:auto; -webkit-overflow-scrolling:touch; background:#fff9f2; padding-bottom:80px; }
 
 /* Header */
 .gt-header {
@@ -1985,7 +1985,7 @@ function openGroomTracker(opts) {
 
 /* Scene */
 .gt-scene {
-  position:relative; height:260px; flex-shrink:0;
+  position:relative; height:240px;
   display:flex; align-items:center; justify-content:center; overflow:hidden;
 }
 .gt-scene-bg {
