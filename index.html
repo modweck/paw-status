@@ -1105,6 +1105,12 @@ function confirmAndBook() {
 // ── GROOM TRACKER ──────────────────────────────────────────
 function openGroomTracker(opts) {
   // nav stays visible
+  // reset tab highlight to explore
+  document.querySelectorAll('.nav-item').forEach(function(n){n.classList.remove('active');});
+  document.getElementById('nav-explore').classList.add('active');
+  // hide bookings screen if open
+  var bs = document.getElementById('bookingsScreen');
+  if(bs) bs.classList.remove('active');
   const existing = document.getElementById('groomTracker');
   if (existing) existing.remove();
 
@@ -1915,7 +1921,7 @@ function openGroomTracker(opts) {
 
 /* ── GROOM TRACKER ── */
 #groomTracker {
-  position:fixed; inset:0; z-index:1999;
+  position:fixed; inset:0; z-index:3000;
   background:#fff9f2;
   max-width:430px; margin:0 auto;
   display:flex; flex-direction:column; overflow:hidden;
