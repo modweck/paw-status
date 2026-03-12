@@ -841,6 +841,7 @@ function continueBooking() {
 
 // ── GROOM TRACKER ──────────────────────────────────────────
 function openGroomTracker(opts) {
+  document.getElementById('bottomNav').style.display = 'none';
   const existing = document.getElementById('groomTracker');
   if (existing) existing.remove();
 
@@ -1422,7 +1423,7 @@ function openGroomTracker(opts) {
     el.innerHTML = `
       <div class="gt-wrap">
         <div class="gt-header">
-          <button class="gt-back" onclick="document.getElementById('groomTracker').classList.remove('gt-visible');setTimeout(()=>{const e=document.getElementById('groomTracker');if(e)e.remove();},320)">←</button>
+          <button class="gt-back" onclick="document.getElementById('groomTracker').classList.remove('gt-visible');setTimeout(()=>{const e=document.getElementById('groomTracker');if(e)e.remove();},320);document.getElementById('bottomNav').style.display='';">←</button>
           <div class="gt-header-center">
             <div class="gt-dog-name">${opts.dogName} 🐾</div>
             <div class="gt-eta">${stage.eta > 0 ? 'Ready in about ' + stage.eta + ' min' : '🎉 Ready for pickup!'}</div>
