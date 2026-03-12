@@ -2086,9 +2086,12 @@ function openGroomTracker(opts) {
             <div class="gt-dog-name">${opts.dogName} 🐾</div>
             <div class="gt-eta">${stage.eta > 0 ? 'Ready in about ' + stage.eta + ' min' : '🎉 Ready for pickup!'}</div>
           </div>
-          <div class="gt-queue ${dogsAhead===0?'gt-queue-none':''}">
-            <div class="gt-queue-num">${dogsAhead}</div>
-            <div class="gt-queue-lbl">ahead</div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
+            <div class="gt-queue ${dogsAhead===0?'gt-queue-none':''}">
+              <div class="gt-queue-num">${dogsAhead}</div>
+              <div class="gt-queue-lbl">ahead</div>
+            </div>
+            <button onclick="openGroomerChat('${opts.groomer}')" style="background:var(--gold-pale);border:1.5px solid var(--gold-border);border-radius:20px;padding:5px 12px;font-size:12px;font-weight:700;color:var(--gold);cursor:pointer;white-space:nowrap;font-family:'DM Sans',sans-serif">💬 Chat</button>
           </div>
         </div>
 
