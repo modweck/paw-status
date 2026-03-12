@@ -1506,6 +1506,7 @@ function openGroomTracker(opts) {
     { id:'finish',  label:'Finishing Touches', msg:`Almost done — nails, ears & a spritz 💅`,              eta:15 },
     { id:'ready',   label:'Ready for Pickup',  msg:`${opts.dogName} is clean, fluffy & waiting for you!`,  eta:0  },
   ];
+  window._trackerStages = STAGES;
 
   const ADDONS = [
     { id:'nail',  icon:'💅', label:'Nail Trim',      price:20, added:false },
@@ -1513,6 +1514,7 @@ function openGroomTracker(opts) {
     { id:'flea',  icon:'🌿', label:'Flea Treatment', price:35, added:false },
   ];
 
+  window._currentStage = 0;
   let currentStage = 0;
   let dogsAhead = 2;
   let addedServices = {};
@@ -2138,7 +2140,7 @@ function openGroomTracker(opts) {
       var nextEta = STAGES[currentStage] ? STAGES[currentStage].eta : 0;
       etaEl.textContent = nextEta > 0 ? '🐕 Grooming · ~' + nextEta + ' min' : '🎉 Bella is ready!';
     }
-    currentStage++;
+    currentStage++; window._currentStage = currentStage;
     render();
   };
 
@@ -2612,7 +2614,10 @@ function minimizeTracker() {
   }
   var bell = document.getElementById('livebell');
   var etaEl = document.getElementById('lbEta');
-  if (etaEl) etaEl.textContent = '🐕 Grooming · ~45 min';
+  var stages = window._trackerStages;
+  var stageIdx = window._currentStage || 0;
+  var liveEta = stages && stages[stageIdx] ? stages[stageIdx].eta : 45;
+  if (etaEl) etaEl.textContent = liveEta > 0 ? '🐕 Grooming · ~' + liveEta + ' min' : '🎉 Bella is ready!';
   if (bell) { bell.classList.add('on'); bell.dataset.mode = 'live'; }
   var reminder = document.getElementById('reminderCard');
   if (reminder) reminder.style.display = 'none';
