@@ -378,6 +378,34 @@
 .gh-btn:hover { background:var(--gold); color:#fff; }
 .gh-stars { font-size:14px; color:#f0b429; letter-spacing:2px; }
 
+
+/* ── LIVE TRACKER BANNER ── */
+#liveTrackerBanner {
+  display:none;
+  position:fixed;
+  bottom:72px;
+  left:50%; transform:translateX(-50%);
+  width:calc(100% - 32px);
+  max-width:398px;
+  background:linear-gradient(135deg,#8b7320 0%,#c8a84b 100%);
+  border-radius:16px;
+  padding:12px 16px;
+  z-index:2500;
+  box-shadow:0 8px 24px rgba(139,115,32,.35);
+  cursor:pointer;
+  animation:bannerSlideUp .3s ease;
+  font-family:'DM Sans',sans-serif;
+}
+@keyframes bannerSlideUp {
+  from { opacity:0; transform:translateX(-50%) translateY(16px); }
+  to   { opacity:1; transform:translateX(-50%) translateY(0); }
+}
+#liveTrackerBanner.show { display:flex; align-items:center; gap:12px; }
+.ltb-icon { font-size:24px; flex-shrink:0; }
+.ltb-text { flex:1; }
+.ltb-title { font-size:13px; font-weight:700; color:#fff; }
+.ltb-eta { font-size:11px; color:rgba(255,255,255,.8); margin-top:1px; }
+.ltb-arrow { font-size:18px; color:rgba(255,255,255,.7); }
 </style>
 </head>
 <body>
@@ -1702,7 +1730,7 @@ function openGroomTracker(opts) {
     el.innerHTML = `
       <div class="gt-wrap">
         <div class="gt-header">
-          <button class="gt-back" onclick="document.getElementById('groomTracker').classList.remove('gt-visible');setTimeout(()=>{const e=document.getElementById('groomTracker');if(e)e.remove();},320);">←</button>
+          <button class="gt-back" onclick="minimizeTracker()">←</button>
           <div class="gt-header-center">
             <div class="gt-dog-name">${opts.dogName} 🐾</div>
             <div class="gt-eta">${stage.eta > 0 ? 'Ready in about ' + stage.eta + ' min' : '🎉 Ready for pickup!'}</div>
@@ -1943,7 +1971,7 @@ function openGroomTracker(opts) {
 }
 #groomTracker.gt-visible { opacity:1; transform:translateY(0); pointer-events:all; }
 
-.gt-wrap { display:block; background:#fff9f2; padding-bottom:80px; }
+.gt-wrap { display:block; background:#fff9f2; padding-bottom:80px; min-height:100vh; }
 
 /* Header */
 .gt-header {
@@ -1955,7 +1983,7 @@ function openGroomTracker(opts) {
 .gt-back { background:none; border:none; font-size:22px; cursor:pointer; color:#8b7320; padding:4px 6px; font-weight:700; }
 .gt-header-center { flex:1; }
 .gt-dog-name { font-family:'DM Serif Display',serif; font-size:20px; color:#3a2a0a; }
-.gt-eta { font-size:12px; color:#b08030; font-weight:600; margin-top:2px; }
+.gt-eta { font-size:18px; color:#b08030; font-weight:700; margin-top:3px; font-family:'DM Serif Display',serif; }
 .gt-queue {
   text-align:center; background:#fff3dc; border:2px solid #ffd080;
   border-radius:12px; padding:6px 12px; min-width:52px;
@@ -2217,6 +2245,31 @@ function openGroomTracker(opts) {
 </div>
 
 <script>
+
+var _trackerEl = null;
+var _trackerEta = 45;
+
+function minimizeTracker() {
+  var el = document.getElementById('groomTracker');
+  if (el) {
+    el.classList.remove('gt-visible');
+    _trackerEl = el;
+    setTimeout(function() { el.style.display = 'none'; }, 320);
+  }
+  var banner = document.getElementById('liveTrackerBanner');
+  if (banner) banner.classList.add('show');
+}
+
+function reopenTracker() {
+  var banner = document.getElementById('liveTrackerBanner');
+  if (banner) banner.classList.remove('show');
+  var el = _trackerEl || document.getElementById('groomTracker');
+  if (el) {
+    el.style.display = '';
+    setTimeout(function() { el.classList.add('gt-visible'); }, 10);
+  }
+}
+
 function switchTab(tab) {
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.getElementById('nav-' + (tab === 'appointments' ? 'appointments' : tab)).classList.add('active');
@@ -2246,5 +2299,14 @@ function rebookAppointment(groomerName) {
 }
 </script>
 
+
+<div id="liveTrackerBanner" onclick="reopenTracker()">
+  <div class="ltb-icon">🐕</div>
+  <div class="ltb-text">
+    <div class="ltb-title">Bella is at the groomer</div>
+    <div class="ltb-eta" id="ltbEta">Ready in about 45 min</div>
+  </div>
+  <div class="ltb-arrow">›</div>
+</div>
 </body>
 </html>
