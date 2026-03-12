@@ -402,6 +402,10 @@
   from { opacity:0; transform:translateX(-50%) translateY(16px); }
   to   { opacity:1; transform:translateX(-50%) translateY(0); }
 }
+@keyframes ipbSlideDown {
+  from { opacity:0; transform:translateY(-12px); }
+  to   { opacity:1; transform:translateY(0); }
+}
 #liveTrackerBanner.show { display:flex; align-items:center; gap:12px; }
 .ltb-icon { font-size:24px; flex-shrink:0; }
 .ltb-text { flex:1; }
@@ -2337,15 +2341,12 @@ function openGroomTracker(opts) {
 #inProgressBanner {
   display:none;
   margin:16px 16px 0;
-  box-sizing:border-box;
-  width:calc(100% - 32px);
   background:linear-gradient(135deg,#8b7320 0%,#c8a84b 100%);
   border-radius:18px;
   padding:16px 18px;
   cursor:pointer;
   box-shadow:0 6px 24px rgba(139,115,32,.35);
-  animation:bannerSlideUp .4s cubic-bezier(.34,1.56,.64,1) both;
-  overflow:hidden;
+  animation:ipbSlideDown .4s cubic-bezier(.34,1.56,.64,1) both;
 }
 #inProgressBanner.active { display:block; }
 .ipb-top { display:flex;align-items:center;gap:12px;margin-bottom:10px; }
