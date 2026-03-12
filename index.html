@@ -532,21 +532,20 @@ function findGroomers() {
   });
 
   const page = document.getElementById('resultsPage');
+  page.style.pointerEvents = '';
   page.classList.add('show');
-  page.scrollTop = 0;
+  document.getElementById('groomerCards').scrollTop = 0;
 }
 
 function closeResults() {
   const page = document.getElementById('resultsPage');
   page.classList.remove('show');
-  // force pointer events back on main content after transition
-  setTimeout(() => {
-    page.style.pointerEvents = 'none';
-    document.querySelector('.phone').style.pointerEvents = 'all';
-  }, 300);
 }
 
 function bookGroomer(groomerName) {
+  // Remove any leftover overlay from a previous booking attempt
+  const existing = document.getElementById('bookingOverlay');
+  if (existing) existing.remove();
   const price = selectedService ? Math.round(selectedService.base * (SIZE_MULT[selectedBreed]||1)) : 85;
   const duration = selectedService ? selectedService.time : '2–3 hrs';
 
