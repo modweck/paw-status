@@ -936,93 +936,85 @@ function showBookingConfirm() {
   if(existing) existing.remove();
 
   const groomerName = window._currentGroomer || 'Happy Tails Grooming';
-  const groomerData = (window.GROOMERS_DATA||[]).find(g=>g.name===groomerName);
+  const groomerData = (window.GROOMERS_DATA||[]).find(function(g){return g.name===groomerName;});
   const hasDiscount = groomerData && groomerData.firstGroom;
   const discountPct = hasDiscount ? (groomerData.discountPct||10) : 0;
   const price = selectedService ? Math.round(selectedService.base * (SIZE_MULT[selectedBreed]||1)) : 85;
   const finalPrice = hasDiscount ? Math.round(price*(1-discountPct/100)) : price;
 
-  // Format date nicely
   const today = new Date();
   const d = new Date(today.getFullYear(), today.getMonth(), parseInt(window._confirmedDate));
   const dateLabel = d.toLocaleDateString('default',{weekday:'short',month:'long',day:'numeric'});
 
+  const discountHTML = hasDiscount
+    ? '<div class="confirm-discount-row"><span style="font-size:18px">🏷️</span><div style="font-size:13px;color:#2d6a2d;font-weight:600">' + discountPct + '% first-groom discount — saving $' + (price-finalPrice) + '</div></div>'
+    : '';
+
+  const priceHTML = hasDiscount
+    ? '<span style="text-decoration:line-through;color:#aaa;font-weight:400;margin-right:5px">$' + price + '</span><span style="color:#2d6a2d">$' + finalPrice + '</span>'
+    : '$' + finalPrice;
+
   const el = document.createElement('div');
   el.id = 'bookingConfirm';
-  el.innerHTML = \`
-    <div class="confirm-sheet">
-      <div class="confirm-handle"></div>
-      <div class="confirm-header">
-        <div class="confirm-title">Confirm your booking</div>
-        <div class="confirm-sub">Review details before locking in your slot</div>
-      </div>
-
-      <div class="confirm-summary">
-        <div class="confirm-row">
-          <span class="confirm-row-icon">🐾</span>
-          <div><div class="confirm-row-label">Groomer</div><div class="confirm-row-val">\${groomerName}</div></div>
-        </div>
-        <div class="confirm-row">
-          <span class="confirm-row-icon">✂️</span>
-          <div><div class="confirm-row-label">Service</div><div class="confirm-row-val">\${selectedService ? selectedService.name : 'Full Groom'} · \${selectedBreed||'your dog'}</div></div>
-        </div>
-        <div class="confirm-row">
-          <span class="confirm-row-icon">📅</span>
-          <div><div class="confirm-row-label">Date & Time</div><div class="confirm-row-val">\${dateLabel} at \${window._confirmedSlot}</div></div>
-        </div>
-        <div class="confirm-row">
-          <span class="confirm-row-icon">💰</span>
-          <div><div class="confirm-row-label">Estimated Total</div><div class="confirm-row-val">\${hasDiscount ? \`<span style="text-decoration:line-through;color:#aaa;font-weight:400;margin-right:5px">$\${price}</span><span style="color:#2d6a2d">$\${finalPrice}</span>\` : '$'+finalPrice}</div></div>
-        </div>
-      </div>
-
-      \${hasDiscount ? \`<div class="confirm-discount-row">
-        <span style="font-size:18px">🏷️</span>
-        <div style="font-size:13px;color:#2d6a2d;font-weight:600">\${discountPct}% first-groom discount applied — saving $\${price-finalPrice}</div>
-      </div>\` : ''}
-
-      <div class="confirm-notes-section">
-        <div class="confirm-notes-label">Notes for your groomer</div>
-        <textarea class="confirm-notes-input" id="groomerNotes" placeholder="e.g. Bella is nervous around loud dryers, loves treats, has a sensitive spot near her tail…" rows="3"></textarea>
-        <div class="confirm-hints">
-          <button class="confirm-hint" onclick="addNote('Nervous around loud noises')">😟 Nervous around noise</button>
-          <button class="confirm-hint" onclick="addNote('Loves treats')">🦴 Loves treats</button>
-          <button class="confirm-hint" onclick="addNote('First time grooming')">✨ First time grooming</button>
-          <button class="confirm-hint" onclick="addNote('Sensitive skin')">🌿 Sensitive skin</button>
-        </div>
-      </div>
-
-      <div class="confirm-btns">
-        <button class="confirm-go-btn" onclick="confirmAndBook()">🔒 Lock in this slot</button>
-        <button style="background:none;border:none;color:#aaa;font-size:14px;cursor:pointer;padding:4px" onclick="document.getElementById('bookingConfirm').remove()">← Back to calendar</button>
-      </div>
-    </div>
-  \`;
+  el.innerHTML =
+    '<div class="confirm-sheet">' +
+      '<div class="confirm-handle"></div>' +
+      '<div class="confirm-header">' +
+        '<div class="confirm-title">Confirm your booking</div>' +
+        '<div class="confirm-sub">Review details before locking in your slot</div>' +
+      '</div>' +
+      '<div class="confirm-summary">' +
+        '<div class="confirm-row"><span class="confirm-row-icon">🐾</span><div><div class="confirm-row-label">Groomer</div><div class="confirm-row-val">' + groomerName + '</div></div></div>' +
+        '<div class="confirm-row"><span class="confirm-row-icon">✂️</span><div><div class="confirm-row-label">Service</div><div class="confirm-row-val">' + (selectedService ? selectedService.name : 'Full Groom') + ' · ' + (selectedBreed||'your dog') + '</div></div></div>' +
+        '<div class="confirm-row"><span class="confirm-row-icon">📅</span><div><div class="confirm-row-label">Date & Time</div><div class="confirm-row-val">' + dateLabel + ' at ' + window._confirmedSlot + '</div></div></div>' +
+        '<div class="confirm-row"><span class="confirm-row-icon">💰</span><div><div class="confirm-row-label">Estimated Total</div><div class="confirm-row-val">' + priceHTML + '</div></div></div>' +
+      '</div>' +
+      discountHTML +
+      '<div class="confirm-notes-section">' +
+        '<div class="confirm-notes-label">Notes for your groomer</div>' +
+        '<textarea class="confirm-notes-input" id="groomerNotes" placeholder="e.g. Bella is nervous around loud dryers, loves treats…" rows="3"></textarea>' +
+        '<div class="confirm-hints">' +
+          '<button class="confirm-hint" onclick="addNote(\'Nervous around loud noises\')">😟 Nervous around noise</button>' +
+          '<button class="confirm-hint" onclick="addNote(\'Loves treats\')">🦴 Loves treats</button>' +
+          '<button class="confirm-hint" onclick="addNote(\'First time grooming\')">✨ First time grooming</button>' +
+          '<button class="confirm-hint" onclick="addNote(\'Sensitive skin\')">🌿 Sensitive skin</button>' +
+        '</div>' +
+      '</div>' +
+      '<div class="confirm-btns">' +
+        '<button class="confirm-go-btn" onclick="confirmAndBook()">🔒 Lock in this slot</button>' +
+        '<button style="background:none;border:none;color:#aaa;font-size:14px;cursor:pointer;padding:4px" onclick="document.getElementById(\'bookingConfirm\').remove()">← Back to calendar</button>' +
+      '</div>' +
+    '</div>';
 
   document.body.appendChild(el);
-  requestAnimationFrame(() => el.classList.add('visible'));
+  requestAnimationFrame(function(){ el.classList.add('visible'); });
 }
 
 function addNote(text) {
-  const ta = document.getElementById('groomerNotes');
+  var ta = document.getElementById('groomerNotes');
   if(!ta) return;
   ta.value = ta.value ? ta.value + ', ' + text : text;
   ta.focus();
 }
 
 function confirmAndBook() {
-  const notes = document.getElementById('groomerNotes')?.value || '';
-  document.getElementById('bookingConfirm')?.remove();
+  var notes = document.getElementById('groomerNotes') ? document.getElementById('groomerNotes').value : '';
+  var confirm = document.getElementById('bookingConfirm');
+  if(confirm) confirm.remove();
   closeBooking();
-  setTimeout(() => openGroomTracker({
-    dogName: 'Bella',
-    breed: selectedBreed || 'Golden Retriever',
-    service: selectedService ? selectedService.name : 'Full Groom',
-    groomer: window._currentGroomer || 'Happy Tails Grooming',
-    timeSlot: window._confirmedSlot,
-    notes
-  }), 380);
+  setTimeout(function(){
+    openGroomTracker({
+      dogName: 'Bella',
+      breed: selectedBreed || 'Golden Retriever',
+      service: selectedService ? selectedService.name : 'Full Groom',
+      groomer: window._currentGroomer || 'Happy Tails Grooming',
+      timeSlot: window._confirmedSlot,
+      notes: notes
+    });
+  }, 380);
 }
+
+
 
 
 
