@@ -406,6 +406,22 @@
 .ltb-title { font-size:13px; font-weight:700; color:#fff; }
 .ltb-eta { font-size:11px; color:rgba(255,255,255,.8); margin-top:1px; }
 .ltb-arrow { font-size:18px; color:rgba(255,255,255,.7); }
+
+/* ── LIVE NAV BADGE ── */
+.nav-live-badge {
+  display:none;
+  position:absolute;
+  top:-2px; right:8px;
+  width:8px; height:8px;
+  background:#e85d24;
+  border-radius:50%;
+  border:1.5px solid #fff9f2;
+}
+.nav-live-badge.visible { display:block; animation:livePulse 1.8s ease-in-out infinite; }
+@keyframes livePulse {
+  0%,100% { transform:scale(1); opacity:1; }
+  50% { transform:scale(1.4); opacity:.7; }
+}
 </style>
 </head>
 <body>
@@ -483,7 +499,7 @@
     <button class="search-btn" id="searchBtn" onclick="findGroomers()" disabled>🐾 Find Groomers</button>
 
     <!-- REMINDER CARD — under find groomers -->
-    <div class="reminder-card">
+    <div class="reminder-card" id="reminderCard">
       <div class="reminder-inner">
         <div class="dog-avatar">
           <svg width="38" height="38" viewBox="0 0 100 100" fill="none">
@@ -2201,7 +2217,7 @@ function openGroomTracker(opts) {
     <div class="nav-dot"></div>
   </div>
 
-  <div class="nav-item" id="nav-appointments" onclick="switchTab('appointments')">
+  <div class="nav-item" id="nav-appointments" onclick="(document.getElementById('navLiveBadge') && document.getElementById('navLiveBadge').classList.contains('visible')) ? reopenTracker() : switchTab('appointments')">
     <div class="nav-icon">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" xmlns="http://www.w3.org/2000/svg">
         <rect x="3" y="4" width="18" height="18" rx="3"/>
@@ -2217,6 +2233,7 @@ function openGroomTracker(opts) {
     </div>
     <span>Bookings</span>
     <div class="nav-dot"></div>
+    <div class="nav-live-badge" id="navLiveBadge"></div>
   </div>
 
   <div class="nav-item" id="nav-mydog" onclick="switchTab('mydog')">
@@ -2256,13 +2273,15 @@ function minimizeTracker() {
     _trackerEl = el;
     setTimeout(function() { el.style.display = 'none'; }, 320);
   }
-  var banner = document.getElementById('liveTrackerBanner');
-  if (banner) banner.classList.add('show');
+  var badge = document.getElementById('navLiveBadge');
+  if (badge) badge.classList.add('visible');
+  var reminder = document.getElementById('reminderCard');
+  if (reminder) reminder.style.display = 'none';
 }
 
 function reopenTracker() {
-  var banner = document.getElementById('liveTrackerBanner');
-  if (banner) banner.classList.remove('show');
+  var badge = document.getElementById('navLiveBadge');
+  if (badge) badge.classList.remove('visible');
   var el = _trackerEl || document.getElementById('groomTracker');
   if (el) {
     el.style.display = '';
