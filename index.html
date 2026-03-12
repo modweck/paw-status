@@ -423,47 +423,48 @@
   50% { transform:scale(1.4); opacity:.7; }
 }
 
-/* ── LIVE BELL BUTTON ── */
-#liveBell {
-  position:relative;
-  background:none; border:none;
-  font-size:22px; cursor:pointer;
-  padding:4px; line-height:1;
-  transition:transform .2s;
-}
-#livebell:hover { transform:scale(1.1); }
-#liveBellDot {
+/* ── LIVE TRACKER BELL PILL ── */
+#livebell {
   display:none;
-  position:absolute;
-  top:2px; right:2px;
-  width:9px; height:9px;
-  background:#e85d24;
-  border-radius:50%;
-  border:2px solid #fff;
+  position:fixed;
+  top:14px;
+  right:calc(50% - 215px + 10px);
+  z-index:4000;
+  background:#fff;
+  border:1.5px solid var(--gold-border);
+  border-radius:30px;
+  padding:6px 12px 6px 8px;
+  box-shadow:0 4px 16px rgba(139,115,32,.2);
+  cursor:pointer;
+  font-family:'DM Sans',sans-serif;
+  align-items:center;
+  gap:6px;
+  transition:transform .15s, box-shadow .15s;
 }
-#liveBellDot.on {
-  display:block;
-  animation:bellPulse 1.8s ease-in-out infinite;
-}
-@keyframes bellPulse {
-  0%,100% { transform:scale(1); opacity:1; }
-  50% { transform:scale(1.3); opacity:.6; }
+#livebell:hover { transform:translateY(-1px); box-shadow:0 6px 20px rgba(139,115,32,.28); }
+#livebell:active { transform:scale(.97); }
+#livebell.on { display:flex; animation:bellSlideIn .3s ease; }
+.lb-icon { font-size:16px; animation:bellRing .6s ease; }
+.lb-text { display:flex; flex-direction:column; }
+.lb-eta { font-size:13px; font-weight:700; color:#1a1a1a; }
+@keyframes bellSlideIn {
+  from { opacity:0; transform:translateY(-8px); }
+  to   { opacity:1; transform:translateY(0); }
 }
 @keyframes bellRing {
   0%,100% { transform:rotate(0deg); }
-  20% { transform:rotate(15deg); }
-  40% { transform:rotate(-12deg); }
-  60% { transform:rotate(8deg); }
-  80% { transform:rotate(-5deg); }
+  20% { transform:rotate(18deg); }
+  40% { transform:rotate(-14deg); }
+  60% { transform:rotate(10deg); }
+  80% { transform:rotate(-6deg); }
 }
-#livebell.ringing { animation:bellRing .5s ease; }
 </style>
 </head>
 <body>
 <div class="phone">
 
   <div class="header">
-    <div class="logo"><div><span class="paw">Paw</span><span class="stat">Status</span></div><button id="livebell" onclick="handleBellTap()">🔔<div id="liveBellDot"></div></button></div>
+    <div class="logo"><div><span class="paw">Paw</span><span class="stat">Status</span></div><span>🔔</span></div>
     <div class="hero-title">Find a groomer<br>your dog will <span class="accent">love</span></div>
     <div class="hero-sub">Real prices by breed · Live slots · Pickup alerts</div>
   </div>
@@ -1837,6 +1838,11 @@ function openGroomTracker(opts) {
   window.gtAdvance = function() {
     if(currentStage >= STAGES.length-1) return;
     if(dogsAhead > 0) dogsAhead--;
+    var etaEl = document.getElementById('lbEta');
+    if (etaEl) {
+      var nextEta = STAGES[currentStage] ? STAGES[currentStage].eta : 0;
+      etaEl.textContent = nextEta > 0 ? '~' + nextEta + ' min' : 'Ready! 🎉';
+    }
     currentStage++;
     render();
   };
@@ -2308,10 +2314,8 @@ function minimizeTracker() {
     _trackerEl = el;
     setTimeout(function() { el.style.display = 'none'; }, 320);
   }
-  var dot = document.getElementById('liveBellDot');
-  if (dot) dot.classList.add('on');
   var bell = document.getElementById('livebell');
-  if (bell) { bell.classList.add('ringing'); setTimeout(function(){ bell.classList.remove('ringing'); }, 500); }
+  if (bell) bell.classList.add('on');
   var reminder = document.getElementById('reminderCard');
   if (reminder) reminder.style.display = 'none';
 }
@@ -2325,8 +2329,8 @@ function handleBellTap() {
 }
 
 function reopenTracker() {
-  var dot = document.getElementById('liveBellDot');
-  if (dot) dot.classList.remove('on');
+  var bell = document.getElementById('livebell');
+  if (bell) bell.classList.remove('on');
   var el = _trackerEl || document.getElementById('groomTracker');
   if (el) {
     el.style.display = '';
@@ -2370,6 +2374,11 @@ function rebookAppointment(groomerName) {
     <span class="ltb-title">Bella · </span><span class="ltb-eta" id="ltbEta">~45 min</span>
   </div>
   <div class="ltb-arrow">›</div>
+</div>
+
+<div id="livebell" onclick="reopenTracker()">
+  <span class="lb-icon">🔔</span>
+  <span class="lb-eta" id="lbEta">~45 min</span>
 </div>
 </body>
 </html>
