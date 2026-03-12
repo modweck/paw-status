@@ -156,6 +156,8 @@
   .groomer-meta { font-size:12px; color:var(--muted); margin-bottom:10px; }
   .groomer-tags { display:flex; flex-wrap:wrap; gap:5px; margin-bottom:12px; }
   .tag { background:#f7f5f0; border:1px solid #eee; border-radius:20px; padding:3px 10px; font-size:11px; color:#666; }
+  .tag-link { text-decoration:none; transition:all 0.15s; cursor:pointer; }
+  .tag-link:hover { background:var(--gold-pale); border-color:var(--gold-light); color:var(--gold); }
   .groomer-footer { display:flex; justify-content:space-between; align-items:center; }
   .groomer-price { font-family:'DM Serif Display',serif; font-size:20px; color:var(--gold); }
   .groomer-price span { font-family:'DM Sans',sans-serif; font-size:10px; color:var(--muted); font-weight:400; }
@@ -383,10 +385,14 @@ const SIZE_MULT = {
 };
 
 const GROOMERS = [
-  {name:"Happy Tails Grooming", neighborhood:"SoHo", address:"170 Mercer St", rating:"4.9", reviews:312, tags:["Walk-ins welcome","Pickup alerts","Top Pick"], emoji:"🐾", featured:true},
-  {name:"Biscuits & Bath", neighborhood:"Upper East Side", address:"227 E 84th St", rating:"4.8", reviews:489, tags:["Same-day slots","Daycare add-on"], emoji:"🛁"},
-  {name:"Jill's Pet Studio", neighborhood:"Upper East Side", address:"1420 Lexington Ave", rating:"4.9", reviews:201, tags:["Your groomer","Last visit: Feb 2025"], emoji:"✂️", isJill:true},
-  {name:"The Wagington", neighborhood:"Midtown", address:"545 8th Ave", rating:"4.7", reviews:156, tags:["Luxury spa","Express available"], emoji:"👑"},
+  {name:"Happy Tails Grooming", neighborhood:"SoHo", address:"170 Mercer St", rating:"4.9", reviews:312, emoji:"🐾", featured:true,
+   links:{website:"https://happytailsgrooming.com", instagram:"https://instagram.com/happytailsnyc", editorial:"https://nymag.com", menu:"https://happytailsgrooming.com/services"}},
+  {name:"Biscuits & Bath", neighborhood:"Upper East Side", address:"227 E 84th St", rating:"4.8", reviews:489, emoji:"🛁",
+   links:{website:"https://biscuitsandbath.com", instagram:"https://instagram.com/biscuitsandbath", editorial:null, menu:"https://biscuitsandbath.com/services"}},
+  {name:"Jill's Pet Studio", neighborhood:"Upper East Side", address:"1420 Lexington Ave", rating:"4.9", reviews:201, emoji:"✂️", isJill:true,
+   links:{website:"https://jillspetstudio.com", instagram:"https://instagram.com/jillspetstudio", editorial:null, menu:null}},
+  {name:"The Wagington", neighborhood:"Midtown", address:"545 8th Ave", rating:"4.7", reviews:156, emoji:"👑",
+   links:{website:"https://thewagington.com", instagram:"https://instagram.com/thewagington", editorial:"https://timeout.com", menu:"https://thewagington.com/menu"}},
 ];
 
 let selectedBreed = null, selectedService = null, renderedGroomers = [];
@@ -521,7 +527,12 @@ function renderGroomerCards(groomers) {
           <div class="groomer-dist">${g.distanceLabel}</div>
         </div>
         <div class="groomer-meta">${g.address}, ${g.neighborhood}</div>
-        <div class="groomer-tags">${g.tags.map(t=>`<span class="tag">${t}</span>`).join('')}</div>
+        <div class="groomer-tags">${[
+          g.links.website   ? `<a class="tag tag-link" href="${g.links.website}" target="_blank" onclick="event.stopPropagation()">🌐 Website</a>` : '',
+          g.links.instagram ? `<a class="tag tag-link" href="${g.links.instagram}" target="_blank" onclick="event.stopPropagation()">📸 Instagram</a>` : '',
+          g.links.editorial ? `<a class="tag tag-link" href="${g.links.editorial}" target="_blank" onclick="event.stopPropagation()">📰 Editorial</a>` : '',
+          g.links.menu      ? `<a class="tag tag-link" href="${g.links.menu}" target="_blank" onclick="event.stopPropagation()">📋 Menu</a>` : '',
+        ].filter(Boolean).join('')}</div>
         <div class="groomer-footer">
           <div class="groomer-price">$${g.price} <span>est. for ${selectedBreed}</span></div>
           <button class="book-btn" onclick="event.stopPropagation();bookGroomer('${g.name}')">Book →</button>
