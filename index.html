@@ -1166,6 +1166,9 @@ function closeResults() {
 
 function bookGroomer(groomerName) {
   window._currentGroomer = groomerName;
+  // Close results page so it no longer intercepts pointer events
+  const rp = document.getElementById('resultsPage');
+  if (rp) { rp.classList.remove('show'); rp.style.pointerEvents = 'none'; }
   // Remove any leftover overlay from a previous booking attempt
   const existing = document.getElementById('bookingOverlay');
   if (existing) existing.remove();
@@ -1498,9 +1501,6 @@ function openGroomTracker(opts) {
   // hide bookings screen if open
   var bs = document.getElementById('bookingsScreen');
   if(bs) bs.classList.remove('active');
-  // hide results page — it stays in .show state and intercepts all taps behind the tracker
-  var rp = document.getElementById('resultsPage');
-  if(rp) { rp.classList.remove('show'); rp.style.pointerEvents = 'none'; }
   // remove any lingering booking overlay
   var bo = document.getElementById('bookingOverlay');
   if(bo) bo.remove();
@@ -2623,9 +2623,6 @@ function minimizeTracker() {
     _trackerEl = el;
     setTimeout(function() { el.style.display = 'none'; }, 320);
   }
-  // Restore results page so it's tappable again
-  var rp = document.getElementById('resultsPage');
-  if(rp) { rp.classList.add('show'); rp.style.pointerEvents = 'all'; }
   // Show bell pill again
   document.getElementById('livebell').style.display = '';
   var bell = document.getElementById('livebell');
