@@ -533,6 +533,7 @@ function findGroomers() {
 
   const page = document.getElementById('resultsPage');
   page.style.pointerEvents = '';
+  page.style.visibility = 'visible';
   page.classList.add('show');
   document.getElementById('groomerCards').scrollTop = 0;
 }
@@ -540,6 +541,9 @@ function findGroomers() {
 function closeResults() {
   const page = document.getElementById('resultsPage');
   page.classList.remove('show');
+  setTimeout(() => {
+    page.style.visibility = 'hidden';
+  }, 280);
 }
 
 function bookGroomer(groomerName) {
