@@ -610,25 +610,29 @@ function bookGroomer(groomerName) {
 
   // Build calendar
   const today = new Date();
-  const blockedUntil = new Date(today); blockedUntil.setDate(today.getDate() + 7);
+  const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  const blockedStart = new Date(todayStart); blockedStart.setDate(todayStart.getDate() + 1);
+  const blockedUntil = new Date(todayStart); blockedUntil.setDate(todayStart.getDate() + 7);
   const year = today.getFullYear(); const month = today.getMonth();
   const monthName = today.toLocaleString('default',{month:'long'});
   const firstDay = new Date(year, month, 1).getDay();
   const daysInMonth = new Date(year, month+1, 0).getDate();
 
-  // Find the first available (bookable) date
+  // Find the first available (bookable) date - today counts if not blocked
   let firstAvailDay = null;
   for(let d=1;d<=new Date(year,month+1,0).getDate();d++){
     const date = new Date(year,month,d);
-    if(date >= today && date > blockedUntil){ firstAvailDay = d; break; }
+    const notPast = date >= todayStart;
+    const notBlocked = date < blockedStart || date > blockedUntil;
+    if(notPast && notBlocked){ firstAvailDay = d; break; }
   }
 
   let calHTML = `<div class="cal-grid-header"><span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span></div><div class="cal-grid">`;
   for(let i=0;i<firstDay;i++) calHTML += `<div></div>`;
   for(let d=1;d<=daysInMonth;d++) {
     const date = new Date(year,month,d);
-    const isPast = date < today;
-    const isBlocked = date >= today && date <= blockedUntil;
+    const isPast = date < todayStart;
+    const isBlocked = date >= blockedStart && date <= blockedUntil;
     const isToday = d === today.getDate();
     const isFirstAvail = d === firstAvailDay;
     let cls = 'cal-day';
@@ -638,7 +642,8 @@ function bookGroomer(groomerName) {
     if(isToday) cls += ' today';
     if(isFirstAvail) cls += ' picked';  // pre-select first available in blue
     const dots = (!isPast && !isBlocked) ? '<span class="avail-dot"></span>' : '';
-    calHTML += `<div class="${cls}" onclick="selectDay(this,${d})">${d}${dots}</div>`;
+    const clickHandler = (isPast) ? '' : isBlocked ? `onclick="joinWaitlist(${d})"` : `onclick="selectDay(this,${d})"`;
+    calHTML += `<div class="${cls}" ${clickHandler}>${d}${dots}</div>`;
   }
   calHTML += `</div>`;
 
@@ -704,6 +709,43 @@ function bookGroomer(groomerName) {
       }, 120);
     }
   });
+}
+
+function joinWaitlist(day) {
+  // Remove any existing waitlist toast
+  const existing = document.getElementById('waitlistToast');
+  if(existing) existing.remove();
+
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const today = new Date();
+  const dateLabel = `${months[today.getMonth()]} ${day}`;
+
+  const toast = document.createElement('div');
+  toast.id = 'waitlistToast';
+  toast.innerHTML = `
+    <div class="waitlist-overlay" onclick="document.getElementById('waitlistToast').remove()"></div>
+    <div class="waitlist-sheet">
+      <div class="waitlist-handle"></div>
+      <div class="waitlist-icon">🔔</div>
+      <h3 class="waitlist-title">Join Waitlist for ${dateLabel}?</h3>
+      <p class="waitlist-desc">We'll notify you instantly if a spot opens up sooner than your booked date. No commitment needed.</p>
+      <button class="waitlist-confirm-btn" onclick="confirmWaitlist('${dateLabel}')">Yes, notify me!</button>
+      <button class="waitlist-cancel-btn" onclick="document.getElementById('waitlistToast').remove()">No thanks</button>
+    </div>
+  `;
+  document.body.appendChild(toast);
+  requestAnimationFrame(() => toast.querySelector('.waitlist-sheet').classList.add('up'));
+}
+
+function confirmWaitlist(dateLabel) {
+  document.getElementById('waitlistToast').remove();
+  // Show success snackbar
+  const snack = document.createElement('div');
+  snack.className = 'waitlist-snack';
+  snack.innerHTML = `✅ You're on the waitlist! We'll text you if ${dateLabel} opens up.`;
+  document.body.appendChild(snack);
+  setTimeout(() => snack.classList.add('show'), 50);
+  setTimeout(() => { snack.classList.remove('show'); setTimeout(()=>snack.remove(),400); }, 3500);
 }
 
 function selectGroomer(el) {
@@ -1506,6 +1548,37 @@ function openGroomTracker(opts) {
 .continue-btn:hover { background:#3a8fc4; }
 </style>
 <style>
+/* ── WAITLIST ── */
+.cal-day.blocked { cursor:pointer; }
+.cal-day.blocked:hover { background:#fff3e0; border-radius:50%; }
+.waitlist-overlay { position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:3000; }
+.waitlist-sheet {
+  position:fixed; bottom:0; left:50%; transform:translateX(-50%) translateY(100%);
+  width:100%; max-width:430px; background:white; border-radius:24px 24px 0 0;
+  padding:24px 24px 36px; z-index:3001; text-align:center;
+  transition:transform .35s cubic-bezier(.32,1,.6,1);
+}
+.waitlist-sheet.up { transform:translateX(-50%) translateY(0); }
+.waitlist-handle { width:40px;height:4px;background:#e0e0e0;border-radius:2px;margin:0 auto 20px; }
+.waitlist-icon { font-size:44px; margin-bottom:12px; }
+.waitlist-title { font-family:'DM Serif Display',serif; font-size:22px; color:#2d1f00; margin:0 0 10px; }
+.waitlist-desc { font-size:14px; color:#666; line-height:1.5; margin:0 0 24px; }
+.waitlist-confirm-btn {
+  display:block; width:100%; padding:16px; background:#8b7320; color:white;
+  border:none; border-radius:14px; font-size:16px; font-weight:600; cursor:pointer; margin-bottom:10px;
+}
+.waitlist-cancel-btn {
+  display:block; width:100%; padding:12px; background:none; color:#888;
+  border:none; font-size:14px; cursor:pointer;
+}
+.waitlist-snack {
+  position:fixed; bottom:90px; left:50%; transform:translateX(-50%) translateY(20px);
+  background:#2d1f00; color:white; padding:14px 20px; border-radius:12px;
+  font-size:14px; max-width:360px; width:90%; text-align:center;
+  opacity:0; transition:all .3s ease; z-index:4000; pointer-events:none;
+}
+.waitlist-snack.show { opacity:1; transform:translateX(-50%) translateY(0); }
+
 /* ── GROOM TRACKER ── */
 #groomTracker {
   position:fixed; inset:0; z-index:3000;
