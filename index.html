@@ -616,6 +616,13 @@ function bookGroomer(groomerName) {
   const firstDay = new Date(year, month, 1).getDay();
   const daysInMonth = new Date(year, month+1, 0).getDate();
 
+  // Find the first available (bookable) date
+  let firstAvailDay = null;
+  for(let d=1;d<=new Date(year,month+1,0).getDate();d++){
+    const date = new Date(year,month,d);
+    if(date >= today && date > blockedUntil){ firstAvailDay = d; break; }
+  }
+
   let calHTML = `<div class="cal-grid-header"><span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span></div><div class="cal-grid">`;
   for(let i=0;i<firstDay;i++) calHTML += `<div></div>`;
   for(let d=1;d<=daysInMonth;d++) {
@@ -623,11 +630,13 @@ function bookGroomer(groomerName) {
     const isPast = date < today;
     const isBlocked = date >= today && date <= blockedUntil;
     const isToday = d === today.getDate();
+    const isFirstAvail = d === firstAvailDay;
     let cls = 'cal-day';
     if(isPast) cls += ' past';
     else if(isBlocked) cls += ' blocked';
     else cls += ' available';
     if(isToday) cls += ' today';
+    if(isFirstAvail) cls += ' picked';  // pre-select first available in blue
     const dots = (!isPast && !isBlocked) ? '<span class="avail-dot"></span>' : '';
     calHTML += `<div class="${cls}" onclick="selectDay(this,${d})">${d}${dots}</div>`;
   }
@@ -686,7 +695,15 @@ function bookGroomer(groomerName) {
     </div>
   `;
   document.body.appendChild(overlay);
-  requestAnimationFrame(() => overlay.classList.add('visible'));
+  requestAnimationFrame(() => {
+    overlay.classList.add('visible');
+    if(firstAvailDay) {
+      setTimeout(() => {
+        const preSelected = overlay.querySelector('.cal-day.picked');
+        if(preSelected) selectDay(preSelected, firstAvailDay);
+      }, 120);
+    }
+  });
 }
 
 function selectGroomer(el) {
@@ -1452,6 +1469,7 @@ function openGroomTracker(opts) {
 .cal-day.available:hover { background:#f5f5f5; }
 .cal-day.today { border:2px solid #4a9fd4; color:#4a9fd4; font-weight:700; }
 .cal-day.picked { background:#4a9fd4; color:white !important; }
+.cal-day.picked .avail-dot { background:white; }
 .avail-dot { width:5px; height:5px; background:#5cb85c; border-radius:50%; margin-top:2px; }
 
 .time-slots-bar {
