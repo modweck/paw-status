@@ -293,6 +293,7 @@
   max-width:430px; margin:0 auto;
   background:#f8f5ef;
   overflow-y:auto;
+  overflow-x:hidden;
   padding-bottom:90px;
   font-family:'DM Sans',sans-serif;
   z-index:1500;
@@ -1538,7 +1539,7 @@ function showInProgressBanner() {
   // Mark the bookings screen as having an in-progress session
   window._sessionActive = true;
   var inprog = document.getElementById('inProgressBanner');
-  if(inprog) inprog.style.display = 'block';
+  if(inprog) inprog.classList.add('active');
   // Also activate bell pill
   var bell = document.getElementById('livebell');
   if(bell) { bell.classList.add('on'); bell.dataset.mode = 'live'; }
@@ -2336,12 +2337,15 @@ function openGroomTracker(opts) {
 #inProgressBanner {
   display:none;
   margin:16px 16px 0;
+  box-sizing:border-box;
+  width:calc(100% - 32px);
   background:linear-gradient(135deg,#8b7320 0%,#c8a84b 100%);
   border-radius:18px;
   padding:16px 18px;
   cursor:pointer;
   box-shadow:0 6px 24px rgba(139,115,32,.35);
   animation:bannerSlideUp .4s cubic-bezier(.34,1.56,.64,1) both;
+  overflow:hidden;
 }
 #inProgressBanner.active { display:block; }
 .ipb-top { display:flex;align-items:center;gap:12px;margin-bottom:10px; }
