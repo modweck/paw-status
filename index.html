@@ -555,6 +555,71 @@
 .pcv-bottom { display:flex; justify-content:space-between; align-items:flex-end; }
 .pcv-name { font-size:13px; font-weight:700; letter-spacing:.5px; }
 .pcv-exp { font-size:11px; opacity:.7; }
+
+/* ── ACCOUNT SCREEN ── */
+#accountScreen {
+  display:none;
+  position:fixed; inset:0;
+  max-width:430px; margin:0 auto;
+  background:#f8f5ef;
+  overflow-y:auto;
+  padding-bottom:90px;
+  font-family:'DM Sans',sans-serif;
+  z-index:1500;
+}
+#accountScreen.active { display:block; }
+.account-header {
+  background:linear-gradient(160deg,#fffdf7 0%,#fdf6e3 100%);
+  padding:52px 20px 28px;
+  border-bottom:1px solid rgba(139,115,32,.1);
+  display:flex; align-items:center; gap:16px;
+}
+.account-avatar {
+  width:64px; height:64px; border-radius:50%;
+  background:linear-gradient(135deg,#8b7320,#c8a84b);
+  display:flex; align-items:center; justify-content:center;
+  font-size:26px; font-weight:700; color:#fff;
+  font-family:'DM Serif Display',serif;
+  box-shadow:0 4px 14px rgba(139,115,32,.25);
+  flex-shrink:0;
+}
+.account-header-info { flex:1; }
+.account-name { font-family:'DM Serif Display',serif; font-size:22px; color:#1a1a1a; }
+.account-email { font-size:13px; color:#b0a080; margin-top:2px; }
+.account-badge {
+  background:var(--gold-pale); border:1px solid var(--gold-border);
+  border-radius:20px; padding:3px 10px;
+  font-size:11px; font-weight:700; color:var(--gold);
+  margin-top:6px; display:inline-block;
+}
+.account-menu-card {
+  background:#fff; border-radius:16px;
+  border:1px solid rgba(0,0,0,.06);
+  box-shadow:0 2px 10px rgba(0,0,0,.04);
+  margin:0 16px 12px; overflow:hidden;
+}
+.account-menu-item {
+  display:flex; align-items:center; gap:14px;
+  padding:15px 16px;
+  border-bottom:1px solid rgba(0,0,0,.05);
+  cursor:pointer; transition:background .15s;
+}
+.account-menu-item:last-child { border-bottom:none; }
+.account-menu-item:active { background:#fafafa; }
+.account-menu-icon {
+  width:36px; height:36px; border-radius:10px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:18px; flex-shrink:0;
+}
+.account-menu-icon.gold { background:var(--gold-pale); }
+.account-menu-icon.blue { background:#e8f2ff; }
+.account-menu-icon.green { background:#e8f8e8; }
+.account-menu-icon.red { background:#fff0f0; }
+.account-menu-body { flex:1; }
+.account-menu-title { font-size:14px; font-weight:700; color:#1a1a1a; }
+.account-menu-sub { font-size:12px; color:#bbb; margin-top:1px; }
+.account-menu-arrow { font-size:16px; color:#ddd; }
+.account-version { text-align:center; font-size:11px; color:#ccc; padding:8px; }
 </style>
 </head>
 <body>
@@ -2363,7 +2428,7 @@ function openGroomTracker(opts) {
 <!-- PERSISTENT BOTTOM NAV -->
 <div class="bottom-nav" id="bottomNav">
 
-  <div class="nav-item active" id="nav-explore" onclick="switchTab('explore')">
+  <div class="nav-item active" id="nav-explore" onclick="closeResults(); switchTab('explore');">
     <div class="nav-icon">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" xmlns="http://www.w3.org/2000/svg">
         <circle cx="11" cy="11" r="7"/>
@@ -2506,15 +2571,23 @@ function switchTab(tab) {
   var bs = document.getElementById('bookingsScreen');
   var ms = document.getElementById('mydogScreen');
 
+  var as = document.getElementById('accountScreen');
   if(tab === 'appointments') {
     bs.classList.add('active');
     if(ms) ms.classList.remove('active');
+    if(as) as.classList.remove('active');
   } else if(tab === 'mydog') {
     if(ms) ms.classList.add('active');
     bs.classList.remove('active');
+    if(as) as.classList.remove('active');
+  } else if(tab === 'account') {
+    if(as) as.classList.add('active');
+    bs.classList.remove('active');
+    if(ms) ms.classList.remove('active');
   } else {
     bs.classList.remove('active');
     if(ms) ms.classList.remove('active');
+    if(as) as.classList.remove('active');
   }
 }
 
@@ -2676,6 +2749,96 @@ function rebookAppointment(groomerName) {
     </div>
   </div>
 
+</div>
+
+<div id="accountScreen">
+  <div class="account-header">
+    <div class="account-avatar">M</div>
+    <div class="account-header-info">
+      <div class="account-name">Maurice W.</div>
+      <div class="account-email">maurice@email.com</div>
+      <div class="account-badge">🐾 PawStatus Member</div>
+    </div>
+  </div>
+
+  <div class="mydog-section" style="padding-top:20px">
+    <div class="mydog-section-title">My Account</div>
+    <div class="account-menu-card">
+      <div class="account-menu-item" onclick="switchTab('mydog')">
+        <div class="account-menu-icon gold">🐕</div>
+        <div class="account-menu-body">
+          <div class="account-menu-title">Bella's Profile</div>
+          <div class="account-menu-sub">Breed, age, grooming preferences</div>
+        </div>
+        <div class="account-menu-arrow">›</div>
+      </div>
+      <div class="account-menu-item" onclick="switchTab('appointments')">
+        <div class="account-menu-icon blue">📅</div>
+        <div class="account-menu-body">
+          <div class="account-menu-title">My Bookings</div>
+          <div class="account-menu-sub">Upcoming & past appointments</div>
+        </div>
+        <div class="account-menu-arrow">›</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="mydog-section">
+    <div class="mydog-section-title">Preferences</div>
+    <div class="account-menu-card">
+      <div class="account-menu-item">
+        <div class="account-menu-icon gold">🔔</div>
+        <div class="account-menu-body">
+          <div class="account-menu-title">Notifications</div>
+          <div class="account-menu-sub">Pickup alerts, reminders, deals</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="width:36px;height:20px;background:var(--gold);border-radius:10px;position:relative;cursor:pointer">
+            <div style="position:absolute;right:2px;top:2px;width:16px;height:16px;background:#fff;border-radius:50%"></div>
+          </div>
+        </div>
+      </div>
+      <div class="account-menu-item">
+        <div class="account-menu-icon blue">📍</div>
+        <div class="account-menu-body">
+          <div class="account-menu-title">Location</div>
+          <div class="account-menu-sub">SoHo, New York</div>
+        </div>
+        <div class="account-menu-arrow">›</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="mydog-section">
+    <div class="mydog-section-title">Support</div>
+    <div class="account-menu-card">
+      <div class="account-menu-item">
+        <div class="account-menu-icon green">💬</div>
+        <div class="account-menu-body">
+          <div class="account-menu-title">Help & FAQ</div>
+          <div class="account-menu-sub">Common questions answered</div>
+        </div>
+        <div class="account-menu-arrow">›</div>
+      </div>
+      <div class="account-menu-item">
+        <div class="account-menu-icon green">⭐</div>
+        <div class="account-menu-body">
+          <div class="account-menu-title">Rate the App</div>
+          <div class="account-menu-sub">Enjoying PawStatus? Let us know</div>
+        </div>
+        <div class="account-menu-arrow">›</div>
+      </div>
+      <div class="account-menu-item">
+        <div class="account-menu-icon red">🚪</div>
+        <div class="account-menu-body">
+          <div class="account-menu-title" style="color:#e05050">Sign Out</div>
+          <div class="account-menu-sub">See you next time!</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="account-version">PawStatus v1.0 · NYC 🐾</div>
 </div>
 </body>
 </html>
