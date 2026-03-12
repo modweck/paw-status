@@ -618,31 +618,41 @@ function bookGroomer(groomerName) {
   const firstDay = new Date(year, month, 1).getDay();
   const daysInMonth = new Date(year, month+1, 0).getDate();
 
-  // Find the first available (bookable) date - today counts if not blocked
+  // Find the first available (bookable) date — skip today and blocked window
   let firstAvailDay = null;
   for(let d=1;d<=new Date(year,month+1,0).getDate();d++){
     const date = new Date(year,month,d);
-    const notPast = date >= todayStart;
-    const notBlocked = date < blockedStart || date > blockedUntil;
-    if(notPast && notBlocked){ firstAvailDay = d; break; }
+    if(date > blockedUntil){ firstAvailDay = d; break; }
   }
+
+  // Waitlist banner for the blocked window
+  const blockedEndLabel = (() => {
+    const d = new Date(blockedUntil); d.setDate(d.getDate());
+    return d.toLocaleDateString('default',{month:'short',day:'numeric'});
+  })();
+  const waitlistBanner = `<div class="waitlist-banner" onclick="joinWaitlist(13)">
+    <span>🔔</span>
+    <span>Dates before ${blockedEndLabel} are fully booked — <strong>join waitlist</strong> for a sooner opening</span>
+    <span class="waitlist-banner-arrow">›</span>
+  </div>`;
 
   let calHTML = `<div class="cal-grid-header"><span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span></div><div class="cal-grid">`;
   for(let i=0;i<firstDay;i++) calHTML += `<div></div>`;
   for(let d=1;d<=daysInMonth;d++) {
     const date = new Date(year,month,d);
-    const isPast = date < todayStart;
-    const isBlocked = date >= blockedStart && date <= blockedUntil;
-    const isToday = d === today.getDate();
+    const isPast  = date <= todayStart;           // today and before = greyed out, no action
+    const isBlocked = date > todayStart && date <= blockedUntil; // tomorrow–+7 = waitlist
     const isFirstAvail = d === firstAvailDay;
     let cls = 'cal-day';
-    if(isPast) cls += ' past';
+    if(isPast)        cls += ' past';
     else if(isBlocked) cls += ' blocked';
-    else cls += ' available';
-    if(isToday) cls += ' today';
-    if(isFirstAvail) cls += ' picked';  // pre-select first available in blue
-    const dots = (!isPast && !isBlocked) ? '<span class="avail-dot"></span>' : '';
-    const clickHandler = (isPast) ? '' : isBlocked ? `onclick="joinWaitlist(${d})"` : `onclick="selectDay(this,${d})"`;
+    else               cls += ' available';
+    if(isFirstAvail)  cls += ' picked';
+    // blocked days show a small waitlist bell icon dot
+    const dots = isFirstAvail ? '<span class="avail-dot"></span>'
+               : (!isPast && !isBlocked) ? '<span class="avail-dot"></span>'
+               : isBlocked ? '<span class="waitlist-dot">🔔</span>' : '';
+    const clickHandler = isPast ? '' : isBlocked ? `onclick="joinWaitlist(${d})"` : `onclick="selectDay(this,${d})"`;
     calHTML += `<div class="${cls}" ${clickHandler}>${d}${dots}</div>`;
   }
   calHTML += `</div>`;
@@ -680,6 +690,7 @@ function bookGroomer(groomerName) {
           <div class="cal-month">${monthName} ${year}</div>
           <div class="cal-nav"><button>‹</button><button>›</button></div>
         </div>
+        ${waitlistBanner}
         ${calHTML}
 
       </div>
@@ -1508,6 +1519,7 @@ function openGroomTracker(opts) {
 .cal-day.past { color:#ddd; cursor:default; }
 .cal-day.blocked { color:#bbb; cursor:default; }
 .cal-day.available { color:#222; }
+.cal-day.past.today { color:#aaa; font-weight:400; }
 .cal-day.available:hover { background:#f5f5f5; }
 .cal-day.today { border:2px solid #4a9fd4; color:#4a9fd4; font-weight:700; }
 .cal-day.picked { background:#4a9fd4; color:white !important; }
@@ -1551,6 +1563,15 @@ function openGroomTracker(opts) {
 /* ── WAITLIST ── */
 .cal-day.blocked { cursor:pointer; }
 .cal-day.blocked:hover { background:#fff3e0; border-radius:50%; }
+.waitlist-dot { display:block; font-size:9px; line-height:1; margin-top:1px; }
+.waitlist-banner {
+  display:flex; align-items:center; gap:8px;
+  background:#fff8e8; border:1.5px solid #e8c87a; border-radius:12px;
+  padding:10px 14px; margin:0 0 14px; cursor:pointer; font-size:13px; color:#5a3e00;
+}
+.waitlist-banner span:first-child { font-size:18px; flex-shrink:0; }
+.waitlist-banner-arrow { margin-left:auto; font-size:18px; color:#8b7320; flex-shrink:0; }
+.waitlist-banner:active { background:#fdeea0; }
 .waitlist-overlay { position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:3000; }
 .waitlist-sheet {
   position:fixed; bottom:0; left:50%; transform:translateX(-50%) translateY(100%);
