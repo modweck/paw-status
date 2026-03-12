@@ -2140,7 +2140,7 @@ function openGroomTracker(opts) {
     var etaEl = document.getElementById('lbEta');
     if (etaEl) {
       var nextEta = STAGES[currentStage] ? STAGES[currentStage].eta : 0;
-      etaEl.textContent = nextEta > 0 ? '🐕 Grooming · ~' + nextEta + ' min' : '🎉 Bella is ready!';
+      etaEl.textContent = nextEta > 0 ? 'In Session · ~' + nextEta + 'm' : '🎉 Bella is ready!';
     }
     currentStage++; window._currentStage = currentStage;
     render();
@@ -2621,7 +2621,7 @@ function minimizeTracker() {
   var stages = window._trackerStages;
   var stageIdx = window._currentStage || 0;
   var liveEta = stages && stages[stageIdx] ? stages[stageIdx].eta : 45;
-  if (etaEl) etaEl.textContent = liveEta > 0 ? '🐕 Grooming · ~' + liveEta + ' min' : '🎉 Bella is ready!';
+  if (etaEl) etaEl.textContent = liveEta > 0 ? 'In Session · ~' + liveEta + 'm' : '🎉 Bella is ready!';
   if (bell) { bell.classList.add('on'); bell.dataset.mode = 'live'; }
   var reminder = document.getElementById('reminderCard');
   if (reminder) reminder.style.display = 'none';
@@ -2651,11 +2651,11 @@ function updateBellPill() {
     var hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
     var mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
     if (days > 0) {
-      etaEl.textContent = days + 'd · 11AM';
+      etaEl.textContent = 'Upcoming · ' + days + 'd ' + hours + 'h';
     } else if (hours > 0) {
-      etaEl.textContent = hours + 'h ' + mins + 'm';
+      etaEl.textContent = 'Upcoming · ' + hours + 'h ' + mins + 'm';
     } else {
-      etaEl.textContent = mins + ' min';
+      etaEl.textContent = 'Upcoming · ' + mins + 'm';
     }
   }
   bell.dataset.mode = 'upcoming';
@@ -2845,7 +2845,7 @@ function rebookAppointment(groomerName) {
 
 <div id="livebell" onclick="reopenTracker()">
   <span class="lb-icon">🔔</span>
-  <span class="lb-eta" id="lbEta">~45 min</span>
+  <span class="lb-eta" id="lbEta">Upcoming · 7d 3h</span>
 </div>
 
 <div id="mydogScreen">
