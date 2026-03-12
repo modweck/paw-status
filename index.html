@@ -285,6 +285,88 @@
   padding:10px 14px; display:flex; align-items:center; gap:10px; margin:0 20px 4px;
 }
 
+/* ── BOOKINGS SCREEN ── */
+.bookings-screen {
+  display:none;
+  position:absolute; inset:0;
+  background:#f5f2ec;
+  overflow-y:auto;
+  padding-bottom:80px;
+  z-index:10;
+  font-family:'DM Sans',sans-serif;
+}
+.bookings-screen.active { display:block; }
+.bookings-header {
+  background:#fff;
+  padding:52px 20px 16px;
+  border-bottom:1px solid #f0f0f0;
+}
+.bookings-title { font-family:'DM Serif Display',serif; font-size:26px; color:#222; }
+.bookings-sub { font-size:13px; color:#aaa; margin-top:2px; }
+.bookings-section-label {
+  font-size:11px; font-weight:700; color:#aaa;
+  letter-spacing:.8px; padding:16px 20px 8px;
+}
+/* Upcoming card */
+.booking-upcoming-card {
+  background:#fff; margin:0 16px; border-radius:16px;
+  border:1.5px solid var(--gold-border);
+  padding:14px; display:flex; gap:14px;
+  box-shadow:0 2px 12px rgba(139,115,32,.08);
+}
+.buc-date-box {
+  background:var(--gold); color:#fff; border-radius:10px;
+  width:48px; min-width:48px; padding:8px 4px;
+  text-align:center;
+}
+.buc-month { font-size:10px; font-weight:700; letter-spacing:.5px; }
+.buc-day { font-size:22px; font-weight:700; font-family:'DM Serif Display',serif; line-height:1; }
+.buc-info { flex:1; }
+.buc-groomer { font-weight:700; font-size:15px; color:#222; }
+.buc-detail { font-size:12px; color:#888; margin-top:2px; }
+.buc-time { font-size:12px; color:#666; margin-top:4px; }
+.buc-status-row { display:flex; align-items:center; justify-content:space-between; margin-top:10px; }
+.buc-status { font-size:12px; font-weight:700; padding:4px 10px; border-radius:20px; }
+.buc-status.confirmed { background:#edfaed; color:#2d6a2d; }
+.buc-cancel-btn {
+  background:none; border:1.5px solid #eee; border-radius:20px;
+  padding:4px 12px; font-size:12px; color:#aaa; cursor:pointer;
+  font-family:'DM Sans',sans-serif; font-weight:600;
+  transition:all .15s;
+}
+.buc-cancel-btn:hover { border-color:#e88; color:#c44; }
+/* Groom history */
+.groom-history-list { padding:0 16px 16px; display:flex; flex-direction:column; gap:0; }
+.gh-card { display:flex; gap:12px; }
+.gh-left { display:flex; flex-direction:column; align-items:center; width:36px; }
+.gh-avatar {
+  width:36px; height:36px; border-radius:50%;
+  background:#fff; border:1.5px solid var(--gold-border);
+  display:flex; align-items:center; justify-content:center;
+  font-size:16px; flex-shrink:0; z-index:1;
+}
+.gh-line { width:2px; background:#f0ece3; flex:1; min-height:20px; }
+.gh-line.last { background:transparent; }
+.gh-body {
+  flex:1; background:#fff; border-radius:14px;
+  padding:12px 14px; margin-bottom:10px;
+  border:1px solid #f0f0f0;
+}
+.gh-top { display:flex; justify-content:space-between; align-items:flex-start; }
+.gh-groomer { font-weight:700; font-size:14px; color:#222; }
+.gh-date { font-size:11px; color:#bbb; }
+.gh-service { font-size:12px; color:#888; margin-top:3px; }
+.gh-price { font-size:12px; color:#aaa; margin-top:2px; }
+.gh-actions { display:flex; align-items:center; justify-content:space-between; margin-top:10px; }
+.gh-btn {
+  background:var(--gold-pale); border:1.5px solid var(--gold-border);
+  border-radius:20px; padding:5px 14px; font-size:12px;
+  color:var(--gold); font-weight:700; cursor:pointer;
+  font-family:'DM Sans',sans-serif; transition:all .15s;
+}
+.gh-btn:hover { background:var(--gold); color:#fff; }
+.gh-stars { font-size:13px; color:#f0b429; letter-spacing:1px; }
+
 </style>
 </head>
 <body>
@@ -1965,6 +2047,100 @@ function openGroomTracker(opts) {
 
 </style>
 
+
+<!-- BOOKINGS SCREEN -->
+<div class="bookings-screen" id="bookingsScreen">
+  <div class="bookings-header">
+    <div class="bookings-title">Bookings</div>
+    <div class="bookings-sub">Bella's appointments</div>
+  </div>
+
+  <!-- Upcoming -->
+  <div class="bookings-section-label">UPCOMING</div>
+  <div class="booking-upcoming-card">
+    <div class="buc-left">
+      <div class="buc-date-box">
+        <div class="buc-month">MAR</div>
+        <div class="buc-day">20</div>
+      </div>
+    </div>
+    <div class="buc-info">
+      <div class="buc-groomer">Happy Tails Grooming</div>
+      <div class="buc-detail">Full Groom · Golden Retriever</div>
+      <div class="buc-time">📍 SoHo · 11:00 AM</div>
+      <div class="buc-status-row">
+        <span class="buc-status confirmed">✓ Confirmed</span>
+        <button class="buc-cancel-btn" onclick="showCancelFlow()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Past bookings -->
+  <div class="bookings-section-label" style="margin-top:20px">GROOM HISTORY</div>
+
+  <div class="groom-history-list">
+
+    <div class="gh-card">
+      <div class="gh-left">
+        <div class="gh-avatar">🐾</div>
+        <div class="gh-line"></div>
+      </div>
+      <div class="gh-body">
+        <div class="gh-top">
+          <div class="gh-groomer">Happy Tails Grooming</div>
+          <div class="gh-date">Feb 18, 2026</div>
+        </div>
+        <div class="gh-service">Full Groom · Bath, Cut, Blow Dry</div>
+        <div class="gh-price">$92 paid</div>
+        <div class="gh-actions">
+          <button class="gh-btn" onclick="rebookAppointment('Happy Tails Grooming')">↩ Rebook</button>
+          <div class="gh-stars">★★★★★</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="gh-card">
+      <div class="gh-left">
+        <div class="gh-avatar">✂️</div>
+        <div class="gh-line"></div>
+      </div>
+      <div class="gh-body">
+        <div class="gh-top">
+          <div class="gh-groomer">Jill's Pet Studio</div>
+          <div class="gh-date">Jan 5, 2026</div>
+        </div>
+        <div class="gh-service">Bath & Brush · Nail Trim add-on</div>
+        <div class="gh-price">$68 paid</div>
+        <div class="gh-actions">
+          <button class="gh-btn" onclick="rebookAppointment('Jill\'s Pet Studio')">↩ Rebook</button>
+          <div class="gh-stars">★★★★☆</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="gh-card">
+      <div class="gh-left">
+        <div class="gh-avatar">🛁</div>
+        <div class="gh-line last"></div>
+      </div>
+      <div class="gh-body">
+        <div class="gh-top">
+          <div class="gh-groomer">Biscuits & Bath</div>
+          <div class="gh-date">Nov 22, 2025</div>
+        </div>
+        <div class="gh-service">Full Groom · Teeth Cleaning add-on</div>
+        <div class="gh-price">$110 paid</div>
+        <div class="gh-actions">
+          <button class="gh-btn" onclick="rebookAppointment('Biscuits & Bath')">↩ Rebook</button>
+          <div class="gh-stars">★★★★★</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
 <!-- PERSISTENT BOTTOM NAV -->
 <div class="bottom-nav" id="bottomNav">
 
@@ -2025,8 +2201,30 @@ function openGroomTracker(opts) {
 <script>
 function switchTab(tab) {
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  document.getElementById('nav-' + tab).classList.add('active');
-  // TODO: show/hide tab screens as they are built out
+  document.getElementById('nav-' + (tab === 'appointments' ? 'appointments' : tab)).classList.add('active');
+
+  // Show/hide bookings screen
+  var bs = document.getElementById('bookingsScreen');
+  if(tab === 'appointments') {
+    bs.classList.add('active');
+  } else {
+    bs.classList.remove('active');
+  }
+}
+
+function rebookAppointment(groomerName) {
+  switchTab('explore');
+  // Scroll back to top and pre-highlight the groomer
+  setTimeout(function(){
+    var cards = document.querySelectorAll('.groomer-card');
+    cards.forEach(function(c){
+      if(c.innerHTML.indexOf(groomerName) > -1) {
+        c.scrollIntoView({behavior:'smooth', block:'center'});
+        c.style.boxShadow = '0 0 0 3px var(--gold-light)';
+        setTimeout(function(){ c.style.boxShadow = ''; }, 2000);
+      }
+    });
+  }, 400);
 }
 </script>
 
