@@ -213,6 +213,77 @@
   .price-discounted { color:#2d6a2d; font-weight:700; }
 
   @keyframes fadeUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+
+/* ── BOOKING CONFIRMATION ── */
+#bookingConfirm {
+  position:fixed; inset:0; z-index:2200;
+  background:rgba(0,0,0,0.45);
+  display:flex; align-items:flex-end; justify-content:center;
+  opacity:0; transition:opacity .25s ease;
+  pointer-events:none;
+  font-family:'DM Sans',sans-serif;
+}
+#bookingConfirm.visible { opacity:1; pointer-events:all; }
+.confirm-sheet {
+  background:#fff;
+  width:100%; max-width:430px;
+  border-radius:24px 24px 0 0;
+  padding:0 0 32px;
+  transform:translateY(40px);
+  transition:transform .3s ease;
+  max-height:88vh;
+  overflow-y:auto;
+}
+#bookingConfirm.visible .confirm-sheet { transform:translateY(0); }
+.confirm-handle { width:40px; height:4px; background:#e0e0e0; border-radius:4px; margin:14px auto 0; }
+.confirm-header { padding:18px 20px 12px; border-bottom:1px solid #f0f0f0; }
+.confirm-title { font-family:'DM Serif Display',serif; font-size:22px; color:#222; }
+.confirm-sub { font-size:13px; color:#888; margin-top:3px; }
+.confirm-summary {
+  margin:16px 20px;
+  background:#fffbf3;
+  border:1.5px solid var(--gold-border);
+  border-radius:14px;
+  padding:14px 16px;
+  display:flex; flex-direction:column; gap:9px;
+}
+.confirm-row { display:flex; align-items:center; gap:10px; font-size:14px; color:#333; }
+.confirm-row-icon { font-size:17px; width:22px; text-align:center; }
+.confirm-row-label { color:#aaa; font-size:12px; }
+.confirm-row-val { font-weight:600; }
+.confirm-notes-section { padding:4px 20px 12px; }
+.confirm-notes-label { font-size:12px; font-weight:700; color:#888; letter-spacing:.5px; text-transform:uppercase; margin-bottom:8px; }
+.confirm-notes-input {
+  width:100%; box-sizing:border-box;
+  border:1.5px solid #eee; border-radius:12px;
+  padding:12px 14px; font-family:'DM Sans',sans-serif;
+  font-size:14px; color:#333; resize:none;
+  background:#fafafa; outline:none;
+  transition:border-color .15s;
+  min-height:90px;
+}
+.confirm-notes-input:focus { border-color:var(--gold-light); background:#fff; }
+.confirm-notes-input::placeholder { color:#bbb; }
+.confirm-hints { display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
+.confirm-hint {
+  background:#f5f5f5; border:1.5px solid #eee; border-radius:20px;
+  padding:5px 12px; font-size:12px; color:#666; cursor:pointer;
+  transition:all .15s;
+}
+.confirm-hint:hover { border-color:var(--gold-light); color:var(--gold); background:var(--gold-pale); }
+.confirm-btns { padding:8px 20px 0; display:flex; flex-direction:column; gap:10px; }
+.confirm-go-btn {
+  width:100%; padding:15px; border:none; border-radius:14px;
+  background:var(--gold); color:#fff;
+  font-family:'DM Sans',sans-serif; font-size:16px; font-weight:700;
+  cursor:pointer; transition:background .2s;
+}
+.confirm-go-btn:hover { background:#7a6418; }
+.confirm-discount-row {
+  background:#edfaed; border:1.5px solid #5cb85c; border-radius:12px;
+  padding:10px 14px; display:flex; align-items:center; gap:10px; margin:0 20px 4px;
+}
+
 </style>
 </head>
 <body>
@@ -855,14 +926,101 @@ function continueBooking() {
   const picked = document.querySelector('.cal-day.picked');
   const slot = document.querySelector('.slot.selected');
   if(!picked || !slot) { alert('Please select a date and time.'); return; }
-  const timeSlot = slot.textContent;
+  window._confirmedSlot = slot.textContent;
+  window._confirmedDate = picked.textContent.replace(/[^0-9]/g,'');
+  showBookingConfirm();
+}
+
+function showBookingConfirm() {
+  const existing = document.getElementById('bookingConfirm');
+  if(existing) existing.remove();
+
+  const groomerName = window._currentGroomer || 'Happy Tails Grooming';
+  const groomerData = (window.GROOMERS_DATA||[]).find(g=>g.name===groomerName);
+  const hasDiscount = groomerData && groomerData.firstGroom;
+  const discountPct = hasDiscount ? (groomerData.discountPct||10) : 0;
+  const price = selectedService ? Math.round(selectedService.base * (SIZE_MULT[selectedBreed]||1)) : 85;
+  const finalPrice = hasDiscount ? Math.round(price*(1-discountPct/100)) : price;
+
+  // Format date nicely
+  const today = new Date();
+  const d = new Date(today.getFullYear(), today.getMonth(), parseInt(window._confirmedDate));
+  const dateLabel = d.toLocaleDateString('default',{weekday:'short',month:'long',day:'numeric'});
+
+  const el = document.createElement('div');
+  el.id = 'bookingConfirm';
+  el.innerHTML = \`
+    <div class="confirm-sheet">
+      <div class="confirm-handle"></div>
+      <div class="confirm-header">
+        <div class="confirm-title">Confirm your booking</div>
+        <div class="confirm-sub">Review details before locking in your slot</div>
+      </div>
+
+      <div class="confirm-summary">
+        <div class="confirm-row">
+          <span class="confirm-row-icon">🐾</span>
+          <div><div class="confirm-row-label">Groomer</div><div class="confirm-row-val">\${groomerName}</div></div>
+        </div>
+        <div class="confirm-row">
+          <span class="confirm-row-icon">✂️</span>
+          <div><div class="confirm-row-label">Service</div><div class="confirm-row-val">\${selectedService ? selectedService.name : 'Full Groom'} · \${selectedBreed||'your dog'}</div></div>
+        </div>
+        <div class="confirm-row">
+          <span class="confirm-row-icon">📅</span>
+          <div><div class="confirm-row-label">Date & Time</div><div class="confirm-row-val">\${dateLabel} at \${window._confirmedSlot}</div></div>
+        </div>
+        <div class="confirm-row">
+          <span class="confirm-row-icon">💰</span>
+          <div><div class="confirm-row-label">Estimated Total</div><div class="confirm-row-val">\${hasDiscount ? \`<span style="text-decoration:line-through;color:#aaa;font-weight:400;margin-right:5px">$\${price}</span><span style="color:#2d6a2d">$\${finalPrice}</span>\` : '$'+finalPrice}</div></div>
+        </div>
+      </div>
+
+      \${hasDiscount ? \`<div class="confirm-discount-row">
+        <span style="font-size:18px">🏷️</span>
+        <div style="font-size:13px;color:#2d6a2d;font-weight:600">\${discountPct}% first-groom discount applied — saving $\${price-finalPrice}</div>
+      </div>\` : ''}
+
+      <div class="confirm-notes-section">
+        <div class="confirm-notes-label">Notes for your groomer</div>
+        <textarea class="confirm-notes-input" id="groomerNotes" placeholder="e.g. Bella is nervous around loud dryers, loves treats, has a sensitive spot near her tail…" rows="3"></textarea>
+        <div class="confirm-hints">
+          <button class="confirm-hint" onclick="addNote('Nervous around loud noises')">😟 Nervous around noise</button>
+          <button class="confirm-hint" onclick="addNote('Loves treats')">🦴 Loves treats</button>
+          <button class="confirm-hint" onclick="addNote('First time grooming')">✨ First time grooming</button>
+          <button class="confirm-hint" onclick="addNote('Sensitive skin')">🌿 Sensitive skin</button>
+        </div>
+      </div>
+
+      <div class="confirm-btns">
+        <button class="confirm-go-btn" onclick="confirmAndBook()">🔒 Lock in this slot</button>
+        <button style="background:none;border:none;color:#aaa;font-size:14px;cursor:pointer;padding:4px" onclick="document.getElementById('bookingConfirm').remove()">← Back to calendar</button>
+      </div>
+    </div>
+  \`;
+
+  document.body.appendChild(el);
+  requestAnimationFrame(() => el.classList.add('visible'));
+}
+
+function addNote(text) {
+  const ta = document.getElementById('groomerNotes');
+  if(!ta) return;
+  ta.value = ta.value ? ta.value + ', ' + text : text;
+  ta.focus();
+}
+
+function confirmAndBook() {
+  const notes = document.getElementById('groomerNotes')?.value || '';
+  document.getElementById('bookingConfirm')?.remove();
   closeBooking();
   setTimeout(() => openGroomTracker({
     dogName: 'Bella',
     breed: selectedBreed || 'Golden Retriever',
     service: selectedService ? selectedService.name : 'Full Groom',
     groomer: window._currentGroomer || 'Happy Tails Grooming',
-    timeSlot
+    timeSlot: window._confirmedSlot,
+    notes
   }), 380);
 }
 
