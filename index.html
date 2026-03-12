@@ -755,11 +755,12 @@
 
     <!-- LOCATION -->
     <div class="section-label">📍 Your Location</div>
-    <div class="location-box">
+    <div class="location-box" style="position:relative">
       <div class="location-input-row">
         <span>📍</span>
-        <input type="text" id="locationInput" placeholder="e.g. 515 E 72nd St, New York" oninput="checkReady()"/>
+        <input type="text" id="locationInput" placeholder="e.g. 515 E 72nd St, New York" oninput="onLocationInput(this.value)" autocomplete="off"/>
       </div>
+      <div id="locationSuggestions" style="display:none;position:absolute;left:0;right:0;top:calc(100% - 2px);background:#fff;border:1.5px solid rgba(139,115,32,.25);border-top:none;border-radius:0 0 16px 16px;z-index:999;box-shadow:0 8px 24px rgba(0,0,0,.1);overflow:hidden;margin:0 0px"></div>
       <div class="location-confirmed" id="locationConfirmed"><span>✓</span><span id="locationText">Location set</span></div>
       <div class="share-btn" onclick="shareLocation()">🎯 Use My Current Location</div>
     </div>
@@ -1051,6 +1052,79 @@ function updateEstimate() {
   document.getElementById('estimateBanner').classList.add('show');
 }
 
+// ── ADDRESS AUTOCOMPLETE ──
+var NYC_ADDRESSES = [
+  '515 E 72nd St, New York, NY',
+  '515 East 72nd Street, New York, NY',
+  '170 Mercer St, New York, NY',
+  '1420 Lexington Ave, New York, NY',
+  '200 W 72nd St, New York, NY',
+  '72nd St & Broadway, New York, NY',
+  '1 E 72nd St, New York, NY',
+  '301 E 72nd St, New York, NY',
+  '400 E 72nd St, New York, NY',
+  '600 E 72nd St, New York, NY',
+  '245 E 72nd St, New York, NY',
+  '350 W 72nd St, New York, NY',
+  '115 E 72nd St, New York, NY',
+  '875 5th Ave, New York, NY',
+  '1 E 86th St, New York, NY',
+  '100 W 77th St, New York, NY',
+  '201 E 69th St, New York, NY',
+  '330 E 75th St, New York, NY',
+  '420 E 64th St, New York, NY',
+  '520 E 81st St, New York, NY',
+  '155 W 68th St, New York, NY',
+  '360 E 57th St, New York, NY',
+  '1185 Park Ave, New York, NY',
+  '415 Central Park West, New York, NY',
+  '44 W 62nd St, New York, NY',
+];
+
+function onLocationInput(val) {
+  checkReady();
+  var box = document.getElementById('locationSuggestions');
+  if (!val || val.length < 2) { box.style.display = 'none'; return; }
+
+  var q = val.toLowerCase().replace(/[^a-z0-9\s]/g, '');
+  var words = q.split(/\s+/).filter(Boolean);
+
+  var matches = NYC_ADDRESSES.filter(function(addr) {
+    var a = addr.toLowerCase().replace(/[^a-z0-9\s]/g, '');
+    return words.every(function(w) { return a.indexOf(w) !== -1; });
+  }).slice(0, 4);
+
+  // Also generate smart suggestions from what they typed
+  if (matches.length === 0) {
+    // Show a "use what I typed" fallback
+    matches = [val + (val.toLowerCase().indexOf('new york') === -1 ? ', New York, NY' : '')];
+  }
+
+  box.innerHTML = matches.map(function(addr) {
+    return '<div onclick="selectAddress(\'' + addr.replace(/'/g, "\\'") + '\')" ' +
+      'style="padding:12px 16px;font-size:14px;cursor:pointer;border-bottom:1px solid #f5f0e8;color:#333;display:flex;align-items:center;gap:8px;" ' +
+      'onmouseover="this.style.background=\'#fdf6e3\'" onmouseout="this.style.background=\'\'">' +
+      '<span style="font-size:16px">📍</span><span>' + addr + '</span></div>';
+  }).join('');
+  box.style.display = 'block';
+}
+
+function selectAddress(addr) {
+  document.getElementById('locationInput').value = addr;
+  document.getElementById('locationSuggestions').style.display = 'none';
+  document.getElementById('locationConfirmed').classList.add('show');
+  document.getElementById('locationText').textContent = addr;
+  checkReady();
+}
+
+// Close suggestions when clicking outside
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('#locationSuggestions') && e.target.id !== 'locationInput') {
+    var box = document.getElementById('locationSuggestions');
+    if (box) box.style.display = 'none';
+  }
+});
+
 function checkReady() {
   const loc = document.getElementById('locationInput').value.trim();
   const hasLoc = loc || document.getElementById('locationConfirmed').classList.contains('show');
@@ -1113,13 +1187,30 @@ function renderGroomerCards(groomers) {
 function sortResults(by, btn) {
   document.querySelectorAll('.sort-pill').forEach(p => p.classList.remove('active'));
   btn.classList.add('active');
-  const sorted = [...renderedGroomers];
+  let sorted = [...renderedGroomers];
+
   if (by === 'rating') sorted.sort((a, b) => parseFloat(b.rating) - parseFloat(a.rating));
-  if (by === 'distance') sorted.sort((a, b) => a.distanceVal - b.distanceVal);
-  if (by === 'price') sorted.sort((a, b) => a.price - b.price);
-  if (by === 'soonest') sorted.sort((a, b) => new Date(a.nextAvail + ' 2026') - new Date(b.nextAvail + ' 2026'));
-  const toRender = (by === 'deals') ? sorted.filter(g => g.firstGroom) : sorted;
-  // Show deals header if filtering
+  else if (by === 'distance') sorted.sort((a, b) => a.distanceVal - b.distanceVal);
+  else if (by === 'price') sorted.sort((a, b) => a.price - b.price);
+  else if (by === 'soonest') sorted.sort((a, b) => new Date(a.nextAvail + ' 2026') - new Date(b.nextAvail + ' 2026'));
+  else if (by === 'deals') {
+    // Pin Happy Tails (isJill) first, filter to deals only
+    sorted = sorted.filter(g => g.firstGroom);
+    const jill = sorted.find(g => g.isJill);
+    const rest = sorted.filter(g => !g.isJill);
+    sorted = jill ? [jill, ...rest] : rest;
+  }
+
+  // For non-deals sorts: shuffle to give fresh feel, no pinning
+  if (by !== 'deals') {
+    // Fisher-Yates shuffle
+    for (let i = sorted.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [sorted[i], sorted[j]] = [sorted[j], sorted[i]];
+    }
+  }
+
+  const toRender = (by === 'deals') ? sorted : sorted;
   const dealsNote = document.getElementById('dealsNote');
   if(dealsNote) dealsNote.style.display = (by==='deals' && toRender.length) ? 'flex' : 'none';
   renderGroomerCards(toRender);
@@ -1149,7 +1240,11 @@ function findGroomers() {
     nextAvail: g.nextAvail || 'TBD'
   }));
 
-  renderGroomerCards(renderedGroomers);
+  // On initial load: pin Happy Tails (isJill) to top
+  const jillGroomer = renderedGroomers.find(g => g.isJill);
+  const others = renderedGroomers.filter(g => !g.isJill);
+  const initialOrder = jillGroomer ? [jillGroomer, ...others] : renderedGroomers;
+  renderGroomerCards(initialOrder);
 
   // Reset sort pills to Rating
   document.querySelectorAll('.sort-pill').forEach(p => p.classList.remove('active'));
