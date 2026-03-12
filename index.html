@@ -17,9 +17,9 @@
     --light: #ccc;
   }
   * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-  body { background:#f5f2ec; font-family:'DM Sans',sans-serif; min-height:100vh; display:flex; justify-content:center; }
+  body { background:#f5f2ec; font-family:'DM Sans',sans-serif; height:100vh; overflow:hidden; display:flex; justify-content:center; align-items:flex-start; }
 
-  .phone { width:100%; max-width:430px; background:var(--white); min-height:100vh; display:flex; flex-direction:column; overflow:hidden; position:relative; z-index:1; }
+  .phone { width:100%; max-width:430px; background:var(--white); height:100vh; display:flex; flex-direction:column; overflow:hidden; position:relative; z-index:1; }
 
   .header { padding:52px 20px 14px; background:var(--white); position:sticky; top:0; z-index:10; border-bottom:1px solid #f5f5f5; }
   .logo { font-family:'DM Serif Display',serif; font-size:22px; display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
@@ -167,8 +167,8 @@
 
   /* BOTTOM NAV — fixed, always visible on every screen */
   .bottom-nav {
-    position:fixed; bottom:0; left:50%; transform:translateX(-50%);
-    width:100%; max-width:430px;
+    position:absolute; bottom:0; left:0; right:0;
+    width:100%;
     display:flex; justify-content:space-around; align-items:flex-end;
     background:white;
     border-top:1px solid #ececec;
@@ -217,7 +217,7 @@
 
 /* ── BOOKING CONFIRMATION ── */
 #bookingConfirm {
-  position:fixed; inset:0; z-index:2200;
+  position:absolute; inset:0; z-index:2200;
   background:rgba(0,0,0,0.45);
   display:flex; align-items:flex-end; justify-content:center;
   opacity:0; transition:opacity .25s ease;
@@ -1874,7 +1874,7 @@ function openGroomTracker(opts) {
 .waitlist-banner span:first-child { font-size:18px; flex-shrink:0; }
 .waitlist-banner-arrow { margin-left:auto; font-size:18px; color:#8b7320; flex-shrink:0; }
 .waitlist-banner:active { background:#fdeea0; }
-.waitlist-overlay { position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:3000; }
+.waitlist-overlay { position:absolute;inset:0;background:rgba(0,0,0,.35);z-index:3000; }
 .waitlist-sheet {
   position:fixed; bottom:0; left:50%; transform:translateX(-50%) translateY(100%);
   width:100%; max-width:430px; background:white; border-radius:24px 24px 0 0;
@@ -1916,7 +1916,7 @@ function openGroomTracker(opts) {
 
 /* ── GROOM TRACKER ── */
 #groomTracker {
-  position:fixed; inset:0; z-index:1999;
+  position:absolute; inset:0; z-index:1999;
   background:#fff9f2;
   max-width:430px; margin:0 auto;
   display:flex; flex-direction:column; overflow:hidden;
