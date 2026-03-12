@@ -458,6 +458,103 @@
   60% { transform:rotate(10deg); }
   80% { transform:rotate(-6deg); }
 }
+
+/* ── MY DOG SCREEN ── */
+#mydogScreen {
+  display:none;
+  position:fixed; inset:0;
+  max-width:430px; margin:0 auto;
+  background:#f8f5ef;
+  overflow-y:auto;
+  padding-bottom:90px;
+  font-family:'DM Sans',sans-serif;
+  z-index:1500;
+}
+#mydogScreen.active { display:block; }
+.mydog-header {
+  background:linear-gradient(160deg,#fffdf7 0%,#fdf6e3 100%);
+  padding:52px 20px 24px;
+  border-bottom:1px solid rgba(139,115,32,.1);
+  text-align:center;
+}
+.mydog-avatar-wrap {
+  position:relative; display:inline-block; margin-bottom:12px;
+}
+.mydog-avatar {
+  width:88px; height:88px; border-radius:50%;
+  background:linear-gradient(135deg,#f5e6c0,#e8d090);
+  border:3px solid #fff;
+  box-shadow:0 4px 20px rgba(139,115,32,.2);
+  display:flex; align-items:center; justify-content:center;
+  font-size:44px;
+}
+.mydog-avatar-edit {
+  position:absolute; bottom:2px; right:2px;
+  width:24px; height:24px; border-radius:50%;
+  background:var(--gold); color:#fff;
+  font-size:12px; display:flex; align-items:center; justify-content:center;
+  cursor:pointer; border:2px solid #fff;
+}
+.mydog-name { font-family:'DM Serif Display',serif; font-size:26px; color:#1a1a1a; }
+.mydog-breed { font-size:13px; color:#b0a080; margin-top:2px; }
+.mydog-section { padding:16px 16px 4px; }
+.mydog-section-title {
+  font-size:10px; font-weight:700; color:#c8b87a;
+  letter-spacing:1.2px; text-transform:uppercase; margin-bottom:10px;
+}
+.mydog-card {
+  background:#fff; border-radius:16px;
+  border:1px solid rgba(0,0,0,.06);
+  box-shadow:0 2px 10px rgba(0,0,0,.04);
+  overflow:hidden; margin-bottom:12px;
+}
+.mydog-row {
+  display:flex; align-items:center;
+  padding:13px 16px; gap:12px;
+  border-bottom:1px solid rgba(0,0,0,.05);
+}
+.mydog-row:last-child { border-bottom:none; }
+.mydog-row-icon { font-size:18px; width:24px; text-align:center; flex-shrink:0; }
+.mydog-row-body { flex:1; }
+.mydog-row-label { font-size:11px; color:#bbb; font-weight:600; letter-spacing:.3px; }
+.mydog-row-val { font-size:14px; color:#1a1a1a; font-weight:600; margin-top:1px; }
+.mydog-row-val.muted { color:#999; font-weight:400; font-style:italic; }
+.mydog-row-edit {
+  font-size:12px; color:var(--gold); font-weight:700;
+  cursor:pointer; padding:4px 8px;
+  background:var(--gold-pale); border-radius:12px;
+  border:1px solid var(--gold-border);
+}
+.mydog-stat-row {
+  display:flex; gap:0;
+}
+.mydog-stat {
+  flex:1; padding:14px 16px; text-align:center;
+  border-right:1px solid rgba(0,0,0,.05);
+}
+.mydog-stat:last-child { border-right:none; }
+.mydog-stat-val { font-size:20px; font-weight:700; color:#1a1a1a; font-family:'DM Serif Display',serif; }
+.mydog-stat-label { font-size:11px; color:#bbb; margin-top:2px; }
+.mydog-tag-row { display:flex; flex-wrap:wrap; gap:6px; padding:12px 16px; }
+.mydog-tag {
+  background:var(--gold-pale); border:1px solid var(--gold-border);
+  border-radius:20px; padding:4px 12px;
+  font-size:12px; color:var(--gold); font-weight:600;
+}
+.mydog-tag.add {
+  background:none; border:1.5px dashed var(--gold-border);
+  color:#ccc; cursor:pointer;
+}
+.payment-card-visual {
+  background:linear-gradient(135deg,#8b7320 0%,#c8a84b 100%);
+  border-radius:14px; padding:18px 20px; margin:0 16px 12px;
+  color:#fff; box-shadow:0 6px 20px rgba(139,115,32,.25);
+}
+.pcv-bank { font-size:11px; opacity:.7; letter-spacing:1px; text-transform:uppercase; }
+.pcv-number { font-size:16px; font-weight:700; letter-spacing:3px; margin:12px 0 16px; }
+.pcv-bottom { display:flex; justify-content:space-between; align-items:flex-end; }
+.pcv-name { font-size:13px; font-weight:700; letter-spacing:.5px; }
+.pcv-exp { font-size:11px; opacity:.7; }
 </style>
 </head>
 <body>
@@ -2406,12 +2503,18 @@ function switchTab(tab) {
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.getElementById('nav-' + (tab === 'appointments' ? 'appointments' : tab)).classList.add('active');
 
-  // Show/hide bookings screen
   var bs = document.getElementById('bookingsScreen');
+  var ms = document.getElementById('mydogScreen');
+
   if(tab === 'appointments') {
     bs.classList.add('active');
+    if(ms) ms.classList.remove('active');
+  } else if(tab === 'mydog') {
+    if(ms) ms.classList.add('active');
+    bs.classList.remove('active');
   } else {
     bs.classList.remove('active');
+    if(ms) ms.classList.remove('active');
   }
 }
 
@@ -2443,6 +2546,136 @@ function rebookAppointment(groomerName) {
 <div id="livebell" onclick="reopenTracker()">
   <span class="lb-icon">🔔</span>
   <span class="lb-eta" id="lbEta">~45 min</span>
+</div>
+
+<div id="mydogScreen">
+  <!-- Dog header -->
+  <div class="mydog-header">
+    <div class="mydog-avatar-wrap">
+      <div class="mydog-avatar">🐕</div>
+      <div class="mydog-avatar-edit">✎</div>
+    </div>
+    <div class="mydog-name">Bella</div>
+    <div class="mydog-breed">Golden Retriever · 3 years old</div>
+  </div>
+
+  <!-- Dog stats -->
+  <div class="mydog-section">
+    <div class="mydog-section-title">Bella's Stats</div>
+    <div class="mydog-card">
+      <div class="mydog-stat-row">
+        <div class="mydog-stat">
+          <div class="mydog-stat-val">3</div>
+          <div class="mydog-stat-label">Age (yrs)</div>
+        </div>
+        <div class="mydog-stat">
+          <div class="mydog-stat-val">62</div>
+          <div class="mydog-stat-label">Weight (lbs)</div>
+        </div>
+        <div class="mydog-stat">
+          <div class="mydog-stat-val">L</div>
+          <div class="mydog-stat-label">Size</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Temperament -->
+  <div class="mydog-section">
+    <div class="mydog-section-title">Temperament & Notes</div>
+    <div class="mydog-card">
+      <div class="mydog-tag-row">
+        <div class="mydog-tag">😊 Friendly</div>
+        <div class="mydog-tag">🍖 Treat motivated</div>
+        <div class="mydog-tag">💨 Anxious w/ dryers</div>
+        <div class="mydog-tag">+ Add</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Grooming preferences -->
+  <div class="mydog-section">
+    <div class="mydog-section-title">Grooming Preferences</div>
+    <div class="mydog-card">
+      <div class="mydog-row">
+        <div class="mydog-row-icon">✂️</div>
+        <div class="mydog-row-body">
+          <div class="mydog-row-label">Preferred cut</div>
+          <div class="mydog-row-val">Full groom · standard trim</div>
+        </div>
+        <div class="mydog-row-edit">Edit</div>
+      </div>
+      <div class="mydog-row">
+        <div class="mydog-row-icon">📅</div>
+        <div class="mydog-row-body">
+          <div class="mydog-row-label">Groom frequency</div>
+          <div class="mydog-row-val">Every 6–8 weeks</div>
+        </div>
+        <div class="mydog-row-edit">Edit</div>
+      </div>
+      <div class="mydog-row">
+        <div class="mydog-row-icon">⭐</div>
+        <div class="mydog-row-body">
+          <div class="mydog-row-label">Preferred groomer</div>
+          <div class="mydog-row-val">Happy Tails Grooming</div>
+        </div>
+        <div class="mydog-row-edit">Edit</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Owner info -->
+  <div class="mydog-section">
+    <div class="mydog-section-title">Your Info</div>
+    <div class="mydog-card">
+      <div class="mydog-row">
+        <div class="mydog-row-icon">👤</div>
+        <div class="mydog-row-body">
+          <div class="mydog-row-label">Name</div>
+          <div class="mydog-row-val">Maurice W.</div>
+        </div>
+        <div class="mydog-row-edit">Edit</div>
+      </div>
+      <div class="mydog-row">
+        <div class="mydog-row-icon">📱</div>
+        <div class="mydog-row-body">
+          <div class="mydog-row-label">Phone</div>
+          <div class="mydog-row-val">(212) 555-0147</div>
+        </div>
+        <div class="mydog-row-edit">Edit</div>
+      </div>
+      <div class="mydog-row">
+        <div class="mydog-row-icon">📍</div>
+        <div class="mydog-row-body">
+          <div class="mydog-row-label">Neighborhood</div>
+          <div class="mydog-row-val">SoHo, New York</div>
+        </div>
+        <div class="mydog-row-edit">Edit</div>
+      </div>
+      <div class="mydog-row">
+        <div class="mydog-row-icon">📧</div>
+        <div class="mydog-row-body">
+          <div class="mydog-row-label">Email</div>
+          <div class="mydog-row-val">maurice@email.com</div>
+        </div>
+        <div class="mydog-row-edit">Edit</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Payment -->
+  <div class="mydog-section">
+    <div class="mydog-section-title">Payment</div>
+    <div class="payment-card-visual">
+      <div class="pcv-bank">Chase Sapphire</div>
+      <div class="pcv-number">•••• •••• •••• 4242</div>
+      <div class="pcv-bottom">
+        <div class="pcv-name">MAURICE W</div>
+        <div class="pcv-exp">Exp 09/28</div>
+      </div>
+    </div>
+  </div>
+
 </div>
 </body>
 </html>
