@@ -620,6 +620,120 @@
 .account-menu-sub { font-size:12px; color:#bbb; margin-top:1px; }
 .account-menu-arrow { font-size:16px; color:#ddd; }
 .account-version { text-align:center; font-size:11px; color:#ccc; padding:8px; }
+
+/* ── GROOMER CHAT ── */
+#groomerChat {
+  display:none;
+  position:fixed; inset:0;
+  max-width:430px; margin:0 auto;
+  background:#f8f5ef;
+  flex-direction:column;
+  font-family:'DM Sans',sans-serif;
+  z-index:3500;
+  opacity:0; transform:translateY(40px);
+  transition:opacity .28s ease, transform .28s ease;
+  pointer-events:none;
+}
+#groomerChat.chat-open {
+  display:flex; opacity:1; transform:translateY(0);
+  pointer-events:all;
+}
+.chat-header {
+  background:linear-gradient(160deg,#fffdf7,#fdf6e3);
+  padding:52px 16px 14px;
+  border-bottom:1px solid rgba(139,115,32,.1);
+  display:flex; align-items:center; gap:12px;
+  flex-shrink:0;
+}
+.chat-back {
+  background:none; border:none; font-size:22px;
+  cursor:pointer; color:#888; padding:4px; line-height:1;
+}
+.chat-groomer-avatar {
+  width:40px; height:40px; border-radius:50%;
+  background:linear-gradient(135deg,#8b7320,#c8a84b);
+  display:flex; align-items:center; justify-content:center;
+  font-size:20px; flex-shrink:0;
+}
+.chat-groomer-info { flex:1; }
+.chat-groomer-name { font-weight:700; font-size:15px; color:#1a1a1a; }
+.chat-groomer-status { font-size:12px; color:#8b7320; margin-top:1px; }
+.chat-messages {
+  flex:1; overflow-y:auto; padding:16px;
+  display:flex; flex-direction:column; gap:10px;
+  -webkit-overflow-scrolling:touch;
+}
+.chat-msg { display:flex; gap:8px; align-items:flex-end; }
+.chat-msg.mine { flex-direction:row-reverse; }
+.chat-bubble {
+  max-width:75%; padding:10px 14px;
+  border-radius:18px; font-size:14px; line-height:1.4;
+}
+.chat-msg.theirs .chat-bubble {
+  background:#fff; color:#1a1a1a;
+  border-bottom-left-radius:4px;
+  box-shadow:0 1px 6px rgba(0,0,0,.07);
+}
+.chat-msg.mine .chat-bubble {
+  background:var(--gold); color:#fff;
+  border-bottom-right-radius:4px;
+}
+.chat-avatar-sm {
+  width:28px; height:28px; border-radius:50%;
+  background:linear-gradient(135deg,#8b7320,#c8a84b);
+  display:flex; align-items:center; justify-content:center;
+  font-size:14px; flex-shrink:0;
+}
+.chat-time { font-size:10px; color:#ccc; text-align:center; padding:4px 0; }
+.chat-typing {
+  display:flex; gap:4px; align-items:center;
+  padding:10px 14px; background:#fff; border-radius:18px;
+  border-bottom-left-radius:4px; width:56px;
+  box-shadow:0 1px 6px rgba(0,0,0,.07);
+}
+.chat-typing span {
+  width:6px; height:6px; border-radius:50%; background:#ccc;
+  animation:typingDot 1.2s ease-in-out infinite;
+}
+.chat-typing span:nth-child(2) { animation-delay:.2s; }
+.chat-typing span:nth-child(3) { animation-delay:.4s; }
+@keyframes typingDot {
+  0%,60%,100% { transform:translateY(0); opacity:.4; }
+  30% { transform:translateY(-4px); opacity:1; }
+}
+.chat-input-row {
+  display:flex; align-items:center; gap:8px;
+  padding:12px 16px;
+  background:#fff;
+  border-top:1px solid rgba(0,0,0,.06);
+  flex-shrink:0;
+  padding-bottom:max(12px, env(safe-area-inset-bottom));
+}
+.chat-input {
+  flex:1; border:1.5px solid #ece8e0; border-radius:22px;
+  padding:10px 16px; font-size:14px; font-family:'DM Sans',sans-serif;
+  outline:none; background:#fafafa; color:#1a1a1a;
+  transition:border-color .15s;
+}
+.chat-input:focus { border-color:var(--gold-border); background:#fff; }
+.chat-send-btn {
+  width:40px; height:40px; border-radius:50%;
+  background:var(--gold); border:none; cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  font-size:16px; flex-shrink:0; transition:background .15s;
+}
+.chat-send-btn:hover { background:#7a651c; }
+.chat-quick-replies {
+  display:flex; gap:8px; flex-wrap:wrap;
+  padding:8px 16px 0;
+}
+.chat-qr {
+  background:var(--gold-pale); border:1.5px solid var(--gold-border);
+  border-radius:20px; padding:6px 14px; font-size:12px;
+  color:var(--gold); font-weight:600; cursor:pointer;
+  white-space:nowrap; transition:all .15s;
+}
+.chat-qr:hover { background:var(--gold); color:#fff; }
 </style>
 </head>
 <body>
@@ -983,7 +1097,7 @@ function renderGroomerCards(groomers) {
             ${g.firstGroom ? `<span class="price-original">$${g.price}</span><span class="price-discounted">$${Math.round(g.price*(1-g.discountPct/100))}</span>` : `$${g.price}`}
             <span>est. for ${selectedBreed}</span>
           </div>
-          <button class="book-btn" onclick="event.stopPropagation();bookGroomer('${g.name}')">Book →</button>
+          <button class="chat-open-btn" onclick="event.stopPropagation();openGroomerChat('${g.name}')" style="background:none;border:1.5px solid var(--gold-border);border-radius:10px;padding:9px 14px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;color:var(--gold);margin-right:8px;transition:all .15s">💬</button><button class="book-btn" onclick="event.stopPropagation();bookGroomer('${g.name}')">Book →</button>
         </div>
       </div>`;
     cards.appendChild(card);
@@ -2353,6 +2467,7 @@ function openGroomTracker(opts) {
       <div class="buc-time">📍 SoHo · 11:00 AM</div>
       <div class="buc-status-row">
         <span class="buc-status confirmed">✓ Confirmed</span>
+        <button class="buc-rebook-btn" onclick="openGroomerChat('Happy Tails Grooming')" style="background:#e8f0ff;border-color:#b0c8f0;color:#3a6abf">💬 Message</button>
         <button class="buc-rebook-btn" onclick="rebookAppointment('Happy Tails Grooming')">✎ Modify</button>
         <button class="buc-cancel-btn" onclick="showCancelFlow()">Cancel</button>
       </div>
@@ -2564,6 +2679,100 @@ function reopenTracker() {
   }
 }
 
+
+// ── GROOMER CHAT ──
+var _chatGroomer = 'Happy Tails Grooming';
+var _chatMessages = [];
+
+var GROOMER_RESPONSES = {
+  'anxious': "Hi! Great question 🐾 We have lots of experience with nervous pups. We go slow, use lots of treats, and never rush. Bella will be in good hands!",
+  'cancellation': "Our cancellation policy is 24 hours notice for a full refund. Same-day cancellations may incur a small fee. Just message us and we'll work it out!",
+  'nail': "Absolutely! We can add a nail trim for +$20. Just let us know when you arrive or we can note it on your booking now 💅",
+  'long': "A full groom for a Golden Retriever typically takes 2–3 hours. We'll send you a pickup alert when Bella is ready!",
+  'default': "Thanks for reaching out! We'll get back to you shortly. Feel free to ask anything about Bella's appointment 🐾"
+};
+
+function getGroomerReply(msg) {
+  var lower = msg.toLowerCase();
+  if (lower.includes('anxi') || lower.includes('nervous') || lower.includes('scared')) return GROOMER_RESPONSES.anxious;
+  if (lower.includes('cancel') || lower.includes('policy') || lower.includes('refund')) return GROOMER_RESPONSES.cancellation;
+  if (lower.includes('nail') || lower.includes('trim') || lower.includes('add')) return GROOMER_RESPONSES.nail;
+  if (lower.includes('long') || lower.includes('time') || lower.includes('hour') || lower.includes('how long')) return GROOMER_RESPONSES.long;
+  return GROOMER_RESPONSES.default;
+}
+
+function openGroomerChat(groomerName) {
+  _chatGroomer = groomerName || 'Happy Tails Grooming';
+  _chatMessages = [];
+  document.getElementById('chatGroomerName').textContent = _chatGroomer;
+  document.getElementById('chatInput').placeholder = 'Message ' + _chatGroomer.split(' ').slice(0,2).join(' ') + '...';
+
+  var msgs = document.getElementById('chatMessages');
+  msgs.innerHTML = '';
+
+  // Opening message from groomer
+  var openingMsg = 'Hi! 👋 Thanks for reaching out to ' + _chatGroomer + '. How can we help you today?';
+  setTimeout(function() {
+    addChatMsg(openingMsg, 'theirs');
+  }, 600);
+
+  var chat = document.getElementById('groomerChat');
+  chat.style.display = 'flex';
+  setTimeout(function() { chat.classList.add('chat-open'); }, 10);
+}
+
+function closeGroomerChat() {
+  var chat = document.getElementById('groomerChat');
+  chat.classList.remove('chat-open');
+  setTimeout(function() { chat.style.display = 'none'; }, 300);
+}
+
+function addChatMsg(text, who) {
+  var msgs = document.getElementById('chatMessages');
+  var div = document.createElement('div');
+  div.className = 'chat-msg ' + who;
+  if (who === 'theirs') {
+    div.innerHTML = '<div class="chat-avatar-sm">🐾</div><div class="chat-bubble">' + text + '</div>';
+  } else {
+    div.innerHTML = '<div class="chat-bubble">' + text + '</div>';
+  }
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function showTyping() {
+  var msgs = document.getElementById('chatMessages');
+  var div = document.createElement('div');
+  div.className = 'chat-msg theirs'; div.id = 'typingIndicator';
+  div.innerHTML = '<div class="chat-avatar-sm">🐾</div><div class="chat-typing"><span></span><span></span><span></span></div>';
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function sendChatMessage() {
+  var input = document.getElementById('chatInput');
+  var text = input.value.trim();
+  if (!text) return;
+  input.value = '';
+  addChatMsg(text, 'mine');
+  // Hide quick replies after first message
+  document.getElementById('chatQuickReplies').style.display = 'none';
+  // Show typing then reply
+  setTimeout(function() {
+    showTyping();
+    setTimeout(function() {
+      var t = document.getElementById('typingIndicator');
+      if (t) t.remove();
+      addChatMsg(getGroomerReply(text), 'theirs');
+    }, 1400);
+  }, 500);
+}
+
+function sendQuickReply(text) {
+  document.getElementById('chatInput').value = text;
+  sendChatMessage();
+}
+
 function switchTab(tab) {
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.getElementById('nav-' + (tab === 'appointments' ? 'appointments' : tab)).classList.add('active');
@@ -2697,15 +2906,38 @@ function rebookAppointment(groomerName) {
     </div>
   </div>
 
-  <!-- Owner info -->
-  <div class="mydog-section">
-    <div class="mydog-section-title">Your Info</div>
+
+
+</div>
+
+<div id="accountScreen">
+  <!-- Header -->
+  <div class="account-header">
+    <div class="account-avatar">M</div>
+    <div class="account-header-info">
+      <div class="account-name">Maurice W.</div>
+      <div class="account-email">maurice@email.com</div>
+      <div class="account-badge">🐾 PawStatus Member</div>
+    </div>
+  </div>
+
+  <!-- Personal Info -->
+  <div class="mydog-section" style="padding-top:20px">
+    <div class="mydog-section-title">Personal Info</div>
     <div class="mydog-card">
       <div class="mydog-row">
         <div class="mydog-row-icon">👤</div>
         <div class="mydog-row-body">
-          <div class="mydog-row-label">Name</div>
+          <div class="mydog-row-label">Full Name</div>
           <div class="mydog-row-val">Maurice W.</div>
+        </div>
+        <div class="mydog-row-edit">Edit</div>
+      </div>
+      <div class="mydog-row">
+        <div class="mydog-row-icon">📧</div>
+        <div class="mydog-row-body">
+          <div class="mydog-row-label">Email</div>
+          <div class="mydog-row-val">maurice@email.com</div>
         </div>
         <div class="mydog-row-edit">Edit</div>
       </div>
@@ -2725,14 +2957,6 @@ function rebookAppointment(groomerName) {
         </div>
         <div class="mydog-row-edit">Edit</div>
       </div>
-      <div class="mydog-row">
-        <div class="mydog-row-icon">📧</div>
-        <div class="mydog-row-body">
-          <div class="mydog-row-label">Email</div>
-          <div class="mydog-row-val">maurice@email.com</div>
-        </div>
-        <div class="mydog-row-edit">Edit</div>
-      </div>
     </div>
   </div>
 
@@ -2747,42 +2971,18 @@ function rebookAppointment(groomerName) {
         <div class="pcv-exp">Exp 09/28</div>
       </div>
     </div>
-  </div>
-
-</div>
-
-<div id="accountScreen">
-  <div class="account-header">
-    <div class="account-avatar">M</div>
-    <div class="account-header-info">
-      <div class="account-name">Maurice W.</div>
-      <div class="account-email">maurice@email.com</div>
-      <div class="account-badge">🐾 PawStatus Member</div>
-    </div>
-  </div>
-
-  <div class="mydog-section" style="padding-top:20px">
-    <div class="mydog-section-title">My Account</div>
-    <div class="account-menu-card">
-      <div class="account-menu-item" onclick="switchTab('mydog')">
-        <div class="account-menu-icon gold">🐕</div>
-        <div class="account-menu-body">
-          <div class="account-menu-title">Bella's Profile</div>
-          <div class="account-menu-sub">Breed, age, grooming preferences</div>
+    <div class="mydog-card">
+      <div class="mydog-row">
+        <div class="mydog-row-icon">➕</div>
+        <div class="mydog-row-body">
+          <div class="mydog-row-val" style="color:var(--gold)">Add payment method</div>
         </div>
-        <div class="account-menu-arrow">›</div>
-      </div>
-      <div class="account-menu-item" onclick="switchTab('appointments')">
-        <div class="account-menu-icon blue">📅</div>
-        <div class="account-menu-body">
-          <div class="account-menu-title">My Bookings</div>
-          <div class="account-menu-sub">Upcoming & past appointments</div>
-        </div>
-        <div class="account-menu-arrow">›</div>
+        <div class="mydog-row-edit">Add</div>
       </div>
     </div>
   </div>
 
+  <!-- Preferences -->
   <div class="mydog-section">
     <div class="mydog-section-title">Preferences</div>
     <div class="account-menu-card">
@@ -2792,23 +2992,14 @@ function rebookAppointment(groomerName) {
           <div class="account-menu-title">Notifications</div>
           <div class="account-menu-sub">Pickup alerts, reminders, deals</div>
         </div>
-        <div style="display:flex;align-items:center;gap:8px">
-          <div style="width:36px;height:20px;background:var(--gold);border-radius:10px;position:relative;cursor:pointer">
-            <div style="position:absolute;right:2px;top:2px;width:16px;height:16px;background:#fff;border-radius:50%"></div>
-          </div>
+        <div style="width:36px;height:20px;background:var(--gold);border-radius:10px;position:relative;cursor:pointer;flex-shrink:0">
+          <div style="position:absolute;right:2px;top:2px;width:16px;height:16px;background:#fff;border-radius:50%"></div>
         </div>
-      </div>
-      <div class="account-menu-item">
-        <div class="account-menu-icon blue">📍</div>
-        <div class="account-menu-body">
-          <div class="account-menu-title">Location</div>
-          <div class="account-menu-sub">SoHo, New York</div>
-        </div>
-        <div class="account-menu-arrow">›</div>
       </div>
     </div>
   </div>
 
+  <!-- Support -->
   <div class="mydog-section">
     <div class="mydog-section-title">Support</div>
     <div class="account-menu-card">
@@ -2839,6 +3030,28 @@ function rebookAppointment(groomerName) {
   </div>
 
   <div class="account-version">PawStatus v1.0 · NYC 🐾</div>
+</div>
+
+<div id="groomerChat">
+  <div class="chat-header">
+    <button class="chat-back" onclick="closeGroomerChat()">←</button>
+    <div class="chat-groomer-avatar">🐾</div>
+    <div class="chat-groomer-info">
+      <div class="chat-groomer-name" id="chatGroomerName">Happy Tails Grooming</div>
+      <div class="chat-groomer-status">🟢 Usually responds in ~1 hour</div>
+    </div>
+  </div>
+  <div class="chat-messages" id="chatMessages"></div>
+  <div class="chat-quick-replies" id="chatQuickReplies">
+    <div class="chat-qr" onclick="sendQuickReply('Do you have experience with anxious dogs?')">Anxious dogs?</div>
+    <div class="chat-qr" onclick="sendQuickReply('What's your cancellation policy?')">Cancellation policy?</div>
+    <div class="chat-qr" onclick="sendQuickReply('Can I add a nail trim?')">Add nail trim?</div>
+    <div class="chat-qr" onclick="sendQuickReply('How long will the groom take?')">How long?</div>
+  </div>
+  <div class="chat-input-row">
+    <input class="chat-input" id="chatInput" type="text" placeholder="Message Happy Tails..." onkeydown="if(event.key==='Enter')sendChatMessage()">
+    <button class="chat-send-btn" onclick="sendChatMessage()">➤</button>
+  </div>
 </div>
 </body>
 </html>
