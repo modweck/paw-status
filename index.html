@@ -1498,6 +1498,12 @@ function openGroomTracker(opts) {
   // hide bookings screen if open
   var bs = document.getElementById('bookingsScreen');
   if(bs) bs.classList.remove('active');
+  // hide results page — it stays in .show state and intercepts all taps behind the tracker
+  var rp = document.getElementById('resultsPage');
+  if(rp) { rp.classList.remove('show'); rp.style.pointerEvents = 'none'; }
+  // remove any lingering booking overlay
+  var bo = document.getElementById('bookingOverlay');
+  if(bo) bo.remove();
   const existing = document.getElementById('groomTracker');
   if (existing) existing.remove();
 
@@ -2617,6 +2623,9 @@ function minimizeTracker() {
     _trackerEl = el;
     setTimeout(function() { el.style.display = 'none'; }, 320);
   }
+  // Restore results page so it's tappable again
+  var rp = document.getElementById('resultsPage');
+  if(rp) { rp.classList.add('show'); rp.style.pointerEvents = 'all'; }
   // Show bell pill again
   document.getElementById('livebell').style.display = '';
   var bell = document.getElementById('livebell');
