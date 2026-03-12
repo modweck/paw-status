@@ -1192,18 +1192,18 @@ function sortResults(by, btn) {
   if (by === 'rating') {
     sorted.sort((a, b) => parseFloat(b.rating) - parseFloat(a.rating));
     // Pin Happy Tails first regardless of rating
-    const jill = sorted.find(g => g.isJill);
-    const rest = sorted.filter(g => !g.isJill);
-    sorted = jill ? [jill, ...rest] : sorted;
+    const top = sorted.find(g => g.featured);
+    const rest = sorted.filter(g => !g.featured);
+    sorted = top ? [top, ...rest] : sorted;
   } else if (by === 'distance') sorted.sort((a, b) => a.distanceVal - b.distanceVal);
   else if (by === 'price') sorted.sort((a, b) => a.price - b.price);
   else if (by === 'soonest') sorted.sort((a, b) => new Date(a.nextAvail + ' 2026') - new Date(b.nextAvail + ' 2026'));
   else if (by === 'deals') {
     // Pin Happy Tails (isJill) first, filter to deals only
     sorted = sorted.filter(g => g.firstGroom);
-    const jill = sorted.find(g => g.isJill);
-    const rest = sorted.filter(g => !g.isJill);
-    sorted = jill ? [jill, ...rest] : rest;
+    const top = sorted.find(g => g.featured);
+    const rest = sorted.filter(g => !g.featured);
+    sorted = top ? [top, ...rest] : rest;
   }
 
   // For non-rating, non-deals sorts: shuffle to give fresh feel
@@ -1245,9 +1245,9 @@ function findGroomers() {
   }));
 
   // On initial load: pin Happy Tails (isJill) to top
-  const jillGroomer = renderedGroomers.find(g => g.isJill);
-  const others = renderedGroomers.filter(g => !g.isJill);
-  const initialOrder = jillGroomer ? [jillGroomer, ...others] : renderedGroomers;
+  const topGroomer = renderedGroomers.find(g => g.featured);
+  const others = renderedGroomers.filter(g => !g.featured);
+  const initialOrder = topGroomer ? [topGroomer, ...others] : renderedGroomers;
   renderGroomerCards(initialOrder);
 
   // Reset sort pills to Rating
