@@ -168,6 +168,11 @@
   .nav-item.active { color:var(--gold); }
   .nav-icon { font-size:20px; }
 
+  .sort-bar { display:flex; gap:8px; padding:10px 16px; border-bottom:1px solid #f0f0f0; background:var(--white); }
+  .sort-pill { background:#f5f5f5; border:1.5px solid #eee; border-radius:20px; padding:7px 14px; font-family:'DM Sans',sans-serif; font-size:12px; font-weight:600; color:#666; cursor:pointer; transition:all 0.15s; white-space:nowrap; }
+  .sort-pill:hover { border-color:var(--gold-light); color:var(--gold); }
+  .sort-pill.active { background:var(--gold-pale); border-color:var(--gold-light); color:var(--gold); }
+
   @keyframes fadeUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
 </style>
 </head>
@@ -293,6 +298,11 @@
     </div>
     <div class="rp-count" id="rpCount"></div>
   </div>
+  <div class="sort-bar">
+    <button class="sort-pill active" onclick="sortResults('rating', this)">⭐ Rating</button>
+    <button class="sort-pill" onclick="sortResults('distance', this)">📍 Distance</button>
+    <button class="sort-pill" onclick="sortResults('price', this)">💰 Price</button>
+  </div>
   <div class="results-scroll" id="groomerCards"></div>
 </div>
 <script>
@@ -379,7 +389,7 @@ const GROOMERS = [
   {name:"The Wagington", neighborhood:"Midtown", address:"545 8th Ave", rating:"4.7", reviews:156, tags:["Luxury spa","Express available"], emoji:"👑"},
 ];
 
-let selectedBreed = null, selectedService = null;
+let selectedBreed = null, selectedService = null, renderedGroomers = [];
 
 // Build breed list
 const grid = document.getElementById('breedGrid');
@@ -492,6 +502,46 @@ function setFallbackLocation() {
   checkReady();
 }
 
+function renderGroomerCards(groomers) {
+  const cards = document.getElementById('groomerCards');
+  cards.innerHTML = '';
+  groomers.forEach(g => {
+    const card = document.createElement('div');
+    card.className = `groomer-card${g.featured ? ' featured' : ''}`;
+    card.innerHTML = `
+      <div class="groomer-img ${g.imgStyle}">
+        <span>${g.emoji}</span>
+        ${g.featured ? '<span class="featured-badge">⭐ Top Pick</span>' : ''}
+        ${g.isJill ? '<span class="featured-badge" style="background:#555">Your Groomer</span>' : ''}
+        <div class="img-rating">★ ${g.rating}<span class="reviews">${g.reviews} reviews</span></div>
+      </div>
+      <div class="groomer-body">
+        <div class="groomer-top">
+          <div class="groomer-name">${g.name}</div>
+          <div class="groomer-dist">${g.distanceLabel}</div>
+        </div>
+        <div class="groomer-meta">${g.address}, ${g.neighborhood}</div>
+        <div class="groomer-tags">${g.tags.map(t=>`<span class="tag">${t}</span>`).join('')}</div>
+        <div class="groomer-footer">
+          <div class="groomer-price">$${g.price} <span>est. for ${selectedBreed}</span></div>
+          <button class="book-btn" onclick="event.stopPropagation();bookGroomer('${g.name}')">Book →</button>
+        </div>
+      </div>`;
+    cards.appendChild(card);
+  });
+}
+
+function sortResults(by, btn) {
+  document.querySelectorAll('.sort-pill').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  const sorted = [...renderedGroomers];
+  if (by === 'rating') sorted.sort((a, b) => parseFloat(b.rating) - parseFloat(a.rating));
+  if (by === 'distance') sorted.sort((a, b) => a.distanceVal - b.distanceVal);
+  if (by === 'price') sorted.sort((a, b) => a.price - b.price);
+  renderGroomerCards(sorted);
+  document.getElementById('groomerCards').scrollTop = 0;
+}
+
 function findGroomers() {
   const mult = SIZE_MULT[selectedBreed] || 1.0;
   const cards = document.getElementById('groomerCards');
@@ -504,32 +554,21 @@ function findGroomers() {
 
   const imgStyles = ['warm','cool','green','purple'];
   const distances = ['0.3 mi','0.6 mi','0.8 mi','1.2 mi'];
+  const distanceVals = [0.3, 0.6, 0.8, 1.2];
 
-  GROOMERS.forEach((g, i) => {
-    const price = Math.round(selectedService.base * mult * (g.isJill ? 0.95 : 1));
-    const card = document.createElement('div');
-    card.className = `groomer-card${g.featured ? ' featured' : ''}`;
-    card.innerHTML = `
-      <div class="groomer-img ${imgStyles[i]}">
-        <span>${g.emoji}</span>
-        ${g.featured ? '<span class="featured-badge">⭐ Top Pick</span>' : ''}
-        ${g.isJill ? '<span class="featured-badge" style="background:#555">Your Groomer</span>' : ''}
-        <div class="img-rating">★ ${g.rating}<span class="reviews">${g.reviews} reviews</span></div>
-      </div>
-      <div class="groomer-body">
-        <div class="groomer-top">
-          <div class="groomer-name">${g.name}</div>
-          <div class="groomer-dist">${distances[i]}</div>
-        </div>
-        <div class="groomer-meta">${g.address}, ${g.neighborhood}</div>
-        <div class="groomer-tags">${g.tags.map(t=>`<span class="tag">${t}</span>`).join('')}</div>
-        <div class="groomer-footer">
-          <div class="groomer-price">$${price} <span>est. for ${selectedBreed}</span></div>
-          <button class="book-btn" onclick="event.stopPropagation();bookGroomer('${g.name}')">Book →</button>
-        </div>
-      </div>`;
-    cards.appendChild(card);
-  });
+  renderedGroomers = GROOMERS.map((g, i) => ({
+    ...g,
+    price: Math.round(selectedService.base * mult * (g.isJill ? 0.95 : 1)),
+    distanceLabel: distances[i],
+    distanceVal: distanceVals[i],
+    imgStyle: imgStyles[i]
+  }));
+
+  renderGroomerCards(renderedGroomers);
+
+  // Reset sort pills to Rating
+  document.querySelectorAll('.sort-pill').forEach(p => p.classList.remove('active'));
+  document.querySelector('.sort-pill').classList.add('active');
 
   const page = document.getElementById('resultsPage');
   page.style.pointerEvents = '';
