@@ -239,7 +239,21 @@
       <div class="service-list" id="serviceList"></div>
     </div>
 
-    <!-- REMINDER CARD — under service -->
+    <!-- ESTIMATE -->
+    <div class="estimate-banner" id="estimateBanner">
+      <div class="estimate-title">💰 Price Estimate</div>
+      <div class="estimate-row">
+        <div>
+          <div class="estimate-service" id="estimateService"></div>
+          <div class="estimate-time" id="estimateTime"></div>
+        </div>
+        <div class="estimate-price" id="estimatePrice"></div>
+      </div>
+    </div>
+
+    <button class="search-btn" id="searchBtn" onclick="findGroomers()" disabled>🐾 Find Groomers</button>
+
+    <!-- REMINDER CARD — under find groomers -->
     <div class="reminder-card">
       <div class="reminder-inner">
         <div class="dog-avatar">
@@ -267,20 +281,6 @@
       </div>
       <button class="btn-check" onclick="this.textContent='✓ Checking availability...'">📅 Check Availability with Jill</button>
     </div>
-
-    <!-- ESTIMATE -->
-    <div class="estimate-banner" id="estimateBanner">
-      <div class="estimate-title">💰 Price Estimate</div>
-      <div class="estimate-row">
-        <div>
-          <div class="estimate-service" id="estimateService"></div>
-          <div class="estimate-time" id="estimateTime"></div>
-        </div>
-        <div class="estimate-price" id="estimatePrice"></div>
-      </div>
-    </div>
-
-    <button class="search-btn" id="searchBtn" onclick="findGroomers()" disabled>🐾 Find Groomers</button>
 
   </div>
 
