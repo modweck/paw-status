@@ -334,6 +334,10 @@
         <h1>Find a groomer<br>your dog will <em>love</em></h1>
         <p>Real prices by breed · Live slots · Pickup alerts</p>
       </div>
+
+      <!-- REMINDER CARD -->
+      <div id="reminderCard" style="display:none;margin-bottom:14px"></div>
+
       <div class="search-card">
         <div class="search-row" style="cursor:default">
           <div class="sr-icon">📍</div>
@@ -412,7 +416,7 @@
       <div class="filter-row" id="filterRow">
         <div class="fchip active" data-f="all">All</div>
         <div class="fchip" data-f="soonest">⚡ Soonest</div>
-        <div class="fchip" data-f="available">Open Today</div>
+        <div class="fchip" data-f="available">Has Openings</div>
         <div class="fchip" data-f="specialist">Specialists</div>
         <div class="fchip" data-f="budget">Lowest Price</div>
         <div class="fchip" data-f="nearby">Nearest</div>
@@ -613,6 +617,27 @@ const specialtyBreeds = {
   4:['yorkie','shihtzhu','cavapoo','mini_schnauzer','chihuahua','dachshund','corgi','shiba'],
 };
 
+const salonStaff = {
+  1:[
+    {id:'1a',name:'Sarah',  specialty:'Doodle specialist', emoji:'👩', workDays:[1,2,3,4,5], rating:4.9},
+    {id:'1b',name:'Marcus', specialty:'All breeds',        emoji:'🧔', workDays:[2,3,4,5,6], rating:4.8},
+    {id:'1c',name:'Priya',  specialty:'Small breeds',      emoji:'👩‍🦱', workDays:[1,3,5,6],   rating:4.9},
+  ],
+  2:[
+    {id:'2a',name:'Jen',    specialty:'Small & toy breeds',emoji:'👩‍🦰', workDays:[1,2,3,4,5], rating:4.7},
+    {id:'2b',name:'Carlos', specialty:'French Bulldogs',   emoji:'🧑', workDays:[3,4,5,6],   rating:4.8},
+  ],
+  3:[
+    {id:'3a',name:'Diana',  specialty:'Large breeds',      emoji:'👩‍🦳', workDays:[1,2,3,4,5], rating:4.9},
+    {id:'3b',name:'Tom',    specialty:'Huskies & doubles', emoji:'🧑‍🦱', workDays:[2,4,5,6],   rating:4.7},
+    {id:'3c',name:'Aisha',  specialty:'All breeds',        emoji:'👩🏾', workDays:[1,3,4,6],   rating:4.8},
+  ],
+  4:[
+    {id:'4a',name:'Lily',   specialty:'Puppies & small',   emoji:'👩🏻', workDays:[1,2,3,4,5], rating:4.6},
+    {id:'4b',name:'Ben',    specialty:'All breeds',        emoji:'👨', workDays:[3,4,5,6],   rating:4.7},
+  ],
+};
+
 const groomers = [
   {id:1,name:"Groomingdales",   address:"349 E 82nd St",distance:0.3,rating:4.9,reviews:312,emoji:"🏆",gradient:"linear-gradient(135deg,#2d3a2d,#4a5e4a)"},
   {id:2,name:"Doggy Stylez",    address:"356 E 87th St",distance:0.6,rating:4.7,reviews:189,emoji:"✂️",gradient:"linear-gradient(135deg,#2d2040,#4a3a60)"},
@@ -697,21 +722,24 @@ function getCalendarDays(weeks=8) {
 }
 
 const slotCache = {};
-function getSlots(gid, bid, sid, size, dateStr) {
-  const k = `${gid}-${bid}-${sid}-${size}-${dateStr}`;
+function getSlots(gid, bid, sid, size, ds, staffId) {
+  const k = (staffId||'any')+'-'+gid+'-'+bid+'-'+sid+'-'+size+'-'+ds;
   if (!slotCache[k]) {
-    // Seed random from key so slots are stable
     let seed = [...k].reduce((a,c)=>a+c.charCodeAt(0),0);
     const rng = ()=>{ seed=(seed*9301+49297)%233280; return seed/233280; };
-    const d = new Date(dateStr);
-    const dow = d.getDay(); // 0=Sun
-    // Sundays mostly closed, Saturdays very busy, weekdays vary
+    const d = new Date(ds);
+    const dow = d.getDay();
+    // If specific staff, check if they work this day
+    if (staffId) {
+      const staff = Object.values(salonStaff).flat().find(s=>s.id===staffId);
+      if (staff && !staff.workDays.includes(dow)) { slotCache[k]=[]; return []; }
+    }
     const booked_rate = dow===0?1.0 : dow===6?0.85 : dow===1?0.75 : dow===5?0.8 : dow===3?0.7 : 0.55;
     const slots = [];
     for (let m=9*60; m<=17*60; m+=30) {
       if (rng() > booked_rate) {
         const h=Math.floor(m/60), min=m%60;
-        slots.push(`${h>12?h-12:h}:${min===0?'00':'30'} ${h>=12?'PM':'AM'}`);
+        slots.push((h>12?h-12:h)+':'+(min===0?'00':'30')+' '+(h>=12?'PM':'AM'));
       }
     }
     slotCache[k] = slots;
@@ -742,8 +770,8 @@ function formatDayShort(d) {
 
 // ── STATE ─────────────────────────────────────────────────────────────────────
 let selBreed = null, selSvc = null, selSize = 'medium', locSet = false;
-let selGroomer = null, selDate = null, selTime = null;
-let selAddons = new Set(), activeTab = 'services', activeFilter = 'all';
+let selGroomer = null, selDate = null, selTime = null, selStaff = null;
+let selAddons = new Set(), activeTab = 'book', activeFilter = 'all';
 let sheetConfirm = false;
 let groomHistory = [
   {salon:'Groomingdales',service:'Full Groom',date:'Feb 12, 2026',price:120},
@@ -990,7 +1018,7 @@ function openSheet(id) {
   selGroomer=groomers.find(g=>g.id===id);
   const first=firstAvailableDay(selGroomer.id);
   selDate=first?dateStr(first):null;
-  selTime=null; selAddons=new Set(); activeTab='book'; sheetConfirm=false;
+  selTime=null; selStaff=null; selAddons=new Set(); activeTab='book'; sheetConfirm=false;
   renderSheet();
   document.getElementById('sheetOv').classList.add('open');
   document.getElementById('menuSheet').classList.add('open');
@@ -1095,7 +1123,27 @@ function renderSheet() {
     `;
   } else if (activeTab==='book') {
     const allDays=getCalendarDays(8);
-    const slots=selDate?getSlots(g.id,selBreed,selSvc,selSize,selDate):[];
+    const staff=salonStaff[g.id]||[];
+    const slots=selDate?getSlots(g.id,selBreed,selSvc,selSize,selDate,selStaff):[];
+
+    // Staff picker HTML
+    let staffHTML='<div class="bt-section-lbl" style="margin-bottom:10px">Choose your groomer</div>';
+    staffHTML+='<div style="display:flex;gap:10px;overflow-x:auto;padding-bottom:10px;scrollbar-width:none">';
+    // No preference option
+    const npSel=selStaff===null;
+    staffHTML+='<div onclick="tapStaff(null)" style="display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;flex-shrink:0">'
+      +'<div style="width:52px;height:52px;border-radius:50%;background:'+(npSel?'var(--dark)':'var(--bg)')+';border:2px solid '+(npSel?'var(--dark)':'var(--border)')+';display:flex;align-items:center;justify-content:center;font-size:22px">🐾</div>'
+      +'<div style="font-size:11px;font-weight:'+(npSel?'700':'500')+';color:'+(npSel?'var(--dark)':'var(--muted)')+';text-align:center;max-width:52px">Any</div>'
+      +'</div>';
+    staff.forEach(st=>{
+      const isSel=selStaff===st.id;
+      staffHTML+='<div onclick="tapStaff(\''+st.id+'\')" style="display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;flex-shrink:0">'
+        +'<div style="width:52px;height:52px;border-radius:50%;background:'+(isSel?'var(--dark)':'var(--bg)')+';border:2px solid '+(isSel?'var(--dark)':'var(--border)')+';display:flex;align-items:center;justify-content:center;font-size:24px">'+st.emoji+'</div>'
+        +'<div style="font-size:11px;font-weight:'+(isSel?'700':'500')+';color:'+(isSel?'var(--dark)':'var(--text)')+';text-align:center;max-width:54px">'+st.name+'</div>'
+        +'<div style="font-size:9px;color:var(--muted);text-align:center;max-width:54px;line-height:1.2">'+st.specialty+'</div>'
+        +'</div>';
+    });
+    staffHTML+='</div>';
 
     // Build weeks for calendar grid
     const weeks=[];
@@ -1167,6 +1215,8 @@ function renderSheet() {
       '<div class="price-hero"><div class="ph-l"><div class="ph-lbl">'+s.name+'</div><div class="ph-svc">'+bd.emoji+' '+bd.name+szLbl+'</div></div>' +
       '<div class="ph-r"><div class="ph-price">$'+total+'</div><div class="ph-time">⏱ ~'+time+' min'+(addonTotal>0?' + add-ons':'')+'</div></div></div>' +
       '<div class="bt-section-lbl" style="margin-bottom:8px">Pick a date</div>' +
+      staffHTML +
+      '<div class="bt-section-lbl" style="margin-bottom:8px;margin-top:8px">Pick a date</div>' +
       calHTML + timesHTML +
       '<button class="confirm-book-btn" '+confirmDis+' onclick="doConfirm()">'+confirmLabel+'</button>' +
       '</div>';
@@ -1182,10 +1232,17 @@ function selectSvcFromMenu(id) {
   switchTab('book');
 }
 
+function renderHistory(){document.getElementById('histList').innerHTML=groomHistory.length===0?'<div style="text-align:center;padding:16px;color:var(--muted);font-size:13px">No grooms yet!</div>':groomHistory.map(h=>`<div class="hist-row"><div class="hr-ic">✂️</div><div class="hr-info"><div class="hr-salon">${h.salon}</div><div class="hr-detail">${h.service} · ${h.date}</div></div><div class="hr-price">$${h.price}</div></div>`).join('');}
 function tapAddon(id){selAddons.has(id)?selAddons.delete(id):selAddons.add(id);renderSheet();}
+function tapStaff(id){selStaff=id;selDate=null;selTime=null;renderSheet();}
 function tapDate(ds){selDate=ds;selTime=null;renderSheet();}
 function tapTime(t){selTime=t;renderSheet();}
-function doConfirm(){sheetConfirm=true;renderSheet();}
+function doConfirm(){
+  sheetConfirm=true;
+  window._upcomingBooking={gid:selGroomer.id,salon:selGroomer.name,service:svcData[selSvc]?.name,date:selDate,time:selTime};
+  renderSheet();
+  renderReminderCard();
+}
 function joinWaitlist(){alert('🔔 You\'re on the waitlist! We\'ll text you if a spot opens up.');}
 
 // ── GUIDES ────────────────────────────────────────────────────────────────────
@@ -1233,16 +1290,90 @@ function updateDogPreview() {
   document.getElementById('rebookTitle').textContent=`Time for ${n}'s groom!`;
 }
 function setPSize(size,btn){document.querySelectorAll('.psize-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');}
-function saveProfile(){const btn=document.querySelector('.save-btn');btn.textContent='✅ Saved!';setTimeout(()=>btn.textContent='Save profile ✓',2000);}
+function saveProfile(){const btn=document.querySelector('.save-btn');btn.textContent='✅ Saved!';setTimeout(()=>btn.textContent='Save profile ✓',2000);renderReminderCard();}
 function handlePhoto(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{const w=document.querySelector('.dog-av');const old=document.getElementById('dogAvEmoji');old.style.display='none';let img=w.querySelector('img');if(!img){img=document.createElement('img');w.insertBefore(img,old);}img.src=ev.target.result;};r.readAsDataURL(f);}
 function addHistory(salon,svc,price){const d=new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});groomHistory.unshift({salon,service:svc,date:d,price});renderHistory();}
-function renderHistory(){document.getElementById('histList').innerHTML=groomHistory.length===0?'<div style="text-align:center;padding:16px;color:var(--muted);font-size:13px">No grooms yet!</div>':groomHistory.map(h=>`<div class="hist-row"><div class="hr-ic">✂️</div><div class="hr-info"><div class="hr-salon">${h.salon}</div><div class="hr-detail">${h.service} · ${h.date}</div></div><div class="hr-price">$${h.price}</div></div>`).join('');}
+function renderReminderCard() {
+  const card = document.getElementById('reminderCard');
+  if (!card) return;
+  const name = document.getElementById('dogName')?.value || '';
+  const bid = document.getElementById('dogBreed')?.value || '';
+  const bd = breedData[bid];
+  const last = groomHistory[0];
+
+  // Check if upcoming booking exists
+  if (window._upcomingBooking) {
+    const b = window._upcomingBooking;
+    const d = new Date(b.date+'T00:00:00');
+    const diff = Math.round((d - TODAY)/(1000*60*60*24));
+    const dayLabel = diff===0?'Today':diff===1?'Tomorrow':'in '+diff+' days';
+    card.style.display='block';
+    card.innerHTML = '<div style="background:var(--dark);border-radius:16px;padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer" onclick="openSheet('+b.gid+')">'
+      +'<div style="font-size:28px">📅</div>'
+      +'<div style="flex:1"><div style="font-family:\'Syne\',sans-serif;font-size:14px;font-weight:800;color:#fff;margin-bottom:2px">Upcoming: '+b.salon+'</div>'
+      +'<div style="font-size:12px;color:#aaa">'+b.service+' · '+formatDayLabel(d)+' at '+b.time+'</div>'
+      +'<div style="font-size:11px;color:var(--accent);margin-top:3px;font-weight:600">'+dayLabel+'</div></div>'
+      +'<div style="color:#555;font-size:18px">›</div></div>';
+    return;
+  }
+
+  // Grooming reminder based on breed
+  const groomFreqs = {
+    yorkie:4,maltese:5,bichon:5,shihtzhu:6,mini_schnauzer:6,cavachon:6,cockapoo:7,cavapoo:7,
+    poodle:5,goldendoodle:7,cocker_spaniel:6,pomsky:8,bernedoodle:8,border_collie:7,aussie:8,
+    corgi:7,shiba:7,chihuahua:10,frenchbulldog:10,dachshund:10,labrador:10,goldenretriever:8,
+    husky:10,german_shepherd:8,boxer:10,doberman:10,
+  };
+  const freqWeeks = bd ? (groomFreqs[bid]||8) : null;
+  const dogName = name || (bd ? 'Your '+bd.name : 'Your dog');
+
+  if (last && freqWeeks) {
+    const lastDate = new Date(last.date);
+    const weeksSince = Math.round((TODAY - lastDate)/(1000*60*60*24*7));
+    if (weeksSince >= freqWeeks - 1) {
+      card.style.display='block';
+      const overdue = weeksSince >= freqWeeks;
+      card.innerHTML = '<div style="background:'+(overdue?'linear-gradient(135deg,#c0392b,#e74c3c)':'linear-gradient(135deg,var(--accent),#ffb300)')+';border-radius:16px;padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer" onclick="reminderBook()">'
+        +'<div style="font-size:28px">'+(overdue?'🚨':'🐾')+'</div>'
+        +'<div style="flex:1">'
+        +'<div style="font-family:\'Syne\',sans-serif;font-size:14px;font-weight:800;color:'+(overdue?'#fff':'var(--dark)')+';margin-bottom:2px">'+(overdue?dogName+' is overdue for a groom!':dogName+' is due for a groom')+' </div>'
+        +'<div style="font-size:12px;color:'+(overdue?'rgba(255,255,255,0.8)':'rgba(26,21,18,0.6)')+'">Last groom '+weeksSince+' weeks ago · '+(bd?bd.name+' need grooming every '+freqWeeks+' wks':'Book now')+'</div></div>'
+        +'<div style="font-size:18px;color:'+(overdue?'rgba(255,255,255,0.6)':'rgba(26,21,18,0.4)')+'">›</div></div>';
+      return;
+    }
+  } else if (freqWeeks) {
+    card.style.display='block';
+    card.innerHTML = '<div style="background:rgba(245,200,66,0.12);border:1.5px solid rgba(245,200,66,0.3);border-radius:16px;padding:13px 16px;display:flex;align-items:center;gap:12px;cursor:pointer" onclick="reminderBook()">'
+      +'<div style="font-size:24px">✂️</div>'
+      +'<div style="flex:1"><div style="font-size:14px;font-weight:700;color:var(--dark);margin-bottom:2px">Ready to book '+dogName+'\'s groom?</div>'
+      +'<div style="font-size:12px;color:var(--muted)">'+(bd?bd.name+' need grooming every '+freqWeeks+' wks':'Find a groomer near you')+'</div></div>'
+      +'<div style="color:#ccc;font-size:18px">›</div></div>';
+    return;
+  }
+  card.style.display='none';
+}
+
+function reminderBook() {
+  const bid = document.getElementById('dogBreed')?.value;
+  if (bid && breedData[bid]) {
+    selBreed=bid;
+    const bd=breedData[bid];
+    const el=document.getElementById('breedDisplay');
+    el.textContent=bd.emoji+' '+bd.name+(bd.variableSize?' (size varies)':'');
+    el.classList.remove('ph');
+    document.getElementById('sizeInline').classList.toggle('vis',bd.variableSize);
+    if (!selSvc) openPicker('service');
+    else { updateEstTime(); checkForm(); }
+  } else {
+    switchNav('profile');
+  }
+}
 
 // ── NAV ───────────────────────────────────────────────────────────────────────
 function switchNav(name){document.querySelectorAll('.bn-btn').forEach(b=>b.classList.remove('active'));document.getElementById(`nav-${name}`).classList.add('active');goToScreen(name==='profile'?'profile':'search');}
 function goToScreen(name){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(`screen-${name}`).classList.add('active');}
 
-renderGuideRow(); renderHistory();
-</script>
+renderHistory();
+setTimeout(renderReminderCard, 100);</script>
 </body>
 </html>
