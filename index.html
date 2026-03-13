@@ -346,6 +346,25 @@
   transition:all .15s; margin-left:auto;
 }
 .buc-cancel-btn:hover { border-color:#f0a0a0; color:#c44; }
+
+/* MODIFY MODAL */
+.mod-day {
+  flex-shrink:0; width:56px; text-align:center;
+  border:1.5px solid #eee; border-radius:12px;
+  padding:8px 4px; cursor:pointer; transition:all .15s;
+}
+.mod-day:hover { border-color:#c8a84b; }
+.mod-day.selected { background:#8b7320; border-color:#8b7320; color:#fff; }
+.mod-day-name { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; opacity:.7; }
+.mod-day-num { font-size:20px; font-weight:700; line-height:1.2; }
+.mod-day-month { font-size:10px; opacity:.7; }
+.mod-time {
+  border:1.5px solid #eee; border-radius:10px;
+  padding:10px 4px; text-align:center; font-size:13px;
+  font-weight:600; cursor:pointer; transition:all .15s; color:#333;
+}
+.mod-time:hover { border-color:#c8a84b; color:#8b7320; }
+.mod-time.selected { background:#8b7320; border-color:#8b7320; color:#fff; }
 /* Groom history */
 .groom-history-list { padding:0 16px 16px; display:flex; flex-direction:column; gap:0; }
 .gh-card { display:flex; gap:12px; }
@@ -3066,19 +3085,102 @@ function switchTab(tab) {
 }
 
 function rebookAppointment(groomerName) {
-  switchTab('explore');
-  // Scroll back to top and pre-highlight the groomer
-  setTimeout(function(){
-    var cards = document.querySelectorAll('.groomer-card');
-    cards.forEach(function(c){
-      if(c.innerHTML.indexOf(groomerName) > -1) {
-        c.scrollIntoView({behavior:'smooth', block:'center'});
-        c.style.boxShadow = '0 0 0 3px var(--gold-light)';
-        setTimeout(function(){ c.style.boxShadow = ''; }, 2000);
-      }
-    });
-  }, 400);
+  // Remove any existing modify modal
+  var existing = document.getElementById('modifyModal');
+  if (existing) existing.remove();
+
+  // Build calendar for next 14 days
+  var today = new Date();
+  var days = [];
+  for (var i = 1; i <= 14; i++) {
+    var d = new Date(today);
+    d.setDate(today.getDate() + i);
+    days.push(d);
+  }
+
+  var dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  var monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var timeSlots = ['9:00 AM','9:30 AM','10:00 AM','10:30 AM','11:00 AM','11:30 AM','12:00 PM','1:00 PM','2:00 PM','3:00 PM','4:00 PM'];
+
+  var calHTML = days.map(function(d, i) {
+    var isWeekend = d.getDay() === 0 || d.getDay() === 6;
+    return '<div class="mod-day' + (i===0?' selected':'') + '" onclick="selectModDay(this,'+i+')" data-idx="'+i+'">' +
+      '<div class="mod-day-name">' + dayNames[d.getDay()] + '</div>' +
+      '<div class="mod-day-num">' + d.getDate() + '</div>' +
+      '<div class="mod-day-month">' + monthNames[d.getMonth()] + '</div>' +
+      '</div>';
+  }).join('');
+
+  var timesHTML = timeSlots.map(function(t, i) {
+    return '<div class="mod-time' + (i===0?' selected':'') + '" onclick="selectModTime(this)">' + t + '</div>';
+  }).join('');
+
+  var el = document.createElement('div');
+  el.id = 'modifyModal';
+  el.style.cssText = 'position:fixed;inset:0;z-index:4500;background:rgba(0,0,0,0.5);display:flex;align-items:flex-end;justify-content:center;font-family:"DM Sans",sans-serif;';
+  el.innerHTML = '<div style="background:#fff;width:100%;max-width:430px;border-radius:24px 24px 0 0;padding:0 0 40px;max-height:90vh;overflow-y:auto;">' +
+    '<div style="padding:20px 20px 0;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #f5f5f5;padding-bottom:14px;">' +
+      '<div style="font-family:\'DM Serif Display\',serif;font-size:20px;color:#1a1a1a;">Modify Appointment</div>' +
+      '<button onclick="document.getElementById(\'modifyModal\').remove()" style="background:none;border:none;font-size:22px;cursor:pointer;color:#999;">✕</button>' +
+    '</div>' +
+    '<div style="padding:16px 20px 8px;">' +
+      '<div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#c8a84b;margin-bottom:10px;">SELECT DATE</div>' +
+      '<div id="modDayScroll" style="display:flex;gap:8px;overflow-x:auto;padding-bottom:8px;scrollbar-width:none;">' + calHTML + '</div>' +
+    '</div>' +
+    '<div style="padding:8px 20px 16px;">' +
+      '<div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#c8a84b;margin-bottom:10px;">SELECT TIME</div>' +
+      '<div id="modTimeGrid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">' + timesHTML + '</div>' +
+    '</div>' +
+    '<div style="padding:0 20px;">' +
+      '<button onclick="confirmModify()" style="width:100%;background:#8b7320;color:#fff;border:none;border-radius:14px;padding:14px;font-family:\'DM Serif Display\',serif;font-size:17px;cursor:pointer;">Confirm Change →</button>' +
+    '</div>' +
+  '</div>';
+
+  document.body.appendChild(el);
+  el.addEventListener('click', function(e){ if(e.target===el) el.remove(); });
 }
+
+window._modDays = (function(){
+  var today = new Date();
+  var days = [];
+  for(var i=1;i<=14;i++){var d=new Date(today);d.setDate(today.getDate()+i);days.push(d);}
+  return days;
+})();
+window._modSelectedDay = 0;
+window._modSelectedTime = '9:00 AM';
+
+function selectModDay(el, idx) {
+  document.querySelectorAll('.mod-day').forEach(function(d){ d.classList.remove('selected'); });
+  el.classList.add('selected');
+  window._modSelectedDay = idx;
+}
+
+function selectModTime(el) {
+  document.querySelectorAll('.mod-time').forEach(function(t){ t.classList.remove('selected'); });
+  el.classList.add('selected');
+  window._modSelectedTime = el.textContent;
+}
+
+function confirmModify() {
+  var d = window._modDays[window._modSelectedDay];
+  var dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  var monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var dateStr = dayNames[d.getDay()] + ', ' + monthNames[d.getMonth()] + ' ' + d.getDate();
+  var modal = document.getElementById('modifyModal');
+  if (modal) modal.remove();
+  // Update the booking card display
+  var timeEl = document.querySelector('.buc-time');
+  if (timeEl) timeEl.textContent = '📍 SoHo · ' + window._modSelectedTime;
+  var dayEl = document.querySelector('.buc-day');
+  if (dayEl) dayEl.textContent = d.getDate();
+  // Show confirmation toast
+  var toast = document.createElement('div');
+  toast.style.cssText = 'position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:#8b7320;color:#fff;padding:12px 24px;border-radius:30px;font-size:14px;font-weight:600;z-index:5000;box-shadow:0 4px 20px rgba(139,115,32,.4);';
+  toast.textContent = '✓ Appointment moved to ' + dateStr + ' at ' + window._modSelectedTime;
+  document.body.appendChild(toast);
+  setTimeout(function(){ toast.remove(); }, 3500);
+}
+
 </script>
 
 
