@@ -2874,29 +2874,12 @@ function updateBellPill() {
   var etaEl = document.getElementById('lbEta');
   if (!bell || !etaEl) return;
 
-  // If live groom is active, keep showing live eta (handled by minimizeTracker)
+  // Bell only shows during an active live grooming session — never for upcoming appointments
   if (bell.classList.contains('on') && bell.dataset.mode === 'live') return;
 
-  var now = new Date();
-  var appt = _upcomingAppt.date;
-  var diff = appt - now;
-
-  if (diff <= 0) {
-    etaEl.textContent = 'Now!';
-  } else {
-    var days = Math.floor(diff / (1000 * 60 * 60 * 24));
-    var hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    var mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-    if (days > 0) {
-      etaEl.textContent = 'Upcoming · ' + days + 'd ' + hours + 'h';
-    } else if (hours > 0) {
-      etaEl.textContent = 'Upcoming · ' + hours + 'h ' + mins + 'm';
-    } else {
-      etaEl.textContent = 'Upcoming · ' + mins + 'm';
-    }
-  }
+  // If not in live mode, keep bell hidden
+  bell.classList.remove('on');
   bell.dataset.mode = 'upcoming';
-  // Do NOT show bell for upcoming - only show during live session
 }
 
 function setUpcomingAppt(dateStr, timeLabel) {
@@ -2926,7 +2909,7 @@ function reopenTracker() {
   var banner = document.getElementById('inProgressBanner');
   if(banner) banner.classList.remove('active');
   var bell = document.getElementById('livebell');
-  if (bell) { bell.dataset.mode = 'upcoming'; }
+  if (bell) { bell.dataset.mode = 'upcoming'; bell.classList.remove('on'); }
   var el = _trackerEl || document.getElementById('groomTracker');
   if (el && el.id === 'groomTracker') {
     el.style.display = '';
