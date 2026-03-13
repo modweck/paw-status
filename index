@@ -2872,9 +2872,8 @@ var _upcomingAppt = { date: new Date('2026-03-20T11:00:00'), label: 'Mar 20 · 1
 function updateBellPill() {
   var bell = document.getElementById('livebell');
   if (!bell) return;
-  // Bell only appears during an active live grooming session — never for upcoming appointments
+  // Bell only shows during active live grooming — never for upcoming appointments
   if (bell.dataset.mode === 'live' && bell.classList.contains('on')) return;
-  // Hide bell if not live
   bell.classList.remove('on');
 }
 
@@ -2941,7 +2940,7 @@ function openGroomerChat(groomerName) {
   _chatGroomer = groomerName || 'Happy Tails Grooming';
   _chatMessages = [];
 
-  // Close results page if open so chat can appear on top
+  // Close results page so chat can slide in over it
   var rp = document.getElementById('resultsPage');
   if (rp) { rp.classList.remove('show'); rp.style.pointerEvents = 'none'; }
 
@@ -2951,14 +2950,13 @@ function openGroomerChat(groomerName) {
   var msgs = document.getElementById('chatMessages');
   msgs.innerHTML = '';
 
-  // Reset quick replies so they show fresh each time
+  // Reset quick replies so they show each time
   var qr = document.getElementById('chatQuickReplies');
   if (qr) qr.style.display = '';
 
-  // Opening message from groomer
-  var openingMsg = 'Hi! 👋 Thanks for reaching out to ' + _chatGroomer + '. How can we help you today?';
+  // Opening greeting from groomer
   setTimeout(function() {
-    addChatMsg(openingMsg, 'theirs');
+    addChatMsg('Hi! 👋 Thanks for reaching out to ' + _chatGroomer + '. How can we help you today?', 'theirs');
   }, 600);
 
   var chat = document.getElementById('groomerChat');
@@ -2970,9 +2968,8 @@ function closeGroomerChat() {
   var chat = document.getElementById('groomerChat');
   chat.classList.remove('chat-open');
   setTimeout(function() { chat.style.display = 'none'; }, 300);
-  // Restore results page if it was showing
   var rp = document.getElementById('resultsPage');
-  if (rp && rp.classList.contains('show')) { rp.style.pointerEvents = ''; }
+  if (rp) rp.style.pointerEvents = '';
 }
 
 function addChatMsg(text, who) {
@@ -3304,4 +3301,10 @@ function rebookAppointment(groomerName) {
     <div class="chat-qr" onclick="sendQuickReply('How long will the groom take?')">How long?</div>
   </div>
   <div class="chat-input-row">
-    <input clas
+    <input class="chat-input" id="chatInput" type="text" placeholder="Message Happy Tails..." onkeydown="if(event.key==='Enter')sendChatMessage()"/>
+    <button class="chat-send-btn" onclick="sendChatMessage()">↑</button>
+  </div>
+</div>
+
+</body>
+</html>
