@@ -635,7 +635,7 @@
   background:#f8f5ef;
   flex-direction:column;
   font-family:'DM Sans',sans-serif;
-  z-index:3500;
+  z-index:4200;
   opacity:0; transform:translateY(40px);
   transition:opacity .28s ease, transform .28s ease;
   pointer-events:none;
@@ -2940,11 +2940,20 @@ function getGroomerReply(msg) {
 function openGroomerChat(groomerName) {
   _chatGroomer = groomerName || 'Happy Tails Grooming';
   _chatMessages = [];
+
+  // Close results page if open so chat can appear on top
+  var rp = document.getElementById('resultsPage');
+  if (rp) { rp.classList.remove('show'); rp.style.pointerEvents = 'none'; }
+
   document.getElementById('chatGroomerName').textContent = _chatGroomer;
   document.getElementById('chatInput').placeholder = 'Message ' + _chatGroomer.split(' ').slice(0,2).join(' ') + '...';
 
   var msgs = document.getElementById('chatMessages');
   msgs.innerHTML = '';
+
+  // Reset quick replies so they show fresh each time
+  var qr = document.getElementById('chatQuickReplies');
+  if (qr) qr.style.display = '';
 
   // Opening message from groomer
   var openingMsg = 'Hi! 👋 Thanks for reaching out to ' + _chatGroomer + '. How can we help you today?';
@@ -2961,6 +2970,9 @@ function closeGroomerChat() {
   var chat = document.getElementById('groomerChat');
   chat.classList.remove('chat-open');
   setTimeout(function() { chat.style.display = 'none'; }, 300);
+  // Restore results page if it was showing
+  var rp = document.getElementById('resultsPage');
+  if (rp && rp.classList.contains('show')) { rp.style.pointerEvents = ''; }
 }
 
 function addChatMsg(text, who) {
