@@ -2924,7 +2924,7 @@ var GROOMER_RESPONSES = {
   'cancellation': "Our cancellation policy is 24 hours notice for a full refund. Same-day cancellations may incur a small fee. Just message us and we'll work it out!",
   'nail': "Absolutely! We can add a nail trim for +$20. Just let us know when you arrive or we can note it on your booking now 💅",
   'long': "A full groom for a Golden Retriever typically takes 2–3 hours. We'll send you a pickup alert when Bella is ready!",
-  'default': "Thanks for reaching out! We'll get back to you shortly. Feel free to ask anything about Bella's appointment 🐾"
+  'default': "You reached Happy Tails 🐾 We will get back to you as soon as possible. Answer time is usually within 10 min."
 };
 
 function getGroomerReply(msg) {
@@ -2956,18 +2956,28 @@ function openGroomerChat(groomerName) {
 
   // Opening greeting from groomer
   setTimeout(function() {
-    addChatMsg('Hi! 👋 Thanks for reaching out to ' + _chatGroomer + '. How can we help you today?', 'theirs');
+    addChatMsg('You reached ' + _chatGroomer + ' 🐾 We will get back to you as soon as possible. Answer time is usually within 10 min.', 'theirs');
   }, 600);
 
   var chat = document.getElementById('groomerChat');
   chat.style.display = 'flex';
-  setTimeout(function() { chat.classList.add('chat-open'); }, 10);
+  chat.style.opacity = '0';
+  chat.style.transform = 'translateY(40px)';
+  chat.style.pointerEvents = 'all';
+  setTimeout(function() {
+    chat.classList.add('chat-open');
+    chat.style.opacity = '';
+    chat.style.transform = '';
+  }, 10);
 }
 
 function closeGroomerChat() {
   var chat = document.getElementById('groomerChat');
   chat.classList.remove('chat-open');
-  setTimeout(function() { chat.style.display = 'none'; }, 300);
+  setTimeout(function() {
+    chat.style.display = 'none';
+    chat.style.pointerEvents = '';
+  }, 300);
   var rp = document.getElementById('resultsPage');
   if (rp) rp.style.pointerEvents = '';
 }
