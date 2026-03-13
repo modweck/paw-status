@@ -2946,8 +2946,10 @@ function openGroomerChat(groomerName) {
   var rp = document.getElementById('resultsPage');
   if (rp) { rp.classList.remove('show'); rp.style.pointerEvents = 'none'; }
 
-  document.getElementById('chatGroomerName').textContent = _chatGroomer;
-  document.getElementById('chatInput').placeholder = 'Message ' + _chatGroomer.split(' ').slice(0,2).join(' ') + '...';
+  var nameEl = document.getElementById('chatGroomerName');
+  var inputEl = document.getElementById('chatInput');
+  if (nameEl) nameEl.textContent = _chatGroomer;
+  if (inputEl) inputEl.placeholder = 'Message ' + _chatGroomer.split(' ').slice(0,2).join(' ') + '...';
 
   var msgs = document.getElementById('chatMessages');
   msgs.innerHTML = '';
