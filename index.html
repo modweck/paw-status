@@ -1074,49 +1074,114 @@ function updateEstimate() {
 
 // ── ADDRESS AUTOCOMPLETE ──
 var NYC_ADDRESSES = [
-  '515 E 72nd St, New York, NY',
-  '515 East 72nd Street, New York, NY',
-  '170 Mercer St, New York, NY',
-  '1420 Lexington Ave, New York, NY',
-  '200 W 72nd St, New York, NY',
-  '72nd St & Broadway, New York, NY',
-  '1 E 72nd St, New York, NY',
-  '301 E 72nd St, New York, NY',
-  '400 E 72nd St, New York, NY',
-  '600 E 72nd St, New York, NY',
-  '245 E 72nd St, New York, NY',
-  '350 W 72nd St, New York, NY',
-  '115 E 72nd St, New York, NY',
-  '875 5th Ave, New York, NY',
-  '1 E 86th St, New York, NY',
-  '100 W 77th St, New York, NY',
-  '201 E 69th St, New York, NY',
-  '330 E 75th St, New York, NY',
-  '420 E 64th St, New York, NY',
-  '520 E 81st St, New York, NY',
-  '155 W 68th St, New York, NY',
-  '360 E 57th St, New York, NY',
-  '1185 Park Ave, New York, NY',
-  '415 Central Park West, New York, NY',
-  '44 W 62nd St, New York, NY',
+  // East 72nd Street
+  '1 E 72nd St, New York, NY 10021','25 E 72nd St, New York, NY 10021','50 E 72nd St, New York, NY 10021',
+  '100 E 72nd St, New York, NY 10021','115 E 72nd St, New York, NY 10021','150 E 72nd St, New York, NY 10021',
+  '200 E 72nd St, New York, NY 10021','245 E 72nd St, New York, NY 10021','301 E 72nd St, New York, NY 10021',
+  '350 E 72nd St, New York, NY 10021','400 E 72nd St, New York, NY 10021','422 E 72nd St, New York, NY 10021',
+  '450 E 72nd St, New York, NY 10021','515 E 72nd St, New York, NY 10021','555 E 72nd St, New York, NY 10021',
+  '600 E 72nd St, New York, NY 10021',
+  // West 72nd Street
+  '1 W 72nd St, New York, NY 10023','50 W 72nd St, New York, NY 10023','100 W 72nd St, New York, NY 10023',
+  '200 W 72nd St, New York, NY 10023','250 W 72nd St, New York, NY 10023','350 W 72nd St, New York, NY 10023',
+  // Upper East Side streets
+  '1 E 60th St, New York, NY 10022','100 E 60th St, New York, NY 10022','200 E 60th St, New York, NY 10022',
+  '1 E 63rd St, New York, NY 10065','150 E 63rd St, New York, NY 10065','300 E 63rd St, New York, NY 10065',
+  '420 E 64th St, New York, NY 10065','1 E 65th St, New York, NY 10065','200 E 65th St, New York, NY 10065',
+  '1 E 66th St, New York, NY 10065','180 E 66th St, New York, NY 10065',
+  '201 E 69th St, New York, NY 10021','350 E 69th St, New York, NY 10021',
+  '1 E 70th St, New York, NY 10021','100 E 70th St, New York, NY 10021','333 E 70th St, New York, NY 10021',
+  '1 E 71st St, New York, NY 10021','200 E 71st St, New York, NY 10021',
+  '1 E 73rd St, New York, NY 10021','166 E 73rd St, New York, NY 10021',
+  '1 E 74th St, New York, NY 10021','201 E 74th St, New York, NY 10021',
+  '330 E 75th St, New York, NY 10021','1 E 76th St, New York, NY 10021',
+  '100 W 77th St, New York, NY 10024','200 E 77th St, New York, NY 10075',
+  '520 E 81st St, New York, NY 10028','1 E 82nd St, New York, NY 10028','200 E 82nd St, New York, NY 10028',
+  '1 E 83rd St, New York, NY 10028','175 E 85th St, New York, NY 10028',
+  '1 E 86th St, New York, NY 10028','170 E 86th St, New York, NY 10028',
+  '1 E 87th St, New York, NY 10128','240 E 87th St, New York, NY 10128',
+  '1 E 88th St, New York, NY 10128','333 E 91st St, New York, NY 10128',
+  // Upper West Side
+  '155 W 68th St, New York, NY 10023','44 W 62nd St, New York, NY 10023',
+  '1 W 64th St, New York, NY 10023','2109 Broadway, New York, NY 10023',
+  '101 W 79th St, New York, NY 10024','150 W 80th St, New York, NY 10024',
+  '250 W 85th St, New York, NY 10024','320 W 86th St, New York, NY 10024',
+  '200 W 90th St, New York, NY 10024','150 W 96th St, New York, NY 10025',
+  // Midtown East
+  '360 E 57th St, New York, NY 10022','200 E 57th St, New York, NY 10022','100 E 57th St, New York, NY 10022',
+  '1 E 53rd St, New York, NY 10022','299 E 52nd St, New York, NY 10022',
+  '300 E 46th St, New York, NY 10017','220 E 42nd St, New York, NY 10017',
+  // Midtown West
+  '350 W 57th St, New York, NY 10019','250 W 55th St, New York, NY 10019',
+  '150 W 51st St, New York, NY 10019','100 W 49th St, New York, NY 10020',
+  // Park Ave / Lex / 5th Ave
+  '1185 Park Ave, New York, NY 10128','1050 Park Ave, New York, NY 10028',
+  '910 Park Ave, New York, NY 10075','800 Park Ave, New York, NY 10021',
+  '640 Park Ave, New York, NY 10065','500 Park Ave, New York, NY 10022',
+  '1420 Lexington Ave, New York, NY 10128','1200 Lexington Ave, New York, NY 10028',
+  '900 Lexington Ave, New York, NY 10021','750 Lexington Ave, New York, NY 10022',
+  '875 5th Ave, New York, NY 10065','1010 5th Ave, New York, NY 10028',
+  '1100 5th Ave, New York, NY 10128','820 5th Ave, New York, NY 10021',
+  // Central Park West
+  '415 Central Park West, New York, NY 10025','300 Central Park West, New York, NY 10024',
+  '211 Central Park West, New York, NY 10024','55 Central Park West, New York, NY 10023',
+  // Chelsea
+  '100 W 26th St, New York, NY 10001','200 W 23rd St, New York, NY 10011',
+  '350 W 14th St, New York, NY 10014','450 W 17th St, New York, NY 10011',
+  '180 8th Ave, New York, NY 10011','260 9th Ave, New York, NY 10001',
+  // West Village / Greenwich Village
+  '170 Mercer St, New York, NY 10012','1 Christopher St, New York, NY 10014',
+  '100 Bleecker St, New York, NY 10012','200 W 4th St, New York, NY 10014',
+  '50 Charles St, New York, NY 10014','75 Bank St, New York, NY 10014',
+  '150 Perry St, New York, NY 10014','85 Horatio St, New York, NY 10014',
+  // SoHo / Tribeca
+  '101 Spring St, New York, NY 10012','155 Wooster St, New York, NY 10012',
+  '30 Crosby St, New York, NY 10013','80 Prince St, New York, NY 10012',
+  '120 Duane St, New York, NY 10007','50 Hudson St, New York, NY 10013',
+  '200 Chambers St, New York, NY 10007',
+  // Flatiron / Gramercy
+  '1 Gramercy Park, New York, NY 10003','200 E 17th St, New York, NY 10003',
+  '1 E 23rd St, New York, NY 10010','150 E 26th St, New York, NY 10010',
+  '45 W 18th St, New York, NY 10011','260 5th Ave, New York, NY 10001',
+  // Lower East Side / East Village
+  '100 Delancey St, New York, NY 10002','200 Rivington St, New York, NY 10002',
+  '150 Ave A, New York, NY 10009','200 E 7th St, New York, NY 10009',
+  '50 E 1st St, New York, NY 10003','180 E 4th St, New York, NY 10009',
+  // Brooklyn
+  '100 Atlantic Ave, Brooklyn, NY 11201','200 Smith St, Brooklyn, NY 11201',
+  '350 Court St, Brooklyn, NY 11231','1 Pierrepont St, Brooklyn, NY 11201',
+  '150 Montague St, Brooklyn, NY 11201','500 Clinton St, Brooklyn, NY 11231',
+  '200 5th Ave, Brooklyn, NY 11215','350 7th Ave, Brooklyn, NY 11215',
+  '100 Bedford Ave, Brooklyn, NY 11211','250 N 7th St, Brooklyn, NY 11211',
+  '180 Kent Ave, Brooklyn, NY 11249',
+  // Harlem / Upper Manhattan
+  '100 W 116th St, New York, NY 10026','250 W 125th St, New York, NY 10027',
+  '400 W 145th St, New York, NY 10031','1 E 110th St, New York, NY 10029',
+  '200 E 116th St, New York, NY 10029',
 ];
+
+function normalizeAddr(s) {
+  return s.toLowerCase()
+    .replace(/\beast\b/g,'e').replace(/\bwest\b/g,'w').replace(/\bnorth\b/g,'n').replace(/\bsouth\b/g,'s')
+    .replace(/\bstreet\b/g,'st').replace(/\bavenue\b/g,'ave').replace(/\bboulevard\b/g,'blvd')
+    .replace(/\bplace\b/g,'pl').replace(/\bdrive\b/g,'dr').replace(/\broad\b/g,'rd')
+    .replace(/[^a-z0-9\s]/g,'').replace(/\s+/g,' ').trim();
+}
 
 function onLocationInput(val) {
   checkReady();
   var box = document.getElementById('locationSuggestions');
   if (!val || val.length < 2) { box.style.display = 'none'; return; }
 
-  var q = val.toLowerCase().replace(/[^a-z0-9\s]/g, '');
+  var q = normalizeAddr(val);
   var words = q.split(/\s+/).filter(Boolean);
 
   var matches = NYC_ADDRESSES.filter(function(addr) {
-    var a = addr.toLowerCase().replace(/[^a-z0-9\s]/g, '');
+    var a = normalizeAddr(addr);
     return words.every(function(w) { return a.indexOf(w) !== -1; });
-  }).slice(0, 4);
+  }).slice(0, 5);
 
-  // Also generate smart suggestions from what they typed
   if (matches.length === 0) {
-    // Show a "use what I typed" fallback
     matches = [val + (val.toLowerCase().indexOf('new york') === -1 ? ', New York, NY' : '')];
   }
 
@@ -1129,11 +1194,36 @@ function onLocationInput(val) {
   box.style.display = 'block';
 }
 
+function detectNeighborhood(addr) {
+  var a = addr.toLowerCase();
+  // Street number extraction
+  var num = parseInt(addr);
+
+  if (a.indexOf('brooklyn') !== -1) return 'Brooklyn';
+  if (a.indexOf('harlem') !== -1 || (a.indexOf('w 116') !== -1) || (a.indexOf('w 125') !== -1) || (a.indexOf('w 145') !== -1)) return 'Harlem';
+  if (a.indexOf('upper west') !== -1 || (a.indexOf('central park west') !== -1) || (a.indexOf('w 6') !== -1 && num >= 59 && num <= 110) || (a.indexOf('w 7') !== -1) || (a.indexOf('w 8') !== -1) || (a.indexOf('w 9') !== -1) || (a.indexOf('broadway') !== -1 && num >= 2000)) return 'Upper West Side';
+  if (a.indexOf('upper east') !== -1 || (a.indexOf('e 6') !== -1 && num >= 59) || (a.indexOf('e 7') !== -1) || (a.indexOf('e 8') !== -1) || (a.indexOf('e 9') !== -1) || a.indexOf('park ave') !== -1 || a.indexOf('lexington ave') !== -1 || (a.indexOf('5th ave') !== -1 && num >= 700)) return 'Upper East Side';
+  if (a.indexOf('e 57') !== -1 || a.indexOf('e 52') !== -1 || a.indexOf('e 46') !== -1 || a.indexOf('e 42') !== -1) return 'Midtown East';
+  if (a.indexOf('w 57') !== -1 || a.indexOf('w 55') !== -1 || a.indexOf('w 51') !== -1 || a.indexOf('w 49') !== -1 || a.indexOf('8th ave') !== -1) return 'Midtown';
+  if (a.indexOf('chelsea') !== -1 || (a.indexOf('w 2') !== -1 && num >= 14 && num <= 29) || a.indexOf('9th ave') !== -1) return 'Chelsea';
+  if (a.indexOf('soho') !== -1 || a.indexOf('mercer') !== -1 || a.indexOf('wooster') !== -1 || a.indexOf('spring') !== -1 || a.indexOf('prince') !== -1) return 'SoHo';
+  if (a.indexOf('tribeca') !== -1 || a.indexOf('duane') !== -1 || a.indexOf('hudson') !== -1 || a.indexOf('chambers') !== -1) return 'Tribeca';
+  if (a.indexOf('west village') !== -1 || a.indexOf('christopher') !== -1 || a.indexOf('charles st') !== -1 || a.indexOf('bank st') !== -1 || a.indexOf('perry st') !== -1 || a.indexOf('horatio') !== -1) return 'West Village';
+  if (a.indexOf('village') !== -1 || a.indexOf('bleecker') !== -1 || a.indexOf('w 4th') !== -1) return 'Greenwich Village';
+  if (a.indexOf('gramercy') !== -1 || a.indexOf('e 17') !== -1 || a.indexOf('e 23') !== -1 || a.indexOf('e 26') !== -1) return 'Gramercy';
+  if (a.indexOf('lower east') !== -1 || a.indexOf('delancey') !== -1 || a.indexOf('rivington') !== -1) return 'Lower East Side';
+  if (a.indexOf('east village') !== -1 || a.indexOf('ave a') !== -1 || a.indexOf('e 7th') !== -1 || a.indexOf('e 4th') !== -1 || a.indexOf('e 1st') !== -1) return 'East Village';
+  if (a.indexOf('flatiron') !== -1 || a.indexOf('5th ave') !== -1) return 'Flatiron';
+  return 'New York';
+}
+
 function selectAddress(addr) {
+  var neighborhood = detectNeighborhood(addr);
+  var display = addr.split(',')[0] + ' · ' + neighborhood;
   document.getElementById('locationInput').value = addr;
   document.getElementById('locationSuggestions').style.display = 'none';
   document.getElementById('locationConfirmed').classList.add('show');
-  document.getElementById('locationText').textContent = addr;
+  document.getElementById('locationText').textContent = '📍 ' + display;
   checkReady();
 }
 
@@ -1153,15 +1243,28 @@ function checkReady() {
 
 function shareLocation() {
   if (!navigator.geolocation) { setFallbackLocation(); return; }
-  navigator.geolocation.getCurrentPosition(() => {
-    document.getElementById('locationText').textContent = '📍 Current location detected';
-    document.getElementById('locationConfirmed').classList.add('show');
-    checkReady();
+  document.getElementById('locationText').textContent = 'Locating...';
+  document.getElementById('locationConfirmed').classList.add('show');
+  navigator.geolocation.getCurrentPosition(function(pos) {
+    var lat = pos.coords.latitude;
+    var lng = pos.coords.longitude;
+    fetch('https://nominatim.openstreetmap.org/reverse?format=json&lat=' + lat + '&lon=' + lng)
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        var a = data.address || {};
+        var neighborhood = a.neighbourhood || a.suburb || a.quarter || a.city_district || a.town || a.city || 'New York';
+        var city = a.city || a.town || 'New York';
+        var label = (neighborhood === city) ? city : neighborhood + ', ' + city;
+        document.getElementById('locationText').textContent = '📍 ' + label;
+        document.getElementById('locationConfirmed').classList.add('show');
+        checkReady();
+      })
+      .catch(function() { setFallbackLocation(); });
   }, setFallbackLocation);
 }
 
 function setFallbackLocation() {
-  document.getElementById('locationText').textContent = 'Upper East Side, New York';
+  document.getElementById('locationText').textContent = '📍 New York, NY';
   document.getElementById('locationConfirmed').classList.add('show');
   checkReady();
 }
