@@ -220,12 +220,12 @@
 #bookingConfirm {
   position:fixed; inset:0; z-index:2200;
   background:rgba(0,0,0,0.45);
-  display:flex; align-items:flex-end; justify-content:center;
+  display:none; align-items:flex-end; justify-content:center;
   opacity:0; transition:opacity .25s ease;
   pointer-events:none;
   font-family:'DM Sans',sans-serif;
 }
-#bookingConfirm.visible { opacity:1; pointer-events:all; }
+#bookingConfirm.visible { display:flex; opacity:1; pointer-events:all; }
 .confirm-sheet {
   background:#fff;
   width:100%; max-width:430px;
@@ -450,7 +450,7 @@
 #livebell:hover { transform:translateY(-1px); box-shadow:0 6px 20px rgba(139,115,32,.28); }
 #livebell:active { transform:scale(.97); }
 #livebell.on { display:flex; animation:bellSlideIn .3s ease; }
-.lb-icon { font-size:16px; animation:bellRing .6s ease; }
+.lb-icon { font-size:16px; }
 .lb-text { display:flex; flex-direction:column; }
 .lb-eta { font-size:13px; font-weight:700; color:#1a1a1a; }
 @keyframes bellSlideIn {
@@ -635,13 +635,14 @@
   background:#f8f5ef;
   flex-direction:column;
   font-family:'DM Sans',sans-serif;
-  z-index:3500;
+  z-index:4200;
   opacity:0; transform:translateY(40px);
   transition:opacity .28s ease, transform .28s ease;
   pointer-events:none;
 }
 #groomerChat.chat-open {
-  display:flex; opacity:1; transform:translateY(0);
+  display:flex;
+  opacity:1; transform:translateY(0);
   pointer-events:all;
 }
 .chat-header {
@@ -2871,32 +2872,10 @@ var _upcomingAppt = { date: new Date('2026-03-20T11:00:00'), label: 'Mar 20 · 1
 
 function updateBellPill() {
   var bell = document.getElementById('livebell');
-  var etaEl = document.getElementById('lbEta');
-  if (!bell || !etaEl) return;
-
-  // If live groom is active, keep showing live eta (handled by minimizeTracker)
-  if (bell.classList.contains('on') && bell.dataset.mode === 'live') return;
-
-  var now = new Date();
-  var appt = _upcomingAppt.date;
-  var diff = appt - now;
-
-  if (diff <= 0) {
-    etaEl.textContent = 'Now!';
-  } else {
-    var days = Math.floor(diff / (1000 * 60 * 60 * 24));
-    var hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    var mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-    if (days > 0) {
-      etaEl.textContent = 'Upcoming · ' + days + 'd ' + hours + 'h';
-    } else if (hours > 0) {
-      etaEl.textContent = 'Upcoming · ' + hours + 'h ' + mins + 'm';
-    } else {
-      etaEl.textContent = 'Upcoming · ' + mins + 'm';
-    }
-  }
-  bell.dataset.mode = 'upcoming';
-  bell.classList.add('on');
+  if (!bell) return;
+  // Bell only shows during active live grooming — never for upcoming appointments
+  if (bell.dataset.mode === 'live' && bell.classList.contains('on')) return;
+  bell.classList.remove('on');
 }
 
 function setUpcomingAppt(dateStr, timeLabel) {
@@ -2904,11 +2883,7 @@ function setUpcomingAppt(dateStr, timeLabel) {
   updateBellPill();
 }
 
-// Start countdown on load
-window.addEventListener('load', function() {
-  updateBellPill();
-  setInterval(updateBellPill, 60000);
-});
+// Bell only shown during active grooming session
 
 function handleBellTap() {
   var dot = document.getElementById('liveBellDot');
@@ -2930,7 +2905,7 @@ function reopenTracker() {
   var banner = document.getElementById('inProgressBanner');
   if(banner) banner.classList.remove('active');
   var bell = document.getElementById('livebell');
-  if (bell) { bell.dataset.mode = 'upcoming'; }
+  if (bell) { bell.dataset.mode = 'upcoming'; bell.classList.remove('on'); }
   var el = _trackerEl || document.getElementById('groomTracker');
   if (el && el.id === 'groomTracker') {
     el.style.display = '';
@@ -2950,7 +2925,7 @@ var GROOMER_RESPONSES = {
   'cancellation': "Our cancellation policy is 24 hours notice for a full refund. Same-day cancellations may incur a small fee. Just message us and we'll work it out!",
   'nail': "Absolutely! We can add a nail trim for +$20. Just let us know when you arrive or we can note it on your booking now 💅",
   'long': "A full groom for a Golden Retriever typically takes 2–3 hours. We'll send you a pickup alert when Bella is ready!",
-  'default': "Thanks for reaching out! We'll get back to you shortly. Feel free to ask anything about Bella's appointment 🐾"
+  'default': "You reached Happy Tails 🐾 We will get back to you as soon as possible. Answer time is usually within 10 min."
 };
 
 function getGroomerReply(msg) {
@@ -2965,27 +2940,49 @@ function getGroomerReply(msg) {
 function openGroomerChat(groomerName) {
   _chatGroomer = groomerName || 'Happy Tails Grooming';
   _chatMessages = [];
-  document.getElementById('chatGroomerName').textContent = _chatGroomer;
-  document.getElementById('chatInput').placeholder = 'Message ' + _chatGroomer.split(' ').slice(0,2).join(' ') + '...';
+
+  // Close results page so chat can slide in over it
+  var rp = document.getElementById('resultsPage');
+  if (rp) { rp.classList.remove('show'); rp.style.pointerEvents = 'none'; }
+
+  var nameEl = document.getElementById('chatGroomerName');
+  var inputEl = document.getElementById('chatInput');
+  if (nameEl) nameEl.textContent = _chatGroomer;
+  if (inputEl) inputEl.placeholder = 'Message ' + _chatGroomer.split(' ').slice(0,2).join(' ') + '...';
 
   var msgs = document.getElementById('chatMessages');
   msgs.innerHTML = '';
 
-  // Opening message from groomer
-  var openingMsg = 'Hi! 👋 Thanks for reaching out to ' + _chatGroomer + '. How can we help you today?';
+  // Reset quick replies so they show each time
+  var qr = document.getElementById('chatQuickReplies');
+  if (qr) qr.style.display = '';
+
+  // Opening greeting from groomer
   setTimeout(function() {
-    addChatMsg(openingMsg, 'theirs');
+    addChatMsg('You reached ' + _chatGroomer + ' 🐾 We will get back to you as soon as possible. Answer time is usually within 10 min.', 'theirs');
   }, 600);
 
   var chat = document.getElementById('groomerChat');
   chat.style.display = 'flex';
+  chat.style.pointerEvents = 'all';
   setTimeout(function() { chat.classList.add('chat-open'); }, 10);
+}
+
+function showCancelFlow() {
+  if (confirm('Cancel your appointment with Happy Tails Grooming on Mar 20?')) {
+    alert('Your appointment has been cancelled. We hope to see you again soon! 🐾');
+  }
 }
 
 function closeGroomerChat() {
   var chat = document.getElementById('groomerChat');
   chat.classList.remove('chat-open');
-  setTimeout(function() { chat.style.display = 'none'; }, 300);
+  setTimeout(function() {
+    chat.style.display = 'none';
+    chat.style.pointerEvents = '';
+  }, 300);
+  var rp = document.getElementById('resultsPage');
+  if (rp) rp.style.pointerEvents = '';
 }
 
 function addChatMsg(text, who) {
@@ -3094,8 +3091,8 @@ function rebookAppointment(groomerName) {
 </div>
 
 <div id="livebell" onclick="reopenTracker()">
-  <span class="lb-icon">🔔</span>
-  <span class="lb-eta" id="lbEta">Upcoming · 7d 3h</span>
+  <span class="lb-icon">🐶</span>
+  <span class="lb-eta" id="lbEta">In Session</span>
 </div>
 
 <div id="mydogScreen">
@@ -3317,4 +3314,10 @@ function rebookAppointment(groomerName) {
     <div class="chat-qr" onclick="sendQuickReply('How long will the groom take?')">How long?</div>
   </div>
   <div class="chat-input-row">
-    <input clas
+    <input class="chat-input" id="chatInput" type="text" placeholder="Message Happy Tails..." onkeydown="if(event.key==='Enter')sendChatMessage()"/>
+    <button class="chat-send-btn" onclick="sendChatMessage()">↑</button>
+  </div>
+</div>
+
+</body>
+</html>
