@@ -629,8 +629,7 @@
 
 /* ── GROOMER CHAT ── */
 #groomerChat {
-  display:flex;
-  visibility:hidden;
+  display:none;
   position:fixed; inset:0;
   max-width:430px; margin:0 auto;
   background:#f8f5ef;
@@ -638,11 +637,11 @@
   font-family:'DM Sans',sans-serif;
   z-index:4200;
   opacity:0; transform:translateY(40px);
-  transition:opacity .28s ease, transform .28s ease, visibility .28s;
+  transition:opacity .28s ease, transform .28s ease;
   pointer-events:none;
 }
 #groomerChat.chat-open {
-  visibility:visible;
+  display:flex;
   opacity:1; transform:translateY(0);
   pointer-events:all;
 }
@@ -2964,18 +2963,18 @@ function openGroomerChat(groomerName) {
   }, 600);
 
   var chat = document.getElementById('groomerChat');
-  chat.style.display = '';
-  chat.style.opacity = '';
-  chat.style.transform = '';
-  chat.style.pointerEvents = '';
-  chat.classList.add('chat-open');
+  chat.style.display = 'flex';
+  chat.style.pointerEvents = 'all';
+  setTimeout(function() { chat.classList.add('chat-open'); }, 10);
 }
 
 function closeGroomerChat() {
   var chat = document.getElementById('groomerChat');
   chat.classList.remove('chat-open');
-  chat.style.display = '';
-  chat.style.pointerEvents = '';
+  setTimeout(function() {
+    chat.style.display = 'none';
+    chat.style.pointerEvents = '';
+  }, 300);
   var rp = document.getElementById('resultsPage');
   if (rp) rp.style.pointerEvents = '';
 }
