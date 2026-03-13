@@ -2968,6 +2968,12 @@ function openGroomerChat(groomerName) {
   setTimeout(function() { chat.classList.add('chat-open'); }, 10);
 }
 
+function showCancelFlow() {
+  if (confirm('Cancel your appointment with Happy Tails Grooming on Mar 20?')) {
+    alert('Your appointment has been cancelled. We hope to see you again soon! 🐾');
+  }
+}
+
 function closeGroomerChat() {
   var chat = document.getElementById('groomerChat');
   chat.classList.remove('chat-open');
