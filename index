@@ -450,7 +450,7 @@
 #livebell:hover { transform:translateY(-1px); box-shadow:0 6px 20px rgba(139,115,32,.28); }
 #livebell:active { transform:scale(.97); }
 #livebell.on { display:flex; animation:bellSlideIn .3s ease; }
-.lb-icon { font-size:16px; animation:bellRing .6s ease; }
+.lb-icon { font-size:16px; }
 .lb-text { display:flex; flex-direction:column; }
 .lb-eta { font-size:13px; font-weight:700; color:#1a1a1a; }
 @keyframes bellSlideIn {
@@ -3090,8 +3090,8 @@ function rebookAppointment(groomerName) {
 </div>
 
 <div id="livebell" onclick="reopenTracker()">
-  <span class="lb-icon">🔔</span>
-  <span class="lb-eta" id="lbEta">Upcoming · 7d 3h</span>
+  <span class="lb-icon">🐶</span>
+  <span class="lb-eta" id="lbEta">In Session</span>
 </div>
 
 <div id="mydogScreen">
