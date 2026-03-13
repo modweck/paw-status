@@ -2871,15 +2871,11 @@ var _upcomingAppt = { date: new Date('2026-03-20T11:00:00'), label: 'Mar 20 · 1
 
 function updateBellPill() {
   var bell = document.getElementById('livebell');
-  var etaEl = document.getElementById('lbEta');
-  if (!bell || !etaEl) return;
-
-  // Bell only shows during an active live grooming session — never for upcoming appointments
-  if (bell.classList.contains('on') && bell.dataset.mode === 'live') return;
-
-  // If not in live mode, keep bell hidden
+  if (!bell) return;
+  // Bell only appears during an active live grooming session — never for upcoming appointments
+  if (bell.dataset.mode === 'live' && bell.classList.contains('on')) return;
+  // Hide bell if not live
   bell.classList.remove('on');
-  bell.dataset.mode = 'upcoming';
 }
 
 function setUpcomingAppt(dateStr, timeLabel) {
