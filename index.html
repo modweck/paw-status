@@ -135,33 +135,95 @@
   .rp-sub { font-size:11px; color:var(--muted); margin-top:1px; }
   .rp-count { font-size:12px; color:var(--muted); white-space:nowrap; }
 
-  .results-scroll { flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; padding-bottom:80px; }
+  .results-scroll { flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:10px 0 80px; }
 
-  /* RESULTS */
-  .groomer-card { background:var(--white); border-bottom:1px solid #f0f0f0; cursor:pointer; transition:background 0.15s; }
-  .groomer-card:hover { background:#fafafa; }
-  .groomer-card.featured { border-left:3px solid var(--gold); }
-  .groomer-img.has-photo { background:#f5f2ec; }
-  .groomer-img { width:100%; height:240px; background:linear-gradient(135deg,#1a1a1a,#2a2a2a); display:flex; align-items:center; justify-content:center; font-size:56px; position:relative; overflow:hidden; }
-  .groomer-img.warm { background:linear-gradient(135deg,#3a2a0a,#1e1608); }
-  .groomer-img.cool { background:linear-gradient(135deg,#0a1a3a,#06111c); }
-  .groomer-img.green { background:linear-gradient(135deg,#0a2a15,#061409); }
-  .groomer-img.purple { background:linear-gradient(135deg,#1a0a3a,#0e0620); }
-  .img-rating { position:absolute; top:10px; right:10px; background:rgba(0,0,0,0.65); color:white; font-size:13px; font-weight:700; padding:4px 10px; border-radius:20px; backdrop-filter:blur(6px); display:flex; flex-direction:column; align-items:center; line-height:1.2; }
-  .img-rating .reviews { font-size:10px; font-weight:400; opacity:0.8; }
-  .featured-badge { position:absolute; top:10px; left:10px; background:var(--gold); color:white; font-size:9px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; padding:3px 9px; border-radius:20px; }
-  .groomer-body { padding:12px 16px 14px; }
-  .groomer-top { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:3px; }
-  .groomer-name { font-size:16px; font-weight:700; color:var(--text); }
-  .groomer-dist { font-size:12px; color:var(--muted); }
-  .groomer-meta { font-size:12px; color:var(--muted); margin-bottom:10px; }
-  .groomer-tags { display:flex; flex-wrap:wrap; gap:5px; margin-bottom:12px; }
+  /* RESULTS — compact card style */
+  .groomer-card {
+    background:var(--white);
+    border:1.5px solid #ede9e0;
+    border-radius:18px;
+    margin:0 12px 12px;
+    overflow:hidden;
+    box-shadow:0 2px 12px rgba(0,0,0,0.06);
+    cursor:pointer;
+    transition:box-shadow 0.15s;
+  }
+  .groomer-card:hover { box-shadow:0 4px 20px rgba(0,0,0,0.1); }
+  .groomer-card.featured { border-color:var(--gold-border); }
+
+  /* Top row: thumbnail + info */
+  .gc-top { display:flex; align-items:flex-start; gap:12px; padding:14px 14px 10px; }
+
+  /* Square thumbnail */
+  .gc-thumb {
+    width:76px; height:76px; border-radius:12px; flex-shrink:0;
+    background:linear-gradient(135deg,#3a2a0a,#1e1608);
+    display:flex; align-items:center; justify-content:center;
+    font-size:32px; overflow:hidden; position:relative;
+  }
+  .gc-thumb.warm  { background:linear-gradient(135deg,#3a2a0a,#1e1608); }
+  .gc-thumb.cool  { background:linear-gradient(135deg,#0a1a3a,#06111c); }
+  .gc-thumb.green { background:linear-gradient(135deg,#0a2a15,#061409); }
+  .gc-thumb.purple{ background:linear-gradient(135deg,#1a0a3a,#0e0620); }
+  .gc-thumb.has-photo { background:#f5f2ec; }
+  .gc-thumb img   { width:100%; height:100%; object-fit:cover; }
+
+  /* Top-pick badge on thumb */
+  .gc-top-pick {
+    position:absolute; top:5px; left:5px;
+    background:var(--gold); color:#fff;
+    font-size:8px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase;
+    padding:2px 6px; border-radius:10px;
+  }
+
+  /* Info block */
+  .gc-info { flex:1; min-width:0; }
+  .gc-name-row { display:flex; align-items:baseline; justify-content:space-between; gap:4px; margin-bottom:3px; }
+  .gc-name { font-size:15px; font-weight:700; color:var(--text); line-height:1.2; }
+  .gc-dist { font-size:11px; color:var(--muted); white-space:nowrap; }
+  .gc-rating-row { display:flex; align-items:center; gap:5px; font-size:12px; color:#666; margin-bottom:5px; }
+  .gc-star { color:#f0b429; font-size:13px; }
+  .gc-avail { display:flex; align-items:center; gap:5px; font-size:12px; }
+  .gc-avail-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+  .gc-avail-dot.green  { background:#34c759; }
+  .gc-avail-dot.red    { background:#ff3b30; }
+  .gc-avail-text.green { color:#2a7a2a; font-weight:600; }
+  .gc-avail-text.red   { color:#c0392b; font-weight:600; }
+  .gc-avail-next       { color:var(--muted); }
+
+  /* Divider */
+  .gc-divider { height:1px; background:#f0ece4; margin:0 14px; }
+
+  /* Price + duration row */
+  .gc-price-row { display:flex; align-items:center; gap:6px; padding:9px 14px 0; font-size:12px; color:#666; }
+  .gc-price { font-weight:600; color:var(--text); }
+  .gc-dot-sep { color:#ccc; }
+
+  /* Discount badge */
+  .gc-discount { display:inline-flex; align-items:center; gap:4px; background:#edfaed; border:1.5px solid #5cb85c; color:#2d6a2d; border-radius:20px; padding:2px 9px; font-size:11px; font-weight:700; margin:6px 14px 0; }
+
+  /* Book button */
+  .gc-book-btn {
+    display:block; width:calc(100% - 28px); margin:10px 14px 6px;
+    background:var(--gold); color:#fff; border:none; border-radius:12px;
+    padding:13px; font-family:'DM Sans',sans-serif; font-size:14px; font-weight:700;
+    cursor:pointer; text-align:center; transition:background 0.2s;
+  }
+  .gc-book-btn:hover { background:#7a651c; }
+  .gc-book-btn.no-avail { background:#e0d8c8; color:#999; cursor:default; }
+
+  /* Find other times */
+  .gc-other-times {
+    display:block; text-align:center; font-size:12px; color:#888;
+    padding:0 14px 13px; cursor:pointer; font-weight:500;
+  }
+  .gc-other-times:hover { color:var(--gold); }
+
+  /* Keep these for backwards compat */
+  .featured-badge { display:none; }
   .tag { background:#f7f5f0; border:1px solid #eee; border-radius:20px; padding:3px 10px; font-size:11px; color:#666; }
   .tag-link { text-decoration:none; transition:all 0.15s; cursor:pointer; }
   .tag-link:hover { background:var(--gold-pale); border-color:var(--gold-light); color:var(--gold); }
-  .groomer-footer { display:flex; justify-content:space-between; align-items:center; }
-  .groomer-price { font-family:'DM Serif Display',serif; font-size:20px; color:var(--gold); }
-  .groomer-price span { font-family:'DM Sans',sans-serif; font-size:10px; color:var(--muted); font-weight:400; }
   .book-btn { background:var(--gold); color:white; border:none; border-radius:10px; padding:10px 20px; font-family:'DM Sans',sans-serif; font-size:13px; font-weight:600; cursor:pointer; transition:background 0.2s; }
   .book-btn:hover { background:#7a651c; }
 
@@ -1602,37 +1664,84 @@ function setFallbackLocation() {
 function renderGroomerCards(groomers) {
   const cards = document.getElementById('groomerCards');
   cards.innerHTML = '';
+
+  // Figure out next booking slot label (e.g. "Fri 2:30 PM")
+  function getBookSlot(nextAvail) {
+    // Try to build a "Day H:MM AM/PM" label from the nextAvail date string
+    try {
+      const d = new Date(nextAvail + ' 2026');
+      if (isNaN(d)) return nextAvail;
+      const day = d.toLocaleDateString('en-US', { weekday: 'short' });
+      return day + ' 2:30 PM';
+    } catch(e) { return nextAvail; }
+  }
+
   groomers.forEach(g => {
     const card = document.createElement('div');
     card.className = `groomer-card${g.featured ? ' featured' : ''}`;
+
+    // Availability status
+    const hasAvailSoon = g.nextAvail && !g.nextAvail.includes('TBD');
+    const noOpenings = !hasAvailSoon;
+    const availDotClass = noOpenings ? 'red' : 'green';
+    const availTextClass = noOpenings ? 'red' : 'green';
+    const availLabel = noOpenings
+      ? 'No openings this week'
+      : `Next: ${g.nextAvail}`;
+    const nextLabel = noOpenings ? `Next: ${g.nextAvail || 'TBD'}` : '';
+
+    // Price range
+    const basePrice = g.price;
+    const highPrice = Math.round(basePrice * 1.15);
+    const priceRange = g.firstGroom
+      ? `<span class="price-original" style="font-size:12px;margin-right:2px;">$${basePrice}</span><span style="color:#2d6a2d;font-weight:700;">$${Math.round(basePrice*(1-g.discountPct/100))}–$${Math.round(highPrice*(1-g.discountPct/100))}</span>`
+      : `$${basePrice}–$${highPrice}`;
+
+    const bookSlot = getBookSlot(g.nextAvail);
+    const bookBtnLabel = noOpenings ? 'Join Waitlist' : `Book ${bookSlot}`;
+    const bookBtnClass = noOpenings ? 'gc-book-btn no-avail' : 'gc-book-btn';
+
+    // Thumbnail: use img if available, otherwise gradient + emoji
+    const thumbContent = g.img
+      ? `<img src="${g.img}" alt="${g.name}" style="width:100%;height:100%;object-fit:cover;border-radius:12px;">`
+      : `<span>${g.emoji}</span>`;
+    const thumbClass = `gc-thumb ${g.img ? 'has-photo' : (g.imgStyle || 'warm')}`;
+
     card.innerHTML = `
-      <div class="groomer-img ${g.img ? 'has-photo' : g.imgStyle}" ${g.img ? `style="background-image:url('${g.img}');background-size:contain;background-position:center;background-repeat:no-repeat;"` : ''}>
-        ${g.img ? '' : `<span>${g.emoji}</span>`}
-        ${g.featured ? '<span class="featured-badge">⭐ Top Pick</span>' : ''}
-        ${g.isJill ? '<span class="featured-badge" style="background:#555">Your Groomer</span>' : ''}
-        <div class="img-rating">★ ${g.rating}<span class="reviews">${g.reviews} reviews</span></div>
-      </div>
-      <div class="groomer-body">
-        <div class="groomer-top">
-          <div class="groomer-name">${g.name}</div>
-          <div class="groomer-dist">${g.distanceLabel}</div>
+      <div class="gc-top">
+        <div class="${thumbClass}" style="position:relative;">
+          ${thumbContent}
+          ${g.featured ? '<span class="gc-top-pick">⭐ TOP PICK</span>' : ''}
         </div>
-        <div class="groomer-meta">${g.address}, ${g.neighborhood} · <span style="color:#5cb85c">Next: ${g.nextAvail}</span></div>
-        ${g.firstGroom ? `<div class="discount-badge">🏷️ ${g.discountPct}% off your first groom</div>` : ''}
-        <div class="groomer-tags">${[
-          g.links.website   ? `<a class="tag tag-link" href="${g.links.website}" target="_blank" onclick="event.stopPropagation()">🌐 Website</a>` : '',
-          g.links.instagram ? `<a class="tag tag-link" href="${g.links.instagram}" target="_blank" onclick="event.stopPropagation()">📸 Instagram</a>` : '',
-          g.links.editorial ? `<a class="tag tag-link" href="${g.links.editorial}" target="_blank" onclick="event.stopPropagation()">📰 Editorial</a>` : '',
-          g.links.menu      ? `<a class="tag tag-link" href="#" onclick="event.stopPropagation();event.preventDefault();openGroomingMenu('${g.name}');return false;">📋 Menu</a>` : '',
-        ].filter(Boolean).join('')}</div>
-        <div class="groomer-footer">
-          <div class="groomer-price">
-            ${g.firstGroom ? `<span class="price-original">$${g.price}</span><span class="price-discounted">$${Math.round(g.price*(1-g.discountPct/100))}</span>` : `$${g.price}`}
-            <span>est. for ${selectedBreed}</span>
+        <div class="gc-info">
+          <div class="gc-name-row">
+            <div class="gc-name">${g.name}</div>
+            ${g.distanceLabel ? `<div class="gc-dist">${g.distanceLabel}</div>` : ''}
           </div>
-          <button class="chat-open-btn" onclick="event.stopPropagation();openGroomerChat('${g.name}')" style="background:var(--gold-pale);border:2px solid var(--gold-border);border-radius:10px;padding:9px 16px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;color:var(--gold);margin-right:8px;transition:all .15s">💬 Ask</button><button class="book-btn" onclick="event.stopPropagation();bookGroomer('${g.name}')">Book →</button>
+          <div class="gc-rating-row">
+            <span class="gc-star">★</span>
+            <span>${g.rating}</span>
+            <span style="color:#ccc;">·</span>
+            <span>${g.reviews} reviews</span>
+          </div>
+          <div class="gc-avail">
+            <span class="gc-avail-dot ${availDotClass}"></span>
+            <span class="gc-avail-text ${availTextClass}">${availLabel}</span>
+          </div>
+          ${noOpenings && nextLabel ? `<div class="gc-avail-next" style="font-size:11px;color:#999;margin-top:2px;">${nextLabel}</div>` : ''}
         </div>
-      </div>`;
+      </div>
+      <div class="gc-divider"></div>
+      <div class="gc-price-row">
+        <span class="gc-price">${priceRange} for ${selectedBreed || 'your dog'}</span>
+        <span class="gc-dot-sep">·</span>
+        <span>${selectedService ? selectedService.time : '1–2 hrs'}</span>
+      </div>
+      ${g.firstGroom ? `<div class="gc-discount">🏷️ ${g.discountPct}% off your first groom</div>` : ''}
+      <button class="${bookBtnClass}" onclick="event.stopPropagation();${noOpenings ? `openWaitlistPage()` : `bookGroomer('${g.name}')`}">${bookBtnLabel}</button>
+      <span class="gc-other-times" onclick="event.stopPropagation();bookGroomer('${g.name}')">Find other times →</span>
+    `;
+
     cards.appendChild(card);
   });
 }
