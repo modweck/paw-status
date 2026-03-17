@@ -4553,47 +4553,12 @@ function confirmModify() {
     </div>
 
     <!-- Time of day -->
-    <div class="wl-time-row">
-      <div class="wl-time-label">Time</div>
-      <div class="wl-time-line"></div>
-      <div class="wl-time-select" onclick="toggleWlTimeDrop(event)" id="wlTimeSelectBtn" style="position:relative;">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>
-        <span id="wlTimeOfDay">Anytime</span>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#aaa" stroke-width="2.5" id="wlTimeChev"><polyline points="6,9 12,15 18,9"/></svg>
-        <!-- Dropdown -->
-        <div id="wlTimeDrop" style="
-          display:none;
-          position:absolute;
-          top:calc(100% + 6px);
-          right:0;
-          background:#fff;
-          border-radius:14px;
-          box-shadow:0 8px 28px rgba(0,0,0,0.13);
-          overflow:hidden;
-          min-width:160px;
-          z-index:100;
-          border:1.5px solid #ede8e0;
-        ">
-          <div class="wl-tod-opt" onclick="pickWlTime(event,'Anytime')">🕐 Anytime</div>
-          <div class="wl-tod-opt" onclick="pickWlTime(event,'Morning')">🌅 Morning</div>
-          <div class="wl-tod-opt" onclick="pickWlTime(event,'Afternoon')">☀️ Afternoon</div>
-          <div class="wl-tod-opt" onclick="pickWlTime(event,'Evening')">🌙 Evening</div>
-        </div>
-      </div>
+    <div class="wl-section-title" style="font-size:17px;margin-bottom:10px;">Time of day <span style="font-size:13px;color:#bbb;font-family:'DM Sans',sans-serif;font-weight:400;">(optional)</span></div>
+    <div class="wl-time-pills" style="margin-bottom:20px;">
+      <div class="wl-time-pill" onclick="selectWlTime(this)">🌅 Morning</div>
+      <div class="wl-time-pill" onclick="selectWlTime(this)">☀️ Afternoon</div>
+      <div class="wl-time-pill" onclick="selectWlTime(this)">🌙 Evening</div>
     </div>
-    <style>
-      .wl-tod-opt {
-        padding: 13px 18px;
-        font-size: 14px; font-weight: 500; color: #333;
-        cursor: pointer; border-bottom: 1px solid #f5f0e8;
-        transition: background .12s;
-        font-family: 'DM Sans', sans-serif;
-        display: flex; align-items: center; gap: 8px;
-      }
-      .wl-tod-opt:last-child { border-bottom: none; }
-      .wl-tod-opt:hover { background: #fffbf0; }
-      .wl-tod-opt.selected { background: #fff8e8; color: #8b7320; font-weight: 700; }
-    </style>
 
     <!-- Get in faster -->
     <div class="wl-faster-card">
