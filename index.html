@@ -1896,7 +1896,7 @@ function findGroomers() {
   const loc = document.getElementById('locationInput').value.trim() || document.getElementById('locationText').textContent;
   document.getElementById('rpTitle').textContent = 'Groomers Near You';
   document.getElementById('rpSub').textContent = `${selectedBreed} · ${selectedService.name}`;
-  document.getElementById('rpCount').textContent = `${GROOMERS.length} found`;
+  const rpCount = document.getElementById('rpCount'); if(rpCount) rpCount.textContent = `${GROOMERS.length} found`;
 
   const imgStyles = ['warm','cool','green','purple'];
   const distances = ['0.3 mi','0.6 mi','0.8 mi','1.2 mi'];
