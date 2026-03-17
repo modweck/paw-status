@@ -4275,6 +4275,7 @@ function confirmModify() {
   font-family:'DM Sans',sans-serif; overflow:hidden;
 }
 #waitlistPage.wl-open { transform:translateX(0); }
+#waitlistPage:not(.wl-open) .wl-cta-wrap { display:none; }
 
 .wl-topbar {
   display:flex; align-items:center; justify-content:space-between;
@@ -4282,7 +4283,7 @@ function confirmModify() {
 }
 .wl-back { background:none; border:none; cursor:pointer; font-size:20px; color:#333; padding:4px; line-height:1; }
 .wl-topbar-title { font-size:17px; font-weight:700; color:#1a1a1a; }
-.wl-scroll { flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:0 14px 110px; }
+.wl-scroll { flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:0 14px 140px; }
 
 .wl-groomer-header {
   background:#fff; border-radius:14px; padding:12px 14px;
@@ -4371,15 +4372,18 @@ function confirmModify() {
 .wl-sub-text { font-size:11px; color:#bbb; text-align:center; margin-bottom:14px; }
 
 .wl-cta-wrap {
-  position:absolute; bottom:0; left:0; right:0;
-  padding:12px 14px env(safe-area-inset-bottom,16px);
-  background:linear-gradient(transparent, #f5f0e8 30%);
+  position:fixed; bottom:0; left:50%; transform:translateX(-50%);
+  width:100%; max-width:430px;
+  padding:12px 14px 24px;
+  background:linear-gradient(transparent, #f5f0e8 28%);
+  z-index:5500;
 }
 .wl-cta {
   display:block; width:100%; background:#8b7320; color:#fff;
   border:none; border-radius:14px; padding:15px;
   font-family:'DM Sans',sans-serif; font-size:16px; font-weight:700;
   cursor:pointer; text-align:center; transition:background .2s;
+  box-shadow:0 4px 20px rgba(139,115,32,.3);
 }
 .wl-cta:hover { background:#7a651c; }
 .wl-cta:active { transform:scale(0.98); }
@@ -4408,24 +4412,24 @@ function confirmModify() {
 
     <!-- Dog + service summary -->
     <div class="wl-sec">Your appointment</div>
-    <div class="wl-dog-row" onclick="bookGroomer('Happy Tails Grooming')" style="cursor:pointer;">
+    <div class="wl-dog-row" style="border-color:#8b7320;background:#fffbf0;">
       <div class="wl-dog-emoji">🐕</div>
       <div class="wl-dog-text">
         <div class="wl-dog-name" id="wlDogName">Bella — Golden Retriever</div>
         <div class="wl-dog-service" id="wlDogService">Bath &amp; Brush</div>
       </div>
-      <div class="wl-est-time" id="wlEstTime" style="cursor:pointer;">~2 hrs ›</div>
+      <div class="wl-est-time" id="wlEstTime">~2 hrs</div>
     </div>
 
     <!-- Extra services -->
-    <div class="wl-sec">Extra services <span>(optional)</span></div>
+    <div class="wl-sec">Other services <span>(optional)</span></div>
     <div style="background:#fff;border-radius:14px;overflow:hidden;margin-bottom:14px;border:1.5px solid #ede8de;">
       <!-- Collapsed header row -->
       <div onclick="toggleWlAddons()" style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;cursor:pointer;" id="wlAddonHeader">
         <div style="display:flex;align-items:center;gap:10px;">
           <span style="font-size:20px;">✂️</span>
           <div>
-            <div style="font-size:14px;font-weight:600;color:#1a1a1a;" id="wlAddonSummary">Select extra services</div>
+            <div style="font-size:14px;font-weight:600;color:#1a1a1a;" id="wlAddonSummary">Select other services</div>
             <div style="font-size:11px;color:#aaa;" id="wlAddonSubSummary">Nail trim, ear cleaning, and more</div>
           </div>
         </div>
@@ -4492,20 +4496,23 @@ function confirmModify() {
 
     <!-- When -->
     <div class="wl-sec">When do you want a spot?</div>
-    <div class="wl-pills">
+    <div class="wl-pills" style="flex-wrap:wrap;">
       <div class="wl-pill wl-when active" onclick="wlSingle(this,'.wl-when')">⚡ ASAP</div>
-      <div class="wl-pill wl-when" onclick="wlSingle(this,'.wl-when')">This week</div>
+      <div class="wl-pill wl-when" onclick="wlSingle(this,'.wl-when')">Mon–Wed</div>
+      <div class="wl-pill wl-when" onclick="wlSingle(this,'.wl-when')">Thu–Fri</div>
+      <div class="wl-pill wl-when" onclick="wlSingle(this,'.wl-when')">This weekend</div>
       <div class="wl-pill wl-when" onclick="wlSingle(this,'.wl-when')">Next week</div>
       <div class="wl-pill wl-when" onclick="wlSingle(this,'.wl-when')">Flexible</div>
     </div>
 
     <!-- Time of day -->
     <div class="wl-sec">Time of day <span>(optional)</span></div>
-    <div class="wl-pills">
+    <div class="wl-pills" style="flex-wrap:wrap;">
       <div class="wl-pill wl-tod active" onclick="wlSingle(this,'.wl-tod')">Any</div>
-      <div class="wl-pill wl-tod" onclick="wlSingle(this,'.wl-tod')">🌅 Morning</div>
-      <div class="wl-pill wl-tod" onclick="wlSingle(this,'.wl-tod')">☀️ Afternoon</div>
-      <div class="wl-pill wl-tod" onclick="wlSingle(this,'.wl-tod')">🌙 Evening</div>
+      <div class="wl-pill wl-tod" onclick="wlSingle(this,'.wl-tod')">8–11am</div>
+      <div class="wl-pill wl-tod" onclick="wlSingle(this,'.wl-tod')">11–2pm</div>
+      <div class="wl-pill wl-tod" onclick="wlSingle(this,'.wl-tod')">2–5pm</div>
+      <div class="wl-pill wl-tod" onclick="wlSingle(this,'.wl-tod')">5–7pm</div>
     </div>
 
     <!-- Notify by -->
@@ -4520,11 +4527,11 @@ function confirmModify() {
     </div>
     <div class="wl-sub-text">You'll be notified instantly when a slot opens for Jill</div>
 
+    <!-- Submit button inline so it's always visible when scrolled down -->
+    <button onclick="confirmWaitlistPage()" style="display:block;width:100%;background:#8b7320;color:#fff;border:none;border-radius:14px;padding:15px;font-family:'DM Sans',sans-serif;font-size:16px;font-weight:700;cursor:pointer;text-align:center;margin-top:14px;box-shadow:0 4px 16px rgba(139,115,32,.3);">Submit Waitlist Request</button>
+
   </div>
 
-  <div class="wl-cta-wrap">
-    <button class="wl-cta" onclick="confirmWaitlistPage()">Submit Waitlist Request</button>
-  </div>
 </div>
 
 <script>
@@ -4536,6 +4543,9 @@ function openWaitlistPage() {
   var dn = document.getElementById('wlDogName');
   if (dn) dn.textContent = 'Bella — ' + breed;
   document.querySelectorAll('.wl-addon-row').forEach(a => a.classList.remove('on'));
+  // Reset pickers so they rebuild with current data
+  var bl = document.getElementById('wlBreedList'); if(bl) bl.innerHTML = '';
+  var sl = document.getElementById('wlServiceList'); if(sl) sl.innerHTML = '';
   updateWlTime();
   var page = document.getElementById('waitlistPage');
   page.style.display = 'flex';
@@ -4550,6 +4560,97 @@ function wlSingle(el, sel) {
   document.querySelectorAll(sel).forEach(p => p.classList.remove('active'));
   el.classList.add('active');
 }
+// Waitlist breed + service pickers
+function buildWlBreedList() {
+  var list = document.getElementById('wlBreedList');
+  if (!list || list.children.length > 0) return;
+  BREEDS.forEach(function(b) {
+    var d = document.createElement('div');
+    d.style.cssText = 'padding:11px 14px;font-size:13px;color:#222;cursor:pointer;border-bottom:1px solid #f9f9f9;font-family:"DM Sans",sans-serif;transition:background .12s;';
+    d.textContent = b;
+    d.dataset.breed = b.toLowerCase();
+    d.onmouseover = function(){ this.style.background='#faf6ee'; };
+    d.onmouseout = function(){ this.style.background=''; };
+    d.onclick = function() {
+      var sel = document.getElementById('wlDogName');
+      if (sel) sel.textContent = 'Bella — ' + b;
+      window.selectedBreed = b;
+      document.getElementById('wlBreedDrop').style.display = 'none';
+      document.getElementById('wlBreedChev').style.transform = '';
+      updateWlTime();
+    };
+    list.appendChild(d);
+  });
+}
+
+function filterWlBreeds(q) {
+  var items = document.getElementById('wlBreedList').children;
+  Array.from(items).forEach(function(item) {
+    item.style.display = q && item.dataset.breed.indexOf(q.toLowerCase()) === -1 ? 'none' : '';
+  });
+}
+
+function toggleWlBreedDrop() {
+  buildWlBreedList();
+  var drop = document.getElementById('wlBreedDrop');
+  var chev = document.getElementById('wlBreedChev');
+  var isOpen = drop.style.display === 'block';
+  // close service drop first
+  document.getElementById('wlServiceDrop').style.display = 'none';
+  document.getElementById('wlServiceChev').style.transform = '';
+  drop.style.display = isOpen ? 'none' : 'block';
+  chev.style.transform = isOpen ? '' : 'rotate(90deg)';
+  if (!isOpen) setTimeout(function(){ var s=document.getElementById('wlBreedSearch'); if(s) s.focus(); }, 100);
+}
+
+function buildWlServiceList() {
+  var list = document.getElementById('wlServiceList');
+  if (!list || list.children.length > 0) return;
+  SERVICES.forEach(function(s) {
+    var mult = SIZE_MULT[window.selectedBreed] || 1.0;
+    var price = Math.round(s.base * mult);
+    var d = document.createElement('div');
+    d.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:12px 14px;cursor:pointer;border-bottom:1px solid #f5f2ec;transition:background .12s;';
+    d.innerHTML = '<div style="display:flex;align-items:center;gap:10px;"><span style="font-size:18px;">'+s.emoji+'</span><div><div style="font-size:13px;font-weight:600;color:#1a1a1a;">'+s.name+'</div><div style="font-size:11px;color:#aaa;">'+s.desc+'</div></div></div><div style="font-size:13px;font-weight:700;color:#8b7320;white-space:nowrap;">from $'+price+'</div>';
+    d.onmouseover = function(){ this.style.background='#faf6ee'; };
+    d.onmouseout = function(){ this.style.background=''; };
+    d.onclick = function() {
+      var sel = document.getElementById('wlDogService');
+      if (sel) sel.textContent = s.name;
+      window.selectedService = s;
+      document.getElementById('wlServiceDrop').style.display = 'none';
+      document.getElementById('wlServiceChev').style.transform = '';
+      updateWlTime();
+    };
+    list.appendChild(d);
+  });
+}
+
+function toggleWlServiceDrop() {
+  buildWlServiceList();
+  var drop = document.getElementById('wlServiceDrop');
+  var chev = document.getElementById('wlServiceChev');
+  var isOpen = drop.style.display === 'block';
+  // close breed drop first
+  document.getElementById('wlBreedDrop').style.display = 'none';
+  document.getElementById('wlBreedChev').style.transform = '';
+  drop.style.display = isOpen ? 'none' : 'block';
+  chev.style.transform = isOpen ? '' : 'rotate(90deg)';
+}
+
+// Close addon dropdown when tapping outside
+document.addEventListener('click', function(e) {
+  var drop = document.getElementById('wlAddonDropdown');
+  var header = document.getElementById('wlAddonHeader');
+  if (drop && drop.style.display === 'block') {
+    if (!e.target.closest('#wlAddonDropdown') && !e.target.closest('#wlAddonHeader')) {
+      drop.style.display = 'none';
+      var chev = document.getElementById('wlAddonChev');
+      if (chev) chev.style.transform = '';
+    }
+  }
+});
+
 function toggleWlAddons() {
   var drop = document.getElementById('wlAddonDropdown');
   var chev = document.getElementById('wlAddonChev');
@@ -4588,7 +4689,7 @@ function updateWlTime() {
   var selected = Array.from(document.querySelectorAll('.wl-addon-row.on')).map(function(r){ return r.querySelector('.wl-addon-row-name').textContent; });
   var sum = document.getElementById('wlAddonSummary');
   var sub = document.getElementById('wlAddonSubSummary');
-  if (sum) sum.textContent = selected.length ? selected.join(', ') : 'Select extra services';
+  if (sum) sum.textContent = selected.length ? selected.join(', ') : 'Select other services';
   if (sub) sub.textContent = selected.length ? '+' + added + ' min added' : 'Nail trim, ear cleaning, and more';
 }
 function confirmWaitlistPage() {
@@ -4602,7 +4703,7 @@ function confirmWaitlistPage() {
 
   var el = document.createElement('div');
   el.id = 'waitlistConfirm';
-  el.style.cssText = 'position:fixed;inset:0;z-index:4000;background:rgba(0,0,0,0.45);display:flex;align-items:flex-end;justify-content:center;font-family:"DM Sans",sans-serif;';
+  el.style.cssText = 'position:fixed;inset:0;z-index:6000;background:rgba(0,0,0,0.5);display:flex;align-items:flex-end;justify-content:center;font-family:"DM Sans",sans-serif;';
   el.innerHTML = `
     <div style="background:#fff;width:100%;max-width:430px;border-radius:24px 24px 0 0;padding:0 0 32px;max-height:88vh;overflow-y:auto;transform:translateY(40px);transition:transform .3s ease;" id="wlConfirmSheet">
       <div style="width:40px;height:4px;background:#e0e0e0;border-radius:4px;margin:14px auto 0;"></div>
@@ -4643,7 +4744,7 @@ function confirmWaitlistPage() {
       </div>
     </div>`;
   document.body.appendChild(el);
-  requestAnimationFrame(function(){ document.getElementById('wlConfirmSheet').style.transform = 'translateY(0)'; });
+  el.style.opacity='0'; requestAnimationFrame(function(){ requestAnimationFrame(function(){ el.style.transition='opacity .2s'; el.style.opacity='1'; document.getElementById('wlConfirmSheet').style.transform = 'translateY(0)'; }); });
 }
 
 function finalConfirmWaitlist() {
