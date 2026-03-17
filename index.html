@@ -1738,7 +1738,7 @@ function renderGroomerCards(groomers) {
         <span>${selectedService ? selectedService.time : '1–2 hrs'}</span>
       </div>
       ${g.firstGroom ? `<div class="gc-discount">🏷️ ${g.discountPct}% off your first groom</div>` : ''}
-      <button class="${bookBtnClass}" onclick="event.stopPropagation();${noOpenings ? `openWaitlistPage()` : `bookGroomer('${g.name}')`}">${bookBtnLabel}</button>
+      <button class="${bookBtnClass}" onclick="event.stopPropagation();${noOpenings ? `openWaitlistPage()` : `bookGroomerDirect('${g.name}', '2:30 PM')`}">${bookBtnLabel}</button>
       <span class="gc-other-times" onclick="event.stopPropagation();bookGroomer('${g.name}')">Find other times →</span>
     `;
 
@@ -1831,9 +1831,21 @@ function closeResults() {
   }, 280);
 }
 
+function bookGroomerDirect(groomerName, slot) {
+  window._currentGroomer = groomerName;
+  const now = new Date();
+  const daysUntilFri = (5 - now.getDay() + 7) % 7 || 7;
+  const fri = new Date(now.getFullYear(), now.getMonth(), now.getDate() + daysUntilFri);
+  window._confirmedDate = String(fri.getDate());
+  window._confirmedMonthLabel = fri.toLocaleString('default', { month: 'long' });
+  window._confirmedSlot = slot || '2:30 PM';
+  const rp = document.getElementById('resultsPage');
+  if (rp) { rp.classList.remove('show'); rp.style.pointerEvents = 'none'; }
+  showBookingConfirm();
+}
+
 function bookGroomer(groomerName) {
   window._currentGroomer = groomerName;
-  // Close results page so it no longer intercepts pointer events
   const rp = document.getElementById('resultsPage');
   if (rp) { rp.classList.remove('show'); rp.style.pointerEvents = 'none'; }
   // Remove any leftover overlay from a previous booking attempt
@@ -2068,7 +2080,9 @@ function showBookingConfirm() {
 
   const today = new Date();
   const d = new Date(today.getFullYear(), today.getMonth(), parseInt(window._confirmedDate));
-  const dateLabel = d.toLocaleDateString('default',{weekday:'short',month:'long',day:'numeric'});
+  // Use stored month label if set (e.g. from bookGroomerDirect)
+  const monthLabel = window._confirmedMonthLabel || d.toLocaleString('default',{month:'long'});
+  const dateLabel = d.toLocaleDateString('default',{weekday:'long',month:'long',day:'numeric'});
 
   const discountHTML = hasDiscount
     ? '<div class="confirm-discount-row"><span style="font-size:18px">🏷️</span><div style="font-size:13px;color:#2d6a2d;font-weight:600">' + discountPct + '% first-groom discount — saving $' + (price-finalPrice) + '</div></div>'
