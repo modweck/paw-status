@@ -825,186 +825,148 @@
 </style>
 </head>
 <body>
-<!-- ══ NEW HOME SCREEN STYLES ══ -->
+<!-- ══ HOME SCREEN STYLES ══ -->
 <style>
-/* Override body/phone background for the new design */
-body { background: #e8e2d8 !important; }
-.phone { background: #ede8e0 !important; overflow: visible !important; }
+body { background: #e8e3d8 !important; }
+.phone { background: #f5f0e8 !important; overflow: visible !important; }
 
 /* Botanical background */
 .home-botanical {
-  position: absolute;
-  top: 0; right: 0;
-  width: 170px;
-  pointer-events: none;
-  z-index: 0;
-  opacity: 0.5;
+  position: absolute; top: 0; right: 0;
+  width: 120px; pointer-events: none; z-index: 0; opacity: 0.35;
 }
 
 /* Top bar */
 .home-topbar {
   position: relative; z-index: 2;
   display: flex; align-items: center; justify-content: space-between;
-  padding: 54px 20px 0;
+  padding: 54px 20px 12px;
   background: transparent;
 }
-.home-logo { font-family: 'DM Serif Display', serif; font-size: 26px; line-height: 1; }
+.home-logo { font-family: 'DM Serif Display', serif; font-size: 24px; line-height: 1; }
 .home-logo .paw { color: #8b7320; }
 .home-logo .stat { color: #1a1a1a; }
-.home-bells { display: flex; align-items: center; gap: 14px; }
-.home-bell-btn { background: none; border: none; cursor: pointer; padding: 4px; line-height: 1; }
+.home-topbar-right { display: flex; align-items: center; gap: 10px; }
+.home-bell-btn { background: none; border: none; cursor: pointer; padding: 4px; line-height: 1; position: relative; }
+.home-avatar-btn {
+  width: 34px; height: 34px; border-radius: 50%;
+  background: linear-gradient(135deg, #d4a840, #8b7320);
+  border: 2px solid #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; cursor: pointer;
+  box-shadow: 0 2px 8px rgba(139,115,32,.3);
+}
 
 /* Hero text */
 .home-hero {
   position: relative; z-index: 2;
-  padding: 20px 20px 0;
+  padding: 4px 20px 16px;
 }
 .home-hero-title {
   font-family: 'DM Serif Display', serif;
-  font-size: 30px; color: #1a1a1a;
-  line-height: 1.18; margin-bottom: 10px;
+  font-size: 28px; color: #1a1a1a;
+  line-height: 1.18; margin-bottom: 6px;
 }
-.home-hero-sub { font-size: 14px; color: #888; line-height: 1.55; }
+.home-hero-sub { font-size: 13px; color: #999; line-height: 1.5; }
 
 /* Scroll content */
 .home-content {
   position: relative; z-index: 2;
   flex: 1; overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  padding: 20px 16px 100px;
+  padding: 0 14px 100px;
 }
 
 /* ── SEARCH CARD ── */
 .home-search-card {
   background: #fff;
   border-radius: 20px;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.09);
   margin-bottom: 14px;
-  overflow: hidden; /* clip dropdowns inside */
+  overflow: hidden;
 }
 
 /* Location row */
 .hsc-location {
   display: flex; align-items: flex-start; flex-direction: column;
-  padding: 15px 18px 12px;
+  padding: 14px 16px 12px;
   border-bottom: 1px solid #f0ece4;
   position: relative;
 }
-.hsc-loc-input-row { display: flex; align-items: center; gap: 10px; width: 100%; }
+.hsc-loc-label { font-size: 10px; font-weight: 700; color: #bbb; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 4px; }
+.hsc-loc-input-row { display: flex; align-items: center; gap: 8px; width: 100%; }
 .hsc-loc-input-row input {
   flex: 1; border: none; outline: none;
-  font-family: 'DM Sans', sans-serif; font-size: 15px;
-  color: #333; background: transparent;
+  font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 600;
+  color: #1a1a1a; background: transparent;
 }
-.hsc-loc-input-row input::placeholder { color: #bbb; }
+.hsc-loc-input-row input::placeholder { color: #bbb; font-weight: 400; }
 #locationSuggestions {
   position: absolute; left: 0; right: 0; top: 100%;
   background: #fff;
   border: 1.5px solid rgba(139,115,32,.25);
-  border-top: none;
-  border-radius: 0 0 16px 16px;
-  z-index: 999;
-  box-shadow: 0 8px 24px rgba(0,0,0,.1);
-  overflow: hidden;
+  border-top: none; border-radius: 0 0 16px 16px;
+  z-index: 999; box-shadow: 0 8px 24px rgba(0,0,0,.1); overflow: hidden;
 }
 .location-confirmed {
   display: none; align-items: center; gap: 6px;
   font-size: 12px; color: #8b7320; font-weight: 600;
-  margin-top: 5px; padding: 0; background: none; border: none;
+  margin-top: 4px; padding: 0; background: none; border: none;
 }
 .location-confirmed.show { display: flex; }
 .hsc-use-location {
-  display: flex; align-items: center; gap: 6px;
-  margin-top: 7px; cursor: pointer;
-  font-size: 13px; font-weight: 600; color: #8b7320;
-  background: none; border: none; padding: 0;
-  font-family: 'DM Sans', sans-serif;
+  display: flex; align-items: center; gap: 6px; margin-top: 6px;
+  cursor: pointer; font-size: 12px; font-weight: 600; color: #8b7320;
+  background: #fff8e8; border: 1.5px solid #e8d898; border-radius: 20px;
+  padding: 5px 12px; font-family: 'DM Sans', sans-serif; transition: background .15s;
 }
+.hsc-use-location:hover { background: #fdf0cc; }
 
-/* Pill selector rows (breed + service) */
-.hsc-picker-row {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 13px 18px; cursor: pointer;
-  transition: background .15s;
+/* Two-col dog+service row */
+.hsc-two-col {
+  display: grid; grid-template-columns: 1fr 1px 1fr;
   border-bottom: 1px solid #f0ece4;
 }
+.hsc-col-divider { background: #f0ece4; }
+.hsc-picker-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 16px; cursor: pointer;
+  transition: background .15s;
+}
 .hsc-picker-row:hover { background: #faf8f5; }
-.hsc-picker-left { display: flex; align-items: center; gap: 12px; }
+.hsc-picker-label { font-size: 10px; font-weight: 700; color: #bbb; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 3px; }
+.hsc-picker-left { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
 .hsc-picker-icon {
-  width: 36px; height: 36px; border-radius: 50%;
+  width: 32px; height: 32px; border-radius: 50%;
   background: #f5f0e8;
   display: flex; align-items: center; justify-content: center;
-  font-size: 18px; flex-shrink: 0;
+  font-size: 16px; flex-shrink: 0;
 }
 .hsc-picker-icon.svc { background: #fdf0f0; }
-.hsc-picker-name {
-  font-size: 15px; font-weight: 600; color: #1a1a1a;
-}
+.hsc-picker-name { font-size: 14px; font-weight: 600; color: #1a1a1a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .hsc-picker-name.placeholder { color: #bbb; font-weight: 400; }
-.hsc-pill-chevron {
-  width: 28px; height: 28px; border-radius: 50%;
-  border: 1.5px solid #e8e2d8; background: #fff;
-  display: flex; align-items: center; justify-content: center;
-  color: #bbb; font-size: 13px; flex-shrink: 0;
-  transition: transform .2s;
-}
+.hsc-pill-chevron { color: #ccc; font-size: 16px; flex-shrink: 0; transition: transform .2s; }
 .hsc-pill-chevron.open { transform: rotate(90deg); }
 
-/* The actual breed/service dropdowns — use original IDs, new styling */
-.breed-list {
-  display: none; flex-direction: column;
-  max-height: 260px; overflow-y: auto;
-  border-top: 1px solid #f0ece4;
-}
+/* Dropdowns */
+.breed-list { display: none; flex-direction: column; max-height: 260px; overflow-y: auto; border-top: 1px solid #f0ece4; }
 .breed-list.open { display: flex; }
-
-.service-list {
-  display: none; flex-direction: column;
-  max-height: 280px; overflow-y: auto;
-  border-top: 1px solid #f0ece4;
-}
+.service-list { display: none; flex-direction: column; max-height: 280px; overflow-y: auto; border-top: 1px solid #f0ece4; }
 .service-list.open { display: flex; }
-
-/* Search boxes */
-.picker-search {
-  display: none;
-  padding: 10px 16px;
-  border-top: 1px solid #f0ece4;
-  background: #faf8f5;
-}
+.picker-search { display: none; padding: 10px 16px; border-top: 1px solid #f0ece4; background: #faf8f5; }
 .picker-search.open { display: block; }
 .picker-search input {
-  width: 100%;
-  border: 1.5px solid #d4a820;
-  border-radius: 12px;
-  padding: 10px 14px;
-  font-family: 'DM Sans', sans-serif;
-  font-size: 14px; color: #333;
-  outline: none; background: #fff;
+  width: 100%; border: 1.5px solid #d4a820; border-radius: 12px;
+  padding: 10px 14px; font-family: 'DM Sans', sans-serif;
+  font-size: 14px; color: #333; outline: none; background: #fff;
 }
 .picker-search input:focus { border-color: #8b7320; }
-
-/* Breed items */
-.breed-item {
-  padding: 13px 18px;
-  font-size: 14px; color: #222;
-  cursor: pointer;
-  border-bottom: 1px solid #f5f2ec;
-  transition: background .12s;
-  font-family: 'DM Sans', sans-serif;
-}
+.breed-item { padding: 13px 18px; font-size: 14px; color: #222; cursor: pointer; border-bottom: 1px solid #f5f2ec; transition: background .12s; font-family: 'DM Sans', sans-serif; }
 .breed-item:last-child { border-bottom: none; }
 .breed-item:hover { background: #faf6ee; }
 .breed-item.selected { background: #fff8e8; color: #8b7320; font-weight: 600; }
 .breed-item.hidden { display: none; }
-
-/* Service items */
-.service-item {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 13px 18px; cursor: pointer;
-  border-bottom: 1px solid #f5f2ec;
-  transition: background .12s;
-}
+.service-item { display: flex; align-items: center; justify-content: space-between; padding: 13px 18px; cursor: pointer; border-bottom: 1px solid #f5f2ec; transition: background .12s; }
 .service-item:last-child { border-bottom: none; }
 .service-item:hover { background: #faf6ee; }
 .service-item.selected { background: #fff8e8; }
@@ -1016,126 +978,196 @@ body { background: #e8e2d8 !important; }
 .service-price { font-size: 13px; font-weight: 700; color: #8b7320; white-space: nowrap; }
 
 /* Estimate strip */
-.estimate-banner {
-  display: none;
-  background: #fff8e8;
-  border-top: 1px solid #f0ece4;
-  padding: 13px 18px;
-  margin: 0;
-  border-radius: 0;
-}
+.estimate-banner { display: none; background: #fff8e8; border-top: 1px solid #f0ece4; padding: 11px 16px; }
 .estimate-banner.show { display: block; }
-.estimate-title { font-size: 10px; font-weight: 700; color: #8b7320; margin-bottom: 6px; letter-spacing: .05em; text-transform: uppercase; }
+.estimate-title { font-size: 10px; font-weight: 700; color: #8b7320; margin-bottom: 4px; letter-spacing: .05em; text-transform: uppercase; }
 .estimate-row { display: flex; justify-content: space-between; align-items: center; }
 .estimate-service { font-size: 14px; font-weight: 600; color: #222; }
-.estimate-price { font-family: 'DM Serif Display', serif; font-size: 22px; color: #8b7320; }
-.estimate-time { font-size: 11px; color: #aaa; margin-top: 2px; }
+.estimate-price { font-family: 'DM Serif Display', serif; font-size: 20px; color: #8b7320; }
+.estimate-time { font-size: 11px; color: #aaa; margin-top: 1px; }
 
 /* CTA */
 .home-cta {
-  display: block; width: calc(100% - 32px);
-  margin: 14px 16px 16px;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  width: calc(100% - 28px); margin: 12px 14px 14px;
   background: #8b7320; color: #fff;
-  border: none; border-radius: 14px; padding: 16px;
-  font-family: 'DM Serif Display', serif; font-size: 18px;
-  cursor: pointer; text-align: center;
-  transition: background .2s, transform .1s;
+  border: none; border-radius: 14px; padding: 15px;
+  font-family: 'DM Sans', sans-serif; font-size: 16px; font-weight: 700;
+  cursor: pointer; text-align: center; transition: background .2s, transform .1s;
 }
 .home-cta:active { transform: scale(0.98); }
-.home-cta:disabled { background: #c4b87a; cursor: not-allowed; }
+.home-cta:disabled { background: #c8b87a; cursor: not-allowed; }
 .home-cta:not(:disabled):hover { background: #7a651c; }
 
-/* ── WAITLIST CARD ── */
-.home-waitlist-card {
+/* ── YOUR GROOMER CARD ── */
+.home-your-groomer {
   background: #fff; border-radius: 18px;
   box-shadow: 0 2px 14px rgba(0,0,0,0.07);
   margin-bottom: 14px; overflow: hidden;
 }
-.hwc-top { display: flex; align-items: flex-start; gap: 14px; padding: 18px 18px 14px; }
-.hwc-bell { font-size: 26px; line-height: 1; flex-shrink: 0; margin-top: 1px; }
-.hwc-title { font-family: 'DM Serif Display', serif; font-size: 17px; color: #8b7320; margin-bottom: 4px; }
-.hwc-sub { font-size: 13px; color: #aaa; line-height: 1.45; }
-.hwc-divider { height: 1px; background: #f0ece4; }
-.hwc-btn {
-  display: block; margin: 14px 18px 18px;
-  background: #9a8428; color: #fff;
-  border: none; border-radius: 12px; padding: 14px;
-  font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 700;
-  cursor: pointer; text-align: center; transition: background .2s;
-  width: calc(100% - 36px);
+.hyg-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 16px 10px;
 }
-.hwc-btn:hover { background: #8b7320; }
+.hyg-label { font-size: 14px; font-weight: 700; color: #1a1a1a; }
+.hyg-label .dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: #34c759; margin-left: 5px; vertical-align: middle; }
+.hyg-see-all { font-size: 13px; font-weight: 600; color: #8b7320; cursor: pointer; }
+.hyg-card {
+  display: flex; align-items: center; gap: 12px;
+  padding: 0 16px 14px; cursor: pointer;
+}
+.hyg-photo {
+  width: 64px; height: 64px; border-radius: 14px; flex-shrink: 0;
+  background: linear-gradient(135deg, #c8a84b, #8b7320);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28px; overflow: hidden; position: relative;
+}
+.hyg-fav {
+  position: absolute; top: 4px; right: 4px; font-size: 14px; line-height: 1;
+}
+.hyg-info { flex: 1; min-width: 0; }
+.hyg-name { font-size: 15px; font-weight: 700; color: #1a1a1a; margin-bottom: 2px; }
+.hyg-rating { display: flex; align-items: center; gap: 4px; font-size: 12px; color: #8b7320; font-weight: 700; margin-bottom: 4px; }
+.hyg-rating .top-pick { font-size: 11px; color: #8b7320; font-weight: 600; }
+.hyg-avail { display: flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600; color: #1a1a1a; }
+.hyg-avail .green-dot { width: 7px; height: 7px; border-radius: 50%; background: #34c759; flex-shrink: 0; }
+.hyg-book-btn {
+  background: #8b7320; color: #fff;
+  border: none; border-radius: 20px; padding: 9px 18px;
+  font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 700;
+  cursor: pointer; flex-shrink: 0; transition: background .15s;
+  white-space: nowrap;
+}
+.hyg-book-btn:hover { background: #7a651c; }
 
-/* ── REBOOK CARD ── */
-.home-rebook-card {
+/* ── GET EARLIER APPOINTMENTS / WAITLIST ── */
+.home-waitlist-card {
   background: #fff; border-radius: 18px;
   box-shadow: 0 2px 14px rgba(0,0,0,0.07);
-  overflow: hidden;
+  margin-bottom: 14px; overflow: hidden;
+  position: relative;
 }
-.hrc-row {
-  display: flex; align-items: center; gap: 14px;
-  padding: 16px 18px; cursor: pointer;
-}
-.hrc-avatar {
-  width: 48px; height: 48px; border-radius: 50%;
-  background: #f5edd8; flex-shrink: 0;
+.hwc-body { padding: 18px 16px 14px; }
+.hwc-top { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 12px; }
+.hwc-bell { font-size: 26px; line-height: 1; flex-shrink: 0; }
+.hwc-title { font-size: 16px; font-weight: 700; color: #1a1a1a; margin-bottom: 3px; }
+.hwc-sub { font-size: 13px; color: #999; line-height: 1.4; }
+.hwc-btn {
   display: flex; align-items: center; justify-content: center;
-  overflow: hidden;
+  width: 100%; background: #8b7320; color: #fff;
+  border: none; border-radius: 12px; padding: 13px;
+  font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 700;
+  cursor: pointer; transition: background .2s; margin-bottom: 10px;
 }
-.hrc-text { flex: 1; }
-.hrc-name { font-size: 15px; font-weight: 700; color: #1a1a1a; margin-bottom: 3px; }
-.hrc-sub { font-size: 13px; color: #aaa; }
-.hrc-chev {
+.hwc-btn:hover { background: #7a651c; }
+.hwc-count { font-size: 12px; color: #aaa; display: flex; align-items: center; gap: 5px; }
+.hwc-divider { display: none; }
+.hwc-avatars {
+  display: flex; position: absolute; right: 14px; bottom: 14px;
+}
+.hwc-av {
   width: 28px; height: 28px; border-radius: 50%;
-  border: 1.5px solid #e8e2d8;
-  display: flex; align-items: center; justify-content: center;
-  color: #bbb; font-size: 13px; flex-shrink: 0;
+  background: linear-gradient(135deg, #c8a84b, #8b7320);
+  border: 2px solid #fff; margin-left: -6px;
+  display: flex; align-items: center; justify-content: center; font-size: 12px;
 }
+
+/* ── REBOOK / REMINDER CARD ── */
+.home-rebook-card {
+  background: linear-gradient(135deg, #2d5016 0%, #1a3a0a 100%);
+  border-radius: 18px;
+  margin-bottom: 14px; overflow: hidden;
+  box-shadow: 0 4px 20px rgba(45,80,22,.3);
+  position: relative;
+}
+.hrb-content { padding: 20px 16px 16px; display: flex; flex-direction: column; gap: 8px; }
+.hrb-dog-img {
+  position: absolute; right: 0; bottom: 0;
+  width: 120px; height: 100%; object-fit: cover; object-position: left center;
+  opacity: 0.7; pointer-events: none;
+}
+.hrb-badge { font-size: 22px; margin-bottom: 2px; }
+.hrb-title { font-family: 'DM Serif Display', serif; font-size: 18px; color: #fff; line-height: 1.2; }
+.hrb-sub-row { display: flex; flex-direction: column; gap: 2px; }
+.hrb-sub { font-size: 13px; color: rgba(255,255,255,.7); }
+.hrb-sub strong { color: #c8a84b; }
+.hrb-btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: #fff; color: #2d5016;
+  border: none; border-radius: 20px; padding: 11px 20px;
+  font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 700;
+  cursor: pointer; margin-top: 4px; width: fit-content;
+  transition: background .15s, transform .1s;
+}
+.hrb-btn:hover { background: #f0f8e8; }
+.hrb-btn:active { transform: scale(0.97); }
+
+/* ── POPULAR NEAR YOU ── */
+.home-section-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 6px 2px 10px;
+}
+.home-section-title { font-size: 16px; font-weight: 700; color: #1a1a1a; }
+.home-section-more { font-size: 13px; color: #999; cursor: pointer; }
+.popular-scroll {
+  display: flex; gap: 10px; overflow-x: auto;
+  scrollbar-width: none; -webkit-overflow-scrolling: touch;
+  padding-bottom: 4px; margin: 0 -14px; padding-left: 14px; padding-right: 14px;
+}
+.popular-scroll::-webkit-scrollbar { display: none; }
+.popular-card {
+  flex-shrink: 0; width: 150px; background: #fff;
+  border-radius: 16px; overflow: hidden;
+  box-shadow: 0 2px 10px rgba(0,0,0,.07); cursor: pointer;
+  transition: transform .15s;
+}
+.popular-card:hover { transform: translateY(-2px); }
+.popular-img {
+  width: 100%; height: 90px;
+  background: linear-gradient(135deg, #3a2a0a, #1e1608);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 32px; position: relative;
+}
+.popular-img.cool { background: linear-gradient(135deg, #0a1a3a, #06111c); }
+.popular-img.green { background: linear-gradient(135deg, #0a2a15, #061409); }
+.popular-info { padding: 10px; }
+.popular-name { font-size: 13px; font-weight: 700; color: #1a1a1a; margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.popular-rating { display: flex; align-items: center; gap: 4px; font-size: 11px; color: #666; margin-bottom: 3px; }
+.popular-avail { display: flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 600; }
+.popular-avail .green-dot { width: 6px; height: 6px; border-radius: 50%; background: #34c759; flex-shrink: 0; }
+.popular-avail .red-dot { width: 6px; height: 6px; border-radius: 50%; background: #ff3b30; flex-shrink: 0; }
 </style>
 
 <div class="phone" style="position:relative;">
 
   <!-- Botanical SVG -->
-  <svg class="home-botanical" viewBox="0 0 200 340" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M158 0 Q153 80 138 160 Q128 220 118 340" stroke="#b8c8a0" stroke-width="2" fill="none"/>
-    <ellipse cx="176" cy="58" rx="30" ry="17" fill="#c8d8a8" transform="rotate(-28 176 58)" opacity=".85"/>
-    <ellipse cx="168" cy="60" rx="26" ry="13" fill="#d8e8b8" transform="rotate(-28 168 60)" opacity=".6"/>
-    <path d="M158 53 Q183 46 192 63 Q175 70 158 53Z" fill="#b0c890" opacity=".75"/>
-    <ellipse cx="136" cy="93" rx="27" ry="13" fill="#bccfa0" transform="rotate(22 136 93)" opacity=".8"/>
-    <ellipse cx="130" cy="94" rx="21" ry="10" fill="#ccd8b0" transform="rotate(22 130 94)" opacity=".55"/>
-    <ellipse cx="163" cy="138" rx="28" ry="15" fill="#c0d0a0" transform="rotate(-24 163 138)" opacity=".75"/>
-    <path d="M146 130 Q170 124 178 146 Q160 150 146 130Z" fill="#a8c088" opacity=".65"/>
-    <ellipse cx="128" cy="183" rx="19" ry="10" fill="#b8cca0" transform="rotate(16 128 183)" opacity=".65"/>
-    <ellipse cx="153" cy="208" rx="23" ry="11" fill="#c4d4a8" transform="rotate(-18 153 208)" opacity=".6"/>
-    <circle cx="188" cy="98" r="3.5" fill="#e8d4a0" opacity=".75"/>
-    <circle cx="183" cy="106" r="2" fill="#ddc890" opacity=".65"/>
-    <circle cx="173" cy="170" r="3" fill="#e0d098" opacity=".7"/>
+  <svg class="home-botanical" viewBox="0 0 120 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M80 0 Q76 50 66 110 Q60 150 52 200" stroke="#b8c8a0" stroke-width="1.5" fill="none"/>
+    <ellipse cx="98" cy="38" rx="22" ry="12" fill="#c8d8a8" transform="rotate(-28 98 38)" opacity=".8"/>
+    <ellipse cx="78" cy="72" rx="18" ry="10" fill="#bccfa0" transform="rotate(22 78 72)" opacity=".7"/>
+    <ellipse cx="95" cy="108" rx="20" ry="11" fill="#c0d0a0" transform="rotate(-20 95 108)" opacity=".65"/>
+    <circle cx="108" cy="62" r="3" fill="#e8d4a0" opacity=".7"/>
   </svg>
 
   <!-- Top bar -->
   <div class="home-topbar">
     <div class="home-logo"><span class="paw">Paw</span><span class="stat">Status</span></div>
-    <div class="home-bells">
+    <div class="home-topbar-right">
       <button class="home-bell-btn" aria-label="Notifications">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
           <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
           <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
         </svg>
+        <span style="position:absolute;top:3px;right:3px;width:7px;height:7px;border-radius:50%;background:#c8a84b;border:1.5px solid #f5f0e8;"></span>
       </button>
-      <button class="home-bell-btn" aria-label="Active alerts" style="position:relative;">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#8b7320" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-          <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-        </svg>
-        <span style="position:absolute;top:3px;right:3px;width:7px;height:7px;border-radius:50%;background:#c8a84b;border:1.5px solid #ede8e0;"></span>
-      </button>
+      <div class="home-avatar-btn">🐕</div>
     </div>
   </div>
 
   <!-- Hero -->
   <div class="home-hero">
-    <div class="home-hero-title">Book a groomer in seconds — no calls, no waiting</div>
-    <div class="home-hero-sub">See real availability, transparent pricing, and rebook instantly.</div>
+    <div class="home-hero-title">Book a groomer<br>in seconds</div>
+    <div class="home-hero-sub">No calls, no waiting — real-time availability</div>
   </div>
 
   <!-- Scrollable content -->
@@ -1146,46 +1178,56 @@ body { background: #e8e2d8 !important; }
 
       <!-- Location -->
       <div class="hsc-location">
+        <div class="hsc-loc-label">Location</div>
         <div class="hsc-loc-input-row">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#e05a6a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#e05a6a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
             <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
           </svg>
           <input type="text" id="locationInput" placeholder="e.g. 515 E 72nd St, New York" oninput="onLocationInput(this.value)" autocomplete="off"/>
         </div>
         <div id="locationSuggestions" style="display:none;"></div>
         <div class="location-confirmed" id="locationConfirmed"><span>✓</span><span id="locationText">Location set</span></div>
-        <button class="hsc-use-location" onclick="shareLocation()">🎯 Use My Current Location</button>
+        <button class="hsc-use-location" onclick="shareLocation()">🎯 Use current</button>
       </div>
 
-      <!-- Breed picker — keeps original IDs breedGrid, breedSearchBox, breedChevron, breedValue -->
-      <div class="hsc-picker-row" onclick="toggleBreed()">
-        <div class="hsc-picker-left">
-          <div class="hsc-picker-icon">🐕</div>
-          <span class="hsc-picker-name placeholder" id="breedValue">Select your dog's breed</span>
+      <!-- Dog + Service two-col -->
+      <div class="hsc-two-col">
+        <!-- Dog/Breed picker -->
+        <div onclick="toggleBreed()">
+          <div class="hsc-picker-row" style="border-bottom:none;">
+            <div>
+              <div class="hsc-picker-label">Dog</div>
+              <div style="display:flex;align-items:center;gap:6px;">
+                <div class="hsc-picker-icon" style="width:26px;height:26px;font-size:14px;">🐕</div>
+                <span class="hsc-picker-name placeholder" id="breedValue" style="font-size:13px;">Select breed</span>
+              </div>
+            </div>
+            <span class="hsc-pill-chevron" id="breedChevron">›</span>
+          </div>
         </div>
-        <div class="hsc-pill-chevron" id="breedChevron">›</div>
+        <div class="hsc-col-divider"></div>
+        <!-- Service picker -->
+        <div onclick="toggleService()">
+          <div class="hsc-picker-row" style="border-bottom:none;">
+            <div>
+              <div class="hsc-picker-label">Service</div>
+              <div style="display:flex;align-items:center;gap:6px;">
+                <div class="hsc-picker-icon svc" style="width:26px;height:26px;font-size:14px;">✂️</div>
+                <span class="hsc-picker-name placeholder" id="serviceValue" style="font-size:13px;">Select service</span>
+              </div>
+            </div>
+            <span class="hsc-pill-chevron" id="serviceChevron">›</span>
+          </div>
+        </div>
       </div>
+
+      <!-- Dropdowns (full width, below two-col) -->
       <div class="picker-search" id="breedSearchBox">
-        <input type="text" id="breedSearch" placeholder="🔍 Type to search breeds..." oninput="filterBreeds(this.value)"/>
+        <input type="text" id="breedSearch" placeholder="🔍 Search breeds..." oninput="filterBreeds(this.value)"/>
       </div>
       <div class="breed-list" id="breedGrid"></div>
-
-      <!-- Service picker — keeps original IDs serviceList, serviceSearchBox, serviceChevron, serviceValue -->
-      <div class="hsc-picker-row" onclick="toggleService()" style="border-bottom:none;">
-        <div class="hsc-picker-left">
-          <div class="hsc-picker-icon svc">
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#e08080" stroke-width="2" stroke-linecap="round">
-              <circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/>
-              <line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/>
-              <line x1="8.12" y1="8.12" x2="12" y2="12"/>
-            </svg>
-          </div>
-          <span class="hsc-picker-name placeholder" id="serviceValue">Select a service</span>
-        </div>
-        <div class="hsc-pill-chevron" id="serviceChevron">›</div>
-      </div>
       <div class="picker-search" id="serviceSearchBox">
-        <input type="text" id="serviceSearch" placeholder="🔍 Type to search services..." oninput="filterServices(this.value)"/>
+        <input type="text" id="serviceSearch" placeholder="🔍 Search services..." oninput="filterServices(this.value)"/>
       </div>
       <div class="service-list" id="serviceList"></div>
 
@@ -1202,49 +1244,100 @@ body { background: #e8e2d8 !important; }
       </div>
 
       <!-- CTA -->
-      <button class="home-cta" id="searchBtn" onclick="findGroomers()" disabled>Find Next Available Groomers 🐾</button>
+      <button class="home-cta" id="searchBtn" onclick="findGroomers()" disabled>
+        🐾 Find Groomers
+      </button>
 
     </div><!-- end search card -->
 
-    <!-- ── WAITLIST CARD ── -->
-    <div class="home-waitlist-card">
-      <div class="hwc-top">
-        <div class="hwc-bell">🔔</div>
-        <div>
-          <div class="hwc-title">Waitlist for Sooner Openings</div>
-          <div class="hwc-sub">Get notified when a groomer has a sooner opening.</div>
-        </div>
+    <!-- ── YOUR GROOMER ── -->
+    <div class="home-your-groomer">
+      <div class="hyg-header">
+        <div class="hyg-label">Your Groomer <span class="dot"></span></div>
+        <div class="hyg-see-all" onclick="findGroomers()">See all</div>
       </div>
-      <div class="hwc-divider"></div>
-      <button class="hwc-btn" onclick="openWaitlistPage()">Join Waitlist &rarr;</button>
+      <div class="hyg-card">
+        <div class="hyg-photo">
+          🧑‍🦰
+          <span class="hyg-fav">❤️</span>
+        </div>
+        <div class="hyg-info">
+          <div class="hyg-name">Jill at Happy Tails ✅</div>
+          <div class="hyg-rating">
+            <span>★</span><span>4.9</span>
+            <span class="top-pick">· Your top pick</span>
+          </div>
+          <div class="hyg-avail">
+            <span class="green-dot"></span>
+            <span>Next available: Mar 25</span>
+          </div>
+        </div>
+        <button class="hyg-book-btn" onclick="bookGroomerDirect('Happy Tails Grooming','2:30 PM')">Book Jill</button>
+      </div>
     </div>
 
-    <!-- ── REBOOK CARD ── -->
-    <div class="home-rebook-card" id="reminderCard">
-      <div class="hrc-row" onclick="bookGroomer('Jill\'s Pet Studio')">
-        <div class="hrc-avatar">
-          <svg width="48" height="48" viewBox="0 0 100 100" fill="none">
-            <circle cx="50" cy="55" r="32" fill="#d4a840"/>
-            <ellipse cx="50" cy="82" rx="22" ry="13" fill="#c09030"/>
-            <ellipse cx="30" cy="36" rx="12" ry="18" fill="#b88820" transform="rotate(-10 30 36)"/>
-            <ellipse cx="70" cy="36" rx="12" ry="18" fill="#b88820" transform="rotate(10 70 36)"/>
-            <ellipse cx="30" cy="37" rx="7" ry="12" fill="#c8a030" transform="rotate(-10 30 37)"/>
-            <ellipse cx="70" cy="37" rx="7" ry="12" fill="#c8a030" transform="rotate(10 70 37)"/>
-            <ellipse cx="50" cy="62" rx="15" ry="11" fill="#c89828"/>
-            <ellipse cx="50" cy="57" rx="6" ry="5" fill="#2a1800"/>
-            <circle cx="40" cy="48" r="6" fill="#1a0e00"/>
-            <circle cx="60" cy="48" r="6" fill="#1a0e00"/>
-            <circle cx="41" cy="46" r="2" fill="white"/>
-            <circle cx="61" cy="46" r="2" fill="white"/>
-            <path d="M43 66 Q50 72 57 66" stroke="#2a1800" stroke-width="2" fill="none" stroke-linecap="round"/>
-            <ellipse cx="50" cy="70" rx="5" ry="4" fill="#e87080"/>
-          </svg>
+    <!-- ── GET EARLIER / WAITLIST ── -->
+    <div class="home-waitlist-card">
+      <div class="hwc-body">
+        <div class="hwc-top">
+          <div class="hwc-bell">🔔</div>
+          <div>
+            <div class="hwc-title">Get Earlier Appointments</div>
+            <div class="hwc-sub">Join waitlist for cancellations</div>
+          </div>
         </div>
-        <div class="hrc-text">
-          <div class="hrc-name"><strong>Bella</strong> cut due in 2 weeks</div>
-          <div class="hrc-sub">Ask to Rebook Jill's Pet Studio</div>
+        <button class="hwc-btn" onclick="openWaitlistPage()">Join Waitlist →</button>
+        <div class="hwc-count">🐾 24 people joined today</div>
+      </div>
+      <div class="hwc-avatars">
+        <div class="hwc-av">👩</div>
+        <div class="hwc-av">👨</div>
+        <div class="hwc-av">👩‍🦱</div>
+      </div>
+    </div>
+
+    <!-- ── BELLA NEEDS GROOMING ── -->
+    <div class="home-rebook-card">
+      <div class="hrb-content" style="max-width:65%;">
+        <div class="hrb-badge">🔔</div>
+        <div class="hrb-title">Bella Needs Grooming Soon 🐶</div>
+        <div class="hrb-sub-row">
+          <div class="hrb-sub">Last visit: <strong>4 weeks ago</strong></div>
+          <div class="hrb-sub">Usually every <strong>6 weeks</strong></div>
         </div>
-        <div class="hrc-chev">›</div>
+        <button class="hrb-btn" onclick="bookGroomerDirect('Happy Tails Grooming','2:30 PM')">Rebook Now →</button>
+      </div>
+    </div>
+
+    <!-- ── POPULAR NEAR YOU ── -->
+    <div class="home-section-header">
+      <div class="home-section-title">Popular Near You</div>
+      <div class="home-section-more" onclick="findGroomers()">···</div>
+    </div>
+    <div class="popular-scroll">
+      <div class="popular-card" onclick="bookGroomerDirect('Happy Tails Grooming','2:30 PM')">
+        <div class="popular-img warm">🐾</div>
+        <div class="popular-info">
+          <div class="popular-name">Happy Tails</div>
+          <div class="popular-rating"><span style="color:#f0b429;">★</span> 4.9 · 0.3 mi</div>
+          <div class="popular-avail"><span class="green-dot"></span><span style="color:#2a7a2a;">Next: Fri 2:30 PM</span></div>
+        </div>
+      </div>
+      <div class="popular-card" onclick="bookGroomerDirect('Biscuits &amp; Bath','10:00 AM')">
+        <div class="popular-img cool">🛁</div>
+        <div class="popular-info">
+          <div class="popular-name">Paws &amp; Co</div>
+          <div class="popular-rating"><span style="color:#f0b429;">★</span> 4.8 · 1.1 mi</div>
+          <div class="popular-avail"><span class="green-dot"></span><span style="color:#2a7a2a;">Next: Fri Mar 20</span></div>
+        </div>
+      </div>
+      <div class="popular-card" onclick="bookGroomerDirect('Jill\'s Pet Studio','2:30 PM')">
+        <div class="popular-img green">✂️</div>
+        <div class="popular-info">
+          <div class="popular-name">Biscuit &amp; Bath</div>
+          <div class="popular-rating"><span style="color:#f0b429;">★</span> 4.7 · 2.4 mi</div>
+          <div class="popular-avail"><span class="red-dot"></span><span style="color:#c0392b;">Next: Sun Mar 22</span></div>
+        </div>
       </div>
     </div>
 
@@ -1260,17 +1353,29 @@ body { background: #e8e2d8 !important; }
       <div class="rp-title" id="rpTitle">Groomers Near You</div>
       <div class="rp-sub" id="rpSub"></div>
     </div>
-    <div class="rp-count" id="rpCount"></div>
+    <button style="background:none;border:1.5px solid #e8e0d4;border-radius:20px;padding:6px 10px;cursor:pointer;color:#666;font-size:13px;display:flex;align-items:center;gap:4px;" onclick="">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
+    </button>
   </div>
   <div class="sort-bar">
-    <button class="sort-pill active" onclick="sortResults('rating', this)">Rating</button>
-    <button class="sort-pill" onclick="sortResults('distance', this)">Distance</button>
-    <button class="sort-pill" onclick="sortResults('price', this)">Price</button>
+    <button class="sort-pill active" onclick="sortResults('rating', this)">Recommended</button>
     <button class="sort-pill" onclick="sortResults('soonest', this)">Soonest</button>
+    <button class="sort-pill" onclick="sortResults('rating', this)">Top Rated</button>
+    <button class="sort-pill" onclick="sortResults('price', this)">Price</button>
     <button class="sort-pill deals-pill" onclick="sortResults('deals', this)">🏷️ Deals</button>
   </div>
   <div class="deals-header" id="dealsNote">🏷️ Showing groomers with 10% off your first groom</div>
+  <!-- Sticky waitlist nudge at bottom -->
   <div class="results-scroll" id="groomerCards"></div>
+  <div style="position:absolute;bottom:72px;left:0;right:0;padding:0 12px;pointer-events:none;">
+    <div style="background:#fffbf0;border:1.5px solid #e8d898;border-radius:14px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 12px rgba(139,115,32,.15);pointer-events:all;">
+      <div>
+        <div style="font-size:13px;font-weight:700;color:#1a1a1a;">🔔 Still looking for sooner?</div>
+        <div style="font-size:11px;color:#999;">Join waitlist for cancellations →</div>
+      </div>
+      <button onclick="openWaitlistPage()" style="background:#8b7320;color:#fff;border:none;border-radius:20px;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap;">Join Waitlist</button>
+    </div>
+  </div>
 </div>
 <script>
 const BREEDS = [
@@ -1665,9 +1770,7 @@ function renderGroomerCards(groomers) {
   const cards = document.getElementById('groomerCards');
   cards.innerHTML = '';
 
-  // Figure out next booking slot label (e.g. "Fri 2:30 PM")
   function getBookSlot(nextAvail) {
-    // Try to build a "Day H:MM AM/PM" label from the nextAvail date string
     try {
       const d = new Date(nextAvail + ' 2026');
       if (isNaN(d)) return nextAvail;
@@ -1676,70 +1779,72 @@ function renderGroomerCards(groomers) {
     } catch(e) { return nextAvail; }
   }
 
-  groomers.forEach(g => {
+  groomers.forEach((g, idx) => {
     const card = document.createElement('div');
     card.className = `groomer-card${g.featured ? ' featured' : ''}`;
 
-    // Availability status
     const hasAvailSoon = g.nextAvail && !g.nextAvail.includes('TBD');
     const noOpenings = !hasAvailSoon;
-    const availDotClass = noOpenings ? 'red' : 'green';
-    const availTextClass = noOpenings ? 'red' : 'green';
-    const availLabel = noOpenings
-      ? 'No openings this week'
-      : `Next: ${g.nextAvail}`;
-    const nextLabel = noOpenings ? `Next: ${g.nextAvail || 'TBD'}` : '';
-
-    // Price range
     const basePrice = g.price;
     const highPrice = Math.round(basePrice * 1.15);
+    const bookSlot = getBookSlot(g.nextAvail);
+    const isYourGroomer = g.featured || idx === 0;
+
+    const availLine = noOpenings
+      ? `<span style="color:#ff3b30;">●</span> <span style="color:#c0392b;font-weight:600;">Next: ${g.nextAvail || 'TBD'}</span>`
+      : `<span style="color:#34c759;">●</span> <span style="color:#2a7a2a;font-weight:700;">Next: ${g.nextAvail} · 2:30 PM</span>`;
+
     const priceRange = g.firstGroom
-      ? `<span class="price-original" style="font-size:12px;margin-right:2px;">$${basePrice}</span><span style="color:#2d6a2d;font-weight:700;">$${Math.round(basePrice*(1-g.discountPct/100))}–$${Math.round(highPrice*(1-g.discountPct/100))}</span>`
+      ? `<span style="text-decoration:line-through;color:#bbb;">$${basePrice}</span> <span style="color:#2d6a2d;font-weight:700;">$${Math.round(basePrice*(1-g.discountPct/100))}–$${Math.round(highPrice*(1-g.discountPct/100))}</span>`
       : `$${basePrice}–$${highPrice}`;
 
-    const bookSlot = getBookSlot(g.nextAvail);
-    const bookBtnLabel = noOpenings ? 'Join Waitlist' : `Book ${bookSlot}`;
-    const bookBtnClass = noOpenings ? 'gc-book-btn no-avail' : 'gc-book-btn';
+    const avatarHTML = !noOpenings ? `
+      <div style="display:flex;align-items:center;gap:6px;margin:8px 14px 2px;">
+        <span style="font-size:11px;color:#999;">Available groomers</span>
+        <div style="display:flex;">
+          ${['👩','👨','👩‍🦱','👩‍🦰'].map(e=>`<div style="width:24px;height:24px;border-radius:50%;background:#f0ece4;border:2px solid #fff;margin-left:-5px;display:flex;align-items:center;justify-content:center;font-size:11px;">${e}</div>`).join('')}
+        </div>
+      </div>` : '';
 
-    // Thumbnail: use img if available, otherwise gradient + emoji
-    const thumbContent = g.img
-      ? `<img src="${g.img}" alt="${g.name}" style="width:100%;height:100%;object-fit:cover;border-radius:12px;">`
-      : `<span>${g.emoji}</span>`;
-    const thumbClass = `gc-thumb ${g.img ? 'has-photo' : (g.imgStyle || 'warm')}`;
+    const ctaHTML = noOpenings
+      ? `<button class="gc-book-btn" style="background:#f5f0e8;color:#8b7320;font-weight:700;" onclick="event.stopPropagation();bookGroomer('${g.name}')">View Times</button>`
+      : `<button class="gc-book-btn" onclick="event.stopPropagation();bookGroomerDirect('${g.name}', '2:30 PM')">Book <span style="color:#c8a84b;">${bookSlot}</span></button>
+         <span class="gc-other-times" onclick="event.stopPropagation();bookGroomer('${g.name}')">More times ↓</span>`;
+
+    const thumbGrads = ['#3a2a0a,#1e1608','#0a1a3a,#06111c','#0a2a15,#061409','#1a0a3a,#0e0620'];
+    const thumbStyle = g.img ? `background:#f5f2ec;` : `background:linear-gradient(135deg,${thumbGrads[idx%4]});`;
 
     card.innerHTML = `
       <div class="gc-top">
-        <div class="${thumbClass}" style="position:relative;">
-          ${thumbContent}
-          ${g.featured ? '<span class="gc-top-pick">⭐ TOP PICK</span>' : ''}
+        <div class="gc-thumb" style="${thumbStyle}position:relative;">
+          ${g.img ? `<img src="${g.img}" alt="${g.name}" style="width:100%;height:100%;object-fit:cover;border-radius:12px;">` : `<span>${g.emoji}</span>`}
+          ${isYourGroomer ? '<span style="position:absolute;top:4px;left:0;right:0;text-align:center;background:#34c759;color:#fff;font-size:7px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;padding:2px 0;">YOUR GROOMER</span>' : ''}
         </div>
         <div class="gc-info">
           <div class="gc-name-row">
             <div class="gc-name">${g.name}</div>
-            ${g.distanceLabel ? `<div class="gc-dist">${g.distanceLabel}</div>` : ''}
+            <div style="display:flex;align-items:center;gap:6px;">
+              <span style="color:#ff6b6b;font-size:16px;cursor:pointer;" onclick="event.stopPropagation()">♡</span>
+              ${g.distanceLabel ? `<span class="gc-dist">${g.distanceLabel}</span>` : ''}
+            </div>
           </div>
+          ${isYourGroomer ? `<div style="font-size:11px;color:#34c759;font-weight:700;margin-bottom:2px;">● Jill — Your groomer</div>` : ''}
           <div class="gc-rating-row">
             <span class="gc-star">★</span>
             <span>${g.rating}</span>
             <span style="color:#ccc;">·</span>
             <span>${g.reviews} reviews</span>
           </div>
-          <div class="gc-avail">
-            <span class="gc-avail-dot ${availDotClass}"></span>
-            <span class="gc-avail-text ${availTextClass}">${availLabel}</span>
+          <div style="font-size:12px;margin-bottom:3px;">${availLine}</div>
+          <div style="font-size:12px;color:#666;font-weight:500;">
+            ${priceRange} · ${selectedService ? selectedService.time : '1–2 hrs'}
           </div>
-          ${noOpenings && nextLabel ? `<div class="gc-avail-next" style="font-size:11px;color:#999;margin-top:2px;">${nextLabel}</div>` : ''}
         </div>
       </div>
-      <div class="gc-divider"></div>
-      <div class="gc-price-row">
-        <span class="gc-price">${priceRange} for ${selectedBreed || 'your dog'}</span>
-        <span class="gc-dot-sep">·</span>
-        <span>${selectedService ? selectedService.time : '1–2 hrs'}</span>
-      </div>
       ${g.firstGroom ? `<div class="gc-discount">🏷️ ${g.discountPct}% off your first groom</div>` : ''}
-      <button class="${bookBtnClass}" onclick="event.stopPropagation();${noOpenings ? `openWaitlistPage()` : `bookGroomerDirect('${g.name}', '2:30 PM')`}">${bookBtnLabel}</button>
-      <span class="gc-other-times" onclick="event.stopPropagation();bookGroomer('${g.name}')">Find other times →</span>
+      ${avatarHTML}
+      <div class="gc-divider" style="margin-top:8px;"></div>
+      ${ctaHTML}
     `;
 
     cards.appendChild(card);
