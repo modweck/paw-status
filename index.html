@@ -763,113 +763,432 @@
 </style>
 </head>
 <body>
-<div class="phone">
+<!-- ══ NEW HOME SCREEN STYLES ══ -->
+<style>
+/* Override body/phone background for the new design */
+body { background: #e8e2d8 !important; }
+.phone { background: #ede8e0 !important; overflow: visible !important; }
 
-  <div class="header">
-    <div class="logo"><div><span class="paw">Paw</span><span class="stat">Status</span></div></div>
-    <div class="hero-title">Find a groomer<br>your dog will <span class="accent">love</span></div>
-    <div class="hero-sub">Real prices by breed · Live slots · Pickup alerts</div>
+/* Botanical background */
+.home-botanical {
+  position: absolute;
+  top: 0; right: 0;
+  width: 170px;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.5;
+}
+
+/* Top bar */
+.home-topbar {
+  position: relative; z-index: 2;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 54px 20px 0;
+  background: transparent;
+}
+.home-logo { font-family: 'DM Serif Display', serif; font-size: 26px; line-height: 1; }
+.home-logo .paw { color: #8b7320; }
+.home-logo .stat { color: #1a1a1a; }
+.home-bells { display: flex; align-items: center; gap: 14px; }
+.home-bell-btn { background: none; border: none; cursor: pointer; padding: 4px; line-height: 1; }
+
+/* Hero text */
+.home-hero {
+  position: relative; z-index: 2;
+  padding: 20px 20px 0;
+}
+.home-hero-title {
+  font-family: 'DM Serif Display', serif;
+  font-size: 30px; color: #1a1a1a;
+  line-height: 1.18; margin-bottom: 10px;
+}
+.home-hero-sub { font-size: 14px; color: #888; line-height: 1.55; }
+
+/* Scroll content */
+.home-content {
+  position: relative; z-index: 2;
+  flex: 1; overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 20px 16px 100px;
+}
+
+/* ── SEARCH CARD ── */
+.home-search-card {
+  background: #fff;
+  border-radius: 20px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+  margin-bottom: 14px;
+  overflow: hidden; /* clip dropdowns inside */
+}
+
+/* Location row */
+.hsc-location {
+  display: flex; align-items: flex-start; flex-direction: column;
+  padding: 15px 18px 12px;
+  border-bottom: 1px solid #f0ece4;
+  position: relative;
+}
+.hsc-loc-input-row { display: flex; align-items: center; gap: 10px; width: 100%; }
+.hsc-loc-input-row input {
+  flex: 1; border: none; outline: none;
+  font-family: 'DM Sans', sans-serif; font-size: 15px;
+  color: #333; background: transparent;
+}
+.hsc-loc-input-row input::placeholder { color: #bbb; }
+#locationSuggestions {
+  position: absolute; left: 0; right: 0; top: 100%;
+  background: #fff;
+  border: 1.5px solid rgba(139,115,32,.25);
+  border-top: none;
+  border-radius: 0 0 16px 16px;
+  z-index: 999;
+  box-shadow: 0 8px 24px rgba(0,0,0,.1);
+  overflow: hidden;
+}
+.location-confirmed {
+  display: none; align-items: center; gap: 6px;
+  font-size: 12px; color: #8b7320; font-weight: 600;
+  margin-top: 5px; padding: 0; background: none; border: none;
+}
+.location-confirmed.show { display: flex; }
+.hsc-use-location {
+  display: flex; align-items: center; gap: 6px;
+  margin-top: 7px; cursor: pointer;
+  font-size: 13px; font-weight: 600; color: #8b7320;
+  background: none; border: none; padding: 0;
+  font-family: 'DM Sans', sans-serif;
+}
+
+/* Pill selector rows (breed + service) */
+.hsc-picker-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 13px 18px; cursor: pointer;
+  transition: background .15s;
+  border-bottom: 1px solid #f0ece4;
+}
+.hsc-picker-row:hover { background: #faf8f5; }
+.hsc-picker-left { display: flex; align-items: center; gap: 12px; }
+.hsc-picker-icon {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: #f5f0e8;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; flex-shrink: 0;
+}
+.hsc-picker-icon.svc { background: #fdf0f0; }
+.hsc-picker-name {
+  font-size: 15px; font-weight: 600; color: #1a1a1a;
+}
+.hsc-picker-name.placeholder { color: #bbb; font-weight: 400; }
+.hsc-pill-chevron {
+  width: 28px; height: 28px; border-radius: 50%;
+  border: 1.5px solid #e8e2d8; background: #fff;
+  display: flex; align-items: center; justify-content: center;
+  color: #bbb; font-size: 13px; flex-shrink: 0;
+  transition: transform .2s;
+}
+.hsc-pill-chevron.open { transform: rotate(90deg); }
+
+/* The actual breed/service dropdowns — use original IDs, new styling */
+.breed-list {
+  display: none; flex-direction: column;
+  max-height: 260px; overflow-y: auto;
+  border-top: 1px solid #f0ece4;
+}
+.breed-list.open { display: flex; }
+
+.service-list {
+  display: none; flex-direction: column;
+  max-height: 280px; overflow-y: auto;
+  border-top: 1px solid #f0ece4;
+}
+.service-list.open { display: flex; }
+
+/* Search boxes */
+.picker-search {
+  display: none;
+  padding: 10px 16px;
+  border-top: 1px solid #f0ece4;
+  background: #faf8f5;
+}
+.picker-search.open { display: block; }
+.picker-search input {
+  width: 100%;
+  border: 1.5px solid #d4a820;
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px; color: #333;
+  outline: none; background: #fff;
+}
+.picker-search input:focus { border-color: #8b7320; }
+
+/* Breed items */
+.breed-item {
+  padding: 13px 18px;
+  font-size: 14px; color: #222;
+  cursor: pointer;
+  border-bottom: 1px solid #f5f2ec;
+  transition: background .12s;
+  font-family: 'DM Sans', sans-serif;
+}
+.breed-item:last-child { border-bottom: none; }
+.breed-item:hover { background: #faf6ee; }
+.breed-item.selected { background: #fff8e8; color: #8b7320; font-weight: 600; }
+.breed-item.hidden { display: none; }
+
+/* Service items */
+.service-item {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 13px 18px; cursor: pointer;
+  border-bottom: 1px solid #f5f2ec;
+  transition: background .12s;
+}
+.service-item:last-child { border-bottom: none; }
+.service-item:hover { background: #faf6ee; }
+.service-item.selected { background: #fff8e8; }
+.service-item.hidden { display: none; }
+.service-left { display: flex; align-items: center; gap: 12px; }
+.service-emoji { font-size: 22px; }
+.service-name { font-size: 14px; font-weight: 600; color: #1a1a1a; }
+.service-desc { font-size: 12px; color: #aaa; margin-top: 1px; }
+.service-price { font-size: 13px; font-weight: 700; color: #8b7320; white-space: nowrap; }
+
+/* Estimate strip */
+.estimate-banner {
+  display: none;
+  background: #fff8e8;
+  border-top: 1px solid #f0ece4;
+  padding: 13px 18px;
+  margin: 0;
+  border-radius: 0;
+}
+.estimate-banner.show { display: block; }
+.estimate-title { font-size: 10px; font-weight: 700; color: #8b7320; margin-bottom: 6px; letter-spacing: .05em; text-transform: uppercase; }
+.estimate-row { display: flex; justify-content: space-between; align-items: center; }
+.estimate-service { font-size: 14px; font-weight: 600; color: #222; }
+.estimate-price { font-family: 'DM Serif Display', serif; font-size: 22px; color: #8b7320; }
+.estimate-time { font-size: 11px; color: #aaa; margin-top: 2px; }
+
+/* CTA */
+.home-cta {
+  display: block; width: calc(100% - 32px);
+  margin: 14px 16px 16px;
+  background: #8b7320; color: #fff;
+  border: none; border-radius: 14px; padding: 16px;
+  font-family: 'DM Serif Display', serif; font-size: 18px;
+  cursor: pointer; text-align: center;
+  transition: background .2s, transform .1s;
+}
+.home-cta:active { transform: scale(0.98); }
+.home-cta:disabled { background: #c4b87a; cursor: not-allowed; }
+.home-cta:not(:disabled):hover { background: #7a651c; }
+
+/* ── WAITLIST CARD ── */
+.home-waitlist-card {
+  background: #fff; border-radius: 18px;
+  box-shadow: 0 2px 14px rgba(0,0,0,0.07);
+  margin-bottom: 14px; overflow: hidden;
+}
+.hwc-top { display: flex; align-items: flex-start; gap: 14px; padding: 18px 18px 14px; }
+.hwc-bell { font-size: 26px; line-height: 1; flex-shrink: 0; margin-top: 1px; }
+.hwc-title { font-family: 'DM Serif Display', serif; font-size: 17px; color: #8b7320; margin-bottom: 4px; }
+.hwc-sub { font-size: 13px; color: #aaa; line-height: 1.45; }
+.hwc-divider { height: 1px; background: #f0ece4; }
+.hwc-btn {
+  display: block; margin: 14px 18px 18px;
+  background: #9a8428; color: #fff;
+  border: none; border-radius: 12px; padding: 14px;
+  font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 700;
+  cursor: pointer; text-align: center; transition: background .2s;
+  width: calc(100% - 36px);
+}
+.hwc-btn:hover { background: #8b7320; }
+
+/* ── REBOOK CARD ── */
+.home-rebook-card {
+  background: #fff; border-radius: 18px;
+  box-shadow: 0 2px 14px rgba(0,0,0,0.07);
+  overflow: hidden;
+}
+.hrc-row {
+  display: flex; align-items: center; gap: 14px;
+  padding: 16px 18px; cursor: pointer;
+}
+.hrc-avatar {
+  width: 48px; height: 48px; border-radius: 50%;
+  background: #f5edd8; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden;
+}
+.hrc-text { flex: 1; }
+.hrc-name { font-size: 15px; font-weight: 700; color: #1a1a1a; margin-bottom: 3px; }
+.hrc-sub { font-size: 13px; color: #aaa; }
+.hrc-chev {
+  width: 28px; height: 28px; border-radius: 50%;
+  border: 1.5px solid #e8e2d8;
+  display: flex; align-items: center; justify-content: center;
+  color: #bbb; font-size: 13px; flex-shrink: 0;
+}
+</style>
+
+<div class="phone" style="position:relative;">
+
+  <!-- Botanical SVG -->
+  <svg class="home-botanical" viewBox="0 0 200 340" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M158 0 Q153 80 138 160 Q128 220 118 340" stroke="#b8c8a0" stroke-width="2" fill="none"/>
+    <ellipse cx="176" cy="58" rx="30" ry="17" fill="#c8d8a8" transform="rotate(-28 176 58)" opacity=".85"/>
+    <ellipse cx="168" cy="60" rx="26" ry="13" fill="#d8e8b8" transform="rotate(-28 168 60)" opacity=".6"/>
+    <path d="M158 53 Q183 46 192 63 Q175 70 158 53Z" fill="#b0c890" opacity=".75"/>
+    <ellipse cx="136" cy="93" rx="27" ry="13" fill="#bccfa0" transform="rotate(22 136 93)" opacity=".8"/>
+    <ellipse cx="130" cy="94" rx="21" ry="10" fill="#ccd8b0" transform="rotate(22 130 94)" opacity=".55"/>
+    <ellipse cx="163" cy="138" rx="28" ry="15" fill="#c0d0a0" transform="rotate(-24 163 138)" opacity=".75"/>
+    <path d="M146 130 Q170 124 178 146 Q160 150 146 130Z" fill="#a8c088" opacity=".65"/>
+    <ellipse cx="128" cy="183" rx="19" ry="10" fill="#b8cca0" transform="rotate(16 128 183)" opacity=".65"/>
+    <ellipse cx="153" cy="208" rx="23" ry="11" fill="#c4d4a8" transform="rotate(-18 153 208)" opacity=".6"/>
+    <circle cx="188" cy="98" r="3.5" fill="#e8d4a0" opacity=".75"/>
+    <circle cx="183" cy="106" r="2" fill="#ddc890" opacity=".65"/>
+    <circle cx="173" cy="170" r="3" fill="#e0d098" opacity=".7"/>
+  </svg>
+
+  <!-- Top bar -->
+  <div class="home-topbar">
+    <div class="home-logo"><span class="paw">Paw</span><span class="stat">Status</span></div>
+    <div class="home-bells">
+      <button class="home-bell-btn" aria-label="Notifications">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+          <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+        </svg>
+      </button>
+      <button class="home-bell-btn" aria-label="Active alerts" style="position:relative;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#8b7320" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+          <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+        </svg>
+        <span style="position:absolute;top:3px;right:3px;width:7px;height:7px;border-radius:50%;background:#c8a84b;border:1.5px solid #ede8e0;"></span>
+      </button>
+    </div>
   </div>
 
-  <div class="content">
+  <!-- Hero -->
+  <div class="home-hero">
+    <div class="home-hero-title">Book a groomer in seconds — no calls, no waiting</div>
+    <div class="home-hero-sub">See real availability, transparent pricing, and rebook instantly.</div>
+  </div>
 
-    <!-- LOCATION -->
-    <div class="section-label">📍 Your Location</div>
-    <div class="location-box" style="position:relative">
-      <div class="location-input-row">
-        <span>📍</span>
-        <input type="text" id="locationInput" placeholder="e.g. 515 E 72nd St, New York" oninput="onLocationInput(this.value)" autocomplete="off"/>
-      </div>
-      <div id="locationSuggestions" style="display:none;position:absolute;left:0;right:0;top:calc(100% - 2px);background:#fff;border:1.5px solid rgba(139,115,32,.25);border-top:none;border-radius:0 0 16px 16px;z-index:999;box-shadow:0 8px 24px rgba(0,0,0,.1);overflow:hidden;margin:0 0px"></div>
-      <div class="location-confirmed" id="locationConfirmed"><span>✓</span><span id="locationText">Location set</span></div>
-      <div class="share-btn" onclick="shareLocation()">🎯 Use My Current Location</div>
-    </div>
+  <!-- Scrollable content -->
+  <div class="home-content">
 
-    <!-- BREED -->
-    <div class="section-label">🐕 Dog Breed</div>
-    <div class="picker-box">
-      <div class="picker-header" onclick="toggleBreed()">
-        <div class="picker-header-left">
-          <span class="picker-icon">🐕</span>
-          <div>
-            <span class="picker-label-small">Breed</span>
-            <span class="picker-value placeholder" id="breedValue">Select your dog's breed</span>
-          </div>
+    <!-- ── SEARCH CARD ── -->
+    <div class="home-search-card">
+
+      <!-- Location -->
+      <div class="hsc-location">
+        <div class="hsc-loc-input-row">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#e05a6a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+          </svg>
+          <input type="text" id="locationInput" placeholder="e.g. 515 E 72nd St, New York" oninput="onLocationInput(this.value)" autocomplete="off"/>
         </div>
-        <span class="chevron" id="breedChevron">›</span>
+        <div id="locationSuggestions" style="display:none;"></div>
+        <div class="location-confirmed" id="locationConfirmed"><span>✓</span><span id="locationText">Location set</span></div>
+        <button class="hsc-use-location" onclick="shareLocation()">🎯 Use My Current Location</button>
+      </div>
+
+      <!-- Breed picker — keeps original IDs breedGrid, breedSearchBox, breedChevron, breedValue -->
+      <div class="hsc-picker-row" onclick="toggleBreed()">
+        <div class="hsc-picker-left">
+          <div class="hsc-picker-icon">🐕</div>
+          <span class="hsc-picker-name placeholder" id="breedValue">Select your dog's breed</span>
+        </div>
+        <div class="hsc-pill-chevron" id="breedChevron">›</div>
       </div>
       <div class="picker-search" id="breedSearchBox">
         <input type="text" id="breedSearch" placeholder="🔍 Type to search breeds..." oninput="filterBreeds(this.value)"/>
       </div>
       <div class="breed-list" id="breedGrid"></div>
-    </div>
 
-    <!-- SERVICE -->
-    <div class="section-label">✂️ Service</div>
-    <div class="picker-box">
-      <div class="picker-header" onclick="toggleService()">
-        <div class="picker-header-left">
-          <span class="picker-icon">✂️</span>
-          <div>
-            <span class="picker-label-small">Service</span>
-            <span class="picker-value placeholder" id="serviceValue">Select a service</span>
+      <!-- Service picker — keeps original IDs serviceList, serviceSearchBox, serviceChevron, serviceValue -->
+      <div class="hsc-picker-row" onclick="toggleService()" style="border-bottom:none;">
+        <div class="hsc-picker-left">
+          <div class="hsc-picker-icon svc">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#e08080" stroke-width="2" stroke-linecap="round">
+              <circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/>
+              <line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/>
+              <line x1="8.12" y1="8.12" x2="12" y2="12"/>
+            </svg>
           </div>
+          <span class="hsc-picker-name placeholder" id="serviceValue">Select a service</span>
         </div>
-        <span class="chevron" id="serviceChevron">›</span>
+        <div class="hsc-pill-chevron" id="serviceChevron">›</div>
       </div>
       <div class="picker-search" id="serviceSearchBox">
         <input type="text" id="serviceSearch" placeholder="🔍 Type to search services..." oninput="filterServices(this.value)"/>
       </div>
       <div class="service-list" id="serviceList"></div>
-    </div>
 
-    <!-- ESTIMATE -->
-    <div class="estimate-banner" id="estimateBanner">
-      <div class="estimate-title">💰 Price Estimate</div>
-      <div class="estimate-row">
-        <div>
-          <div class="estimate-service" id="estimateService"></div>
-          <div class="estimate-time" id="estimateTime"></div>
+      <!-- Estimate -->
+      <div class="estimate-banner" id="estimateBanner">
+        <div class="estimate-title">💰 Price Estimate</div>
+        <div class="estimate-row">
+          <div>
+            <div class="estimate-service" id="estimateService"></div>
+            <div class="estimate-time" id="estimateTime"></div>
+          </div>
+          <div class="estimate-price" id="estimatePrice"></div>
         </div>
-        <div class="estimate-price" id="estimatePrice"></div>
       </div>
+
+      <!-- CTA -->
+      <button class="home-cta" id="searchBtn" onclick="findGroomers()" disabled>Find Next Available Groomers 🐾</button>
+
+    </div><!-- end search card -->
+
+    <!-- ── WAITLIST CARD ── -->
+    <div class="home-waitlist-card">
+      <div class="hwc-top">
+        <div class="hwc-bell">🔔</div>
+        <div>
+          <div class="hwc-title">Waitlist for Sooner Openings</div>
+          <div class="hwc-sub">Get notified when a groomer has a sooner opening.</div>
+        </div>
+      </div>
+      <div class="hwc-divider"></div>
+      <button class="hwc-btn" onclick="openWaitlistPage()">Join Waitlist &rarr;</button>
     </div>
 
-    <button class="search-btn" id="searchBtn" onclick="findGroomers()" disabled>🐾 Find Groomers</button>
-
-    <!-- REMINDER CARD — under find groomers -->
-    <div class="reminder-card" id="reminderCard">
-      <div class="reminder-inner">
-        <div class="dog-avatar">
-          <svg width="38" height="38" viewBox="0 0 100 100" fill="none">
-            <ellipse cx="50" cy="78" rx="30" ry="18" fill="#c8a55a"/>
-            <circle cx="50" cy="46" r="24" fill="#d4b06a"/>
-            <ellipse cx="32" cy="30" rx="10" ry="15" fill="#b8943a" transform="rotate(-12 32 30)"/>
-            <ellipse cx="68" cy="30" rx="10" ry="15" fill="#b8943a" transform="rotate(12 68 30)"/>
-            <ellipse cx="32" cy="32" rx="6" ry="10" fill="#c8a048" transform="rotate(-12 32 32)"/>
-            <ellipse cx="68" cy="32" rx="6" ry="10" fill="#c8a048" transform="rotate(12 68 32)"/>
-            <ellipse cx="50" cy="53" rx="12" ry="9" fill="#c8a048"/>
-            <ellipse cx="50" cy="48" rx="5" ry="4" fill="#3a2a1a"/>
-            <circle cx="42" cy="41" r="5" fill="#2a1a0a"/><circle cx="58" cy="41" r="5" fill="#2a1a0a"/>
-            <circle cx="43" cy="39" r="1.5" fill="white"/><circle cx="59" cy="39" r="1.5" fill="white"/>
-            <path d="M45 57 Q50 61 55 57" stroke="#3a2a1a" stroke-width="1.2" fill="none" stroke-linecap="round"/>
-            <ellipse cx="50" cy="61" rx="4" ry="3" fill="#e8707a"/>
-            <ellipse cx="50" cy="66" rx="14" ry="9" fill="#e0c880"/>
+    <!-- ── REBOOK CARD ── -->
+    <div class="home-rebook-card" id="reminderCard">
+      <div class="hrc-row" onclick="bookGroomer('Jill\'s Pet Studio')">
+        <div class="hrc-avatar">
+          <svg width="48" height="48" viewBox="0 0 100 100" fill="none">
+            <circle cx="50" cy="55" r="32" fill="#d4a840"/>
+            <ellipse cx="50" cy="82" rx="22" ry="13" fill="#c09030"/>
+            <ellipse cx="30" cy="36" rx="12" ry="18" fill="#b88820" transform="rotate(-10 30 36)"/>
+            <ellipse cx="70" cy="36" rx="12" ry="18" fill="#b88820" transform="rotate(10 70 36)"/>
+            <ellipse cx="30" cy="37" rx="7" ry="12" fill="#c8a030" transform="rotate(-10 30 37)"/>
+            <ellipse cx="70" cy="37" rx="7" ry="12" fill="#c8a030" transform="rotate(10 70 37)"/>
+            <ellipse cx="50" cy="62" rx="15" ry="11" fill="#c89828"/>
+            <ellipse cx="50" cy="57" rx="6" ry="5" fill="#2a1800"/>
+            <circle cx="40" cy="48" r="6" fill="#1a0e00"/>
+            <circle cx="60" cy="48" r="6" fill="#1a0e00"/>
+            <circle cx="41" cy="46" r="2" fill="white"/>
+            <circle cx="61" cy="46" r="2" fill="white"/>
+            <path d="M43 66 Q50 72 57 66" stroke="#2a1800" stroke-width="2" fill="none" stroke-linecap="round"/>
+            <ellipse cx="50" cy="70" rx="5" ry="4" fill="#e87080"/>
           </svg>
         </div>
-        <div>
-          <span class="reminder-badge">⏰ Reminder</span>
-          <div class="reminder-title">Next cut due in <span class="gold">2 weeks</span></div>
-          <div class="reminder-sub">Book same service with <strong>Jill</strong> again?</div>
+        <div class="hrc-text">
+          <div class="hrc-name"><strong>Bella</strong> cut due in 2 weeks</div>
+          <div class="hrc-sub">Ask to Rebook Jill's Pet Studio</div>
         </div>
+        <div class="hrc-chev">›</div>
       </div>
-      <button class="btn-check" onclick="this.textContent='✓ Checking availability...'">📅 Check Availability with Jill</button>
     </div>
 
-  </div>
+  </div><!-- end home-content -->
 
-
-</div>
+</div><!-- end .phone -->
 
 <!-- RESULTS PAGE — slides in from right -->
 <div class="results-page" id="resultsPage">
@@ -1008,6 +1327,10 @@ function toggleBreed() {
   const open = document.getElementById('breedGrid').classList.toggle('open');
   document.getElementById('breedChevron').classList.toggle('open', open);
   document.getElementById('breedSearchBox').classList.toggle('open', open);
+  // close service if open
+  document.getElementById('serviceList').classList.remove('open');
+  document.getElementById('serviceChevron').classList.remove('open');
+  document.getElementById('serviceSearchBox').classList.remove('open');
   if (open) setTimeout(() => document.getElementById('breedSearch').focus(), 100);
 }
 
@@ -1015,6 +1338,10 @@ function toggleService() {
   const open = document.getElementById('serviceList').classList.toggle('open');
   document.getElementById('serviceChevron').classList.toggle('open', open);
   document.getElementById('serviceSearchBox').classList.toggle('open', open);
+  // close breed if open
+  document.getElementById('breedGrid').classList.remove('open');
+  document.getElementById('breedChevron').classList.remove('open');
+  document.getElementById('breedSearchBox').classList.remove('open');
   if (open) setTimeout(() => document.getElementById('serviceSearch').focus(), 100);
 }
 
@@ -1039,9 +1366,11 @@ function selectBreed(breed, item) {
   item.classList.add('selected');
   selectedBreed = breed;
   const v = document.getElementById('breedValue');
-  v.textContent = breed; v.classList.remove('placeholder');
+  v.textContent = breed;
+  v.classList.remove('placeholder');
   document.getElementById('breedGrid').classList.remove('open');
-  document.getElementById('breedChevron').classList.remove('open');
+  const chev = document.getElementById('breedChevron');
+  chev.classList.remove('open');
   document.getElementById('breedSearchBox').classList.remove('open');
   document.getElementById('breedSearch').value = '';
   filterBreeds('');
@@ -1053,7 +1382,8 @@ function selectService(svc, item) {
   item.classList.add('selected');
   selectedService = svc;
   const v = document.getElementById('serviceValue');
-  v.textContent = svc.name; v.classList.remove('placeholder');
+  v.textContent = svc.name;
+  v.classList.remove('placeholder');
   document.getElementById('serviceList').classList.remove('open');
   document.getElementById('serviceChevron').classList.remove('open');
   document.getElementById('serviceSearchBox').classList.remove('open');
@@ -3616,6 +3946,482 @@ function confirmModify() {
   </div>
 </div>
 
+<!-- ══════════════════════════════════════════
+     WAITLIST PAGE
+══════════════════════════════════════════ -->
+<style>
+#waitlistPage {
+  position: fixed; inset: 0;
+  max-width: 430px; margin: 0 auto;
+  background: #f0ebe2;
+  z-index: 3000;
+  display: flex; flex-direction: column;
+  transform: translateX(100%);
+  transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+  font-family: 'DM Sans', sans-serif;
+  overflow: hidden;
+}
+#waitlistPage.wl-open { transform: translateX(0); }
+
+/* Top bar */
+.wl-topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 54px 20px 14px;
+  background: #f0ebe2;
+  flex-shrink: 0;
+}
+.wl-back {
+  background: none; border: none; cursor: pointer;
+  font-size: 22px; color: #333; padding: 4px; line-height: 1;
+}
+.wl-logo { font-family: 'DM Serif Display', serif; font-size: 22px; }
+.wl-logo span:first-child { color: #8b7320; }
+.wl-logo span:last-child { color: #1a1a1a; }
+.wl-bell { background: none; border: none; cursor: pointer; padding: 4px; }
+
+/* Scroll body */
+.wl-body {
+  flex: 1; overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 0 16px 120px;
+}
+
+/* Groomer card */
+.wl-groomer-card {
+  background: #fff;
+  border-radius: 18px;
+  padding: 14px 16px;
+  margin-bottom: 18px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+}
+.wl-groomer-top {
+  display: flex; align-items: flex-start; gap: 14px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #f0ece4;
+  margin-bottom: 10px;
+}
+.wl-groomer-img {
+  width: 72px; height: 72px; border-radius: 12px;
+  object-fit: cover; flex-shrink: 0;
+  background: linear-gradient(135deg, #2a1a08, #4a3010);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28px; overflow: hidden;
+}
+.wl-groomer-name {
+  font-family: 'DM Serif Display', serif;
+  font-size: 20px; color: #1a1a1a; margin-bottom: 4px;
+}
+.wl-groomer-meta {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 13px; color: #888; margin-bottom: 4px;
+}
+.wl-star { color: #c8a84b; }
+.wl-service-row {
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: 13px; color: #aaa;
+}
+.wl-service-row .wl-chev { color: #bbb; font-size: 16px; }
+.wl-view-others {
+  font-size: 13px; color: #888;
+  cursor: pointer; display: flex; align-items: center; gap: 4px;
+}
+.wl-view-others:hover { color: #8b7320; }
+
+/* Section title */
+.wl-section-title {
+  font-family: 'DM Serif Display', serif;
+  font-size: 20px; color: #1a1a1a;
+  margin-bottom: 14px;
+}
+
+/* Time pills */
+.wl-time-pills {
+  display: flex; gap: 10px; margin-bottom: 20px;
+}
+.wl-time-pill {
+  flex: 1; padding: 12px 8px;
+  border-radius: 12px; border: 1.5px solid #ddd;
+  background: #fff; font-size: 14px; font-weight: 600;
+  color: #333; cursor: pointer; text-align: center;
+  transition: all .15s; font-family: 'DM Sans', sans-serif;
+}
+.wl-time-pill.active {
+  border-color: #8b7320; color: #8b7320;
+  background: #fff;
+}
+.wl-time-pill .wl-bolt { margin-right: 4px; }
+
+/* Time dropdown */
+.wl-time-row {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 18px;
+}
+.wl-time-label {
+  font-family: 'DM Serif Display', serif;
+  font-size: 18px; color: #1a1a1a;
+}
+.wl-time-line { flex: 1; height: 1px; background: #e8e2d8; margin: 0 14px; }
+.wl-time-select {
+  display: flex; align-items: center; gap: 8px;
+  background: #fff; border: 1.5px solid #e0dbd2;
+  border-radius: 10px; padding: 8px 14px;
+  font-size: 14px; color: #444; cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+}
+.wl-time-select svg { color: #888; }
+
+/* Get in faster box */
+.wl-faster-card {
+  background: #fff; border-radius: 18px;
+  padding: 16px; margin-bottom: 18px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+}
+.wl-faster-title {
+  font-size: 16px; font-weight: 700; color: #1a1a1a;
+  margin-bottom: 4px; display: flex; align-items: center; gap: 8px;
+}
+.wl-faster-sub { font-size: 13px; color: #aaa; margin-bottom: 14px; }
+
+/* Groomer rows */
+.wl-groomer-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 14px; border-radius: 14px;
+  margin-bottom: 8px; cursor: pointer;
+  border: 1.5px solid transparent;
+  transition: all .15s; background: #fafaf8;
+}
+.wl-groomer-row.selected {
+  border-color: #c8a84b; background: #fffdf7;
+}
+.wl-groomer-row:last-child { margin-bottom: 0; }
+.wl-gr-avatar {
+  width: 44px; height: 44px; border-radius: 50%;
+  background: #e8dfc8; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px; overflow: hidden;
+}
+.wl-gr-name { font-size: 15px; font-weight: 600; color: #1a1a1a; flex: 1; }
+.wl-gr-avail { font-size: 13px; font-weight: 600; }
+.wl-gr-avail.green { color: #3a9a3a; }
+.wl-gr-avail.orange { color: #e07820; }
+.wl-gr-btn {
+  width: 30px; height: 30px; border-radius: 50%;
+  border: 1.5px solid #ddd; background: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; color: #bbb; flex-shrink: 0;
+  transition: all .15s;
+}
+.wl-groomer-row.selected .wl-gr-btn {
+  background: #8b7320; border-color: #8b7320; color: #fff; font-size: 14px;
+}
+
+/* Notify by */
+.wl-notify-row {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 24px;
+}
+.wl-notify-label {
+  font-family: 'DM Serif Display', serif;
+  font-size: 18px; color: #1a1a1a;
+}
+.wl-notify-pills { display: flex; gap: 10px; }
+.wl-notify-pill {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 18px; border-radius: 30px;
+  border: 1.5px solid #ddd; background: #fff;
+  font-size: 14px; font-weight: 600; color: #555;
+  cursor: pointer; transition: all .15s;
+  font-family: 'DM Sans', sans-serif;
+}
+.wl-notify-pill.active { border-color: #8b7320; color: #8b7320; }
+.wl-notify-radio {
+  width: 18px; height: 18px; border-radius: 50%;
+  border: 2px solid #ddd; background: #fff;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; transition: all .15s;
+}
+.wl-notify-pill.active .wl-notify-radio {
+  border-color: #8b7320; background: #8b7320;
+}
+.wl-notify-pill.active .wl-notify-radio::after {
+  content: '✓'; color: #fff; font-size: 11px; font-weight: 700;
+}
+
+/* Bottom CTA */
+.wl-cta-wrap {
+  position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+  width: 100%; max-width: 430px;
+  padding: 16px 16px env(safe-area-inset-bottom, 16px);
+  background: linear-gradient(transparent, #f0ebe2 30%);
+  z-index: 10;
+}
+.wl-cta {
+  display: block; width: 100%;
+  background: #7a6218; color: #fff;
+  border: none; border-radius: 16px; padding: 18px;
+  font-family: 'DM Serif Display', serif; font-size: 20px;
+  cursor: pointer; text-align: center;
+  transition: background .2s, transform .1s;
+  box-shadow: 0 4px 20px rgba(122,98,24,0.35);
+}
+.wl-cta:active { transform: scale(0.98); }
+.wl-cta:hover { background: #6a5410; }
+</style>
+
+<div id="waitlistPage">
+
+  <!-- Top bar -->
+  <div class="wl-topbar">
+    <button class="wl-back" onclick="closeWaitlistPage()">←</button>
+    <div class="wl-logo"><span>Paw</span><span>Status</span></div>
+    <button class="wl-bell">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+        <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- Scrollable body -->
+  <div class="wl-body">
+
+    <!-- Groomer card -->
+    <div class="wl-groomer-card">
+      <div class="wl-groomer-top">
+        <!-- Storefront image -->
+        <div class="wl-groomer-img">
+          <svg width="72" height="72" viewBox="0 0 72 72" fill="none">
+            <rect width="72" height="72" rx="12" fill="#1a1008"/>
+            <rect x="8" y="32" width="56" height="32" rx="2" fill="#2a1e0a"/>
+            <rect x="12" y="36" width="20" height="24" rx="2" fill="#3a2a10"/>
+            <rect x="14" y="38" width="16" height="14" rx="1" fill="#f5c840" opacity=".15"/>
+            <rect x="40" y="36" width="18" height="10" rx="2" fill="#3a2a10"/>
+            <rect x="42" y="38" width="14" height="8" rx="1" fill="#f5c840" opacity=".12"/>
+            <rect x="26" y="48" width="20" height="14" rx="2" fill="#2e2008"/>
+            <rect x="30" y="50" width="4" height="8" fill="#4a3010" rx="1"/>
+            <rect x="38" y="50" width="4" height="8" fill="#4a3010" rx="1"/>
+            <rect x="8" y="28" width="56" height="6" rx="1" fill="#c8a840"/>
+            <text x="14" y="25" font-size="6" fill="#c8a840" font-family="sans-serif" font-weight="bold">JILL'S PET STUDIO</text>
+            <rect x="16" y="12" width="8" height="16" rx="1" fill="#3a2a08"/>
+            <rect x="48" y="10" width="8" height="18" rx="1" fill="#3a2a08"/>
+            <circle cx="20" cy="8" r="6" fill="#2a4a10"/>
+            <circle cx="52" cy="6" r="8" fill="#2a4a10" opacity=".8"/>
+            <rect x="28" y="58" width="2" height="10" fill="#8b7320" rx="1"/>
+          </svg>
+        </div>
+        <div style="flex:1;">
+          <div class="wl-groomer-name">Jill's Pet Studio</div>
+          <div class="wl-groomer-meta">
+            <span class="wl-star">★</span>
+            <span id="wlRating">4.8</span>
+            <span>·</span>
+            <span id="wlDist">0.8 mi</span>
+          </div>
+          <div class="wl-service-row">
+            <span id="wlService">Bath &amp; Brush · Bella</span>
+            <span class="wl-chev">›</span>
+          </div>
+        </div>
+      </div>
+      <div class="wl-view-others" onclick="closeWaitlistPage()">
+        View other groomers »
+      </div>
+    </div>
+
+    <!-- When section -->
+    <div class="wl-section-title">When do you want a spot?</div>
+    <div class="wl-time-pills">
+      <div class="wl-time-pill active" onclick="selectWlTime(this)"><span class="wl-bolt">⚡</span>ASAP</div>
+      <div class="wl-time-pill" onclick="selectWlTime(this)">This Week</div>
+      <div class="wl-time-pill" onclick="selectWlTime(this)">Next Week</div>
+    </div>
+
+    <!-- Time of day -->
+    <div class="wl-time-row">
+      <div class="wl-time-label">Time</div>
+      <div class="wl-time-line"></div>
+      <div class="wl-time-select" onclick="toggleWlTimeDrop(event)" id="wlTimeSelectBtn" style="position:relative;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>
+        <span id="wlTimeOfDay">Anytime</span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#aaa" stroke-width="2.5" id="wlTimeChev"><polyline points="6,9 12,15 18,9"/></svg>
+        <!-- Dropdown -->
+        <div id="wlTimeDrop" style="
+          display:none;
+          position:absolute;
+          top:calc(100% + 6px);
+          right:0;
+          background:#fff;
+          border-radius:14px;
+          box-shadow:0 8px 28px rgba(0,0,0,0.13);
+          overflow:hidden;
+          min-width:160px;
+          z-index:100;
+          border:1.5px solid #ede8e0;
+        ">
+          <div class="wl-tod-opt" onclick="pickWlTime(event,'Anytime')">🕐 Anytime</div>
+          <div class="wl-tod-opt" onclick="pickWlTime(event,'Morning')">🌅 Morning</div>
+          <div class="wl-tod-opt" onclick="pickWlTime(event,'Afternoon')">☀️ Afternoon</div>
+          <div class="wl-tod-opt" onclick="pickWlTime(event,'Evening')">🌙 Evening</div>
+        </div>
+      </div>
+    </div>
+    <style>
+      .wl-tod-opt {
+        padding: 13px 18px;
+        font-size: 14px; font-weight: 500; color: #333;
+        cursor: pointer; border-bottom: 1px solid #f5f0e8;
+        transition: background .12s;
+        font-family: 'DM Sans', sans-serif;
+        display: flex; align-items: center; gap: 8px;
+      }
+      .wl-tod-opt:last-child { border-bottom: none; }
+      .wl-tod-opt:hover { background: #fffbf0; }
+      .wl-tod-opt.selected { background: #fff8e8; color: #8b7320; font-weight: 700; }
+    </style>
+
+    <!-- Get in faster -->
+    <div class="wl-faster-card">
+      <div class="wl-faster-title">⚡ Get in faster</div>
+      <div class="wl-faster-sub">Add nearby groomers to increase your chances</div>
+
+      <div class="wl-groomer-row selected" onclick="toggleWlGroomer(this)">
+        <div class="wl-gr-avatar">✂️</div>
+        <div class="wl-gr-name">Jill's Pet Studio</div>
+        <div class="wl-gr-btn">✓</div>
+      </div>
+
+      <div class="wl-groomer-row" onclick="toggleWlGroomer(this)">
+        <div class="wl-gr-avatar" style="background:#e8d8c8;">
+          <svg width="28" height="28" viewBox="0 0 40 40" fill="none">
+            <circle cx="20" cy="20" r="20" fill="#d4b888"/>
+            <circle cx="20" cy="16" r="8" fill="#c8a870"/>
+            <path d="M8 34c0-6.627 5.373-12 12-12h0c6.627 0 12 5.373 12 12" fill="#b89850"/>
+          </svg>
+        </div>
+        <div class="wl-gr-name">Happy Tails</div>
+        <div class="wl-gr-avail green">Next: Tomorrow</div>
+        <div class="wl-gr-btn">+</div>
+      </div>
+
+      <div class="wl-groomer-row" onclick="toggleWlGroomer(this)">
+        <div class="wl-gr-avatar" style="background:#d8c8d8;">
+          <svg width="28" height="28" viewBox="0 0 40 40" fill="none">
+            <circle cx="20" cy="20" r="20" fill="#c8a8c8"/>
+            <circle cx="20" cy="16" r="8" fill="#b898b8"/>
+            <path d="M8 34c0-6.627 5.373-12 12-12h0c6.627 0 12 5.373 12 12" fill="#a888a8"/>
+          </svg>
+        </div>
+        <div class="wl-gr-name">Paws &amp; Co</div>
+        <div class="wl-gr-avail orange">Next: 3 days</div>
+        <div class="wl-gr-btn">+</div>
+      </div>
+    </div>
+
+    <!-- Get notified by -->
+    <div class="wl-notify-row">
+      <div class="wl-notify-label">Get notified by</div>
+      <div class="wl-notify-pills">
+        <div class="wl-notify-pill active" onclick="toggleWlNotify(this)">
+          <div class="wl-notify-radio"></div>
+          Push
+        </div>
+        <div class="wl-notify-pill" onclick="toggleWlNotify(this)">
+          <div class="wl-notify-radio"></div>
+          Text
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end wl-body -->
+
+  <!-- Fixed CTA -->
+  <div class="wl-cta-wrap">
+    <button class="wl-cta" onclick="confirmWaitlistPage()">Join Waitlist</button>
+  </div>
+
+</div><!-- end #waitlistPage -->
+
+<script>
+function openWaitlistPage() {
+  // Sync current breed/service into waitlist page
+  var svc = (window.selectedService && window.selectedService.name) || 'Bath & Brush';
+  var breed = window.selectedBreed || 'Bella';
+  var el = document.getElementById('wlService');
+  if (el) el.textContent = svc + ' · ' + breed;
+
+  var page = document.getElementById('waitlistPage');
+  page.style.display = 'flex';
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => page.classList.add('wl-open'));
+  });
+}
+
+function closeWaitlistPage() {
+  var page = document.getElementById('waitlistPage');
+  page.classList.remove('wl-open');
+  setTimeout(() => { page.style.display = 'none'; }, 300);
+}
+
+function selectWlTime(el) {
+  document.querySelectorAll('.wl-time-pill').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function toggleWlTimeDrop(e) {
+  e.stopPropagation();
+  var drop = document.getElementById('wlTimeDrop');
+  var chev = document.getElementById('wlTimeChev');
+  var isOpen = drop.style.display === 'block';
+  drop.style.display = isOpen ? 'none' : 'block';
+  chev.style.transform = isOpen ? '' : 'rotate(180deg)';
+}
+
+function pickWlTime(e, val) {
+  e.stopPropagation();
+  document.getElementById('wlTimeOfDay').textContent = val;
+  document.getElementById('wlTimeDrop').style.display = 'none';
+  document.getElementById('wlTimeChev').style.transform = '';
+  // highlight selected
+  document.querySelectorAll('.wl-tod-opt').forEach(function(o) {
+    o.classList.toggle('selected', o.textContent.trim().includes(val));
+  });
+}
+
+// Close dropdown if user taps outside
+document.addEventListener('click', function(e) {
+  var drop = document.getElementById('wlTimeDrop');
+  if (drop && drop.style.display === 'block') {
+    if (!e.target.closest('#wlTimeSelectBtn')) {
+      drop.style.display = 'none';
+      document.getElementById('wlTimeChev').style.transform = '';
+    }
+  }
+});
+
+function toggleWlGroomer(row) {
+  var btn = row.querySelector('.wl-gr-btn');
+  var isSelected = row.classList.toggle('selected');
+  btn.textContent = isSelected ? '✓' : '+';
+}
+
+function toggleWlNotify(pill) {
+  document.querySelectorAll('.wl-notify-pill').forEach(p => p.classList.remove('active'));
+  pill.classList.add('active');
+}
+
+function confirmWaitlistPage() {
+  closeWaitlistPage();
+  // Show success toast
+  var toast = document.createElement('div');
+  toast.style.cssText = 'position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:#8b7320;color:#fff;padding:14px 24px;border-radius:30px;font-size:14px;font-weight:600;z-index:5000;box-shadow:0 4px 20px rgba(139,115,32,.4);white-space:nowrap;';
+  toast.textContent = '🔔 You\'re on the waitlist! We\'ll notify you ASAP.';
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 3500);
+}
+
+// Init — hidden by default
+document.getElementById('waitlistPage').style.display = 'none';
+</script>
+
 </body>
 </html>
-
