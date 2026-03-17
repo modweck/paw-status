@@ -270,8 +270,8 @@
   .discount-badge { display:inline-flex; align-items:center; gap:4px; background:#edfaed; border:1.5px solid #5cb85c; color:#2d6a2d; border-radius:20px; padding:3px 10px; font-size:11px; font-weight:700; margin-top:6px; }
   .deals-header { display:none; align-items:center; gap:8px; background:#edfaed; border-bottom:1.5px solid #b8e6b8; padding:10px 16px; font-size:13px; color:#2d6a2d; font-weight:600; }
   .booking-discount { background:#edfaed; border:1.5px solid #5cb85c; border-radius:12px; padding:10px 14px; margin:0 16px 12px; display:flex; align-items:center; gap:10px; }
-  .booking-discount-text { font-size:13px; color:#2d6a2d; font-weight:600; }
-  .booking-discount-sub { font-size:11px; color:#4a8a4a; margin-top:1px; }
+  .booking-discount-text { font-size:12px; color:#2d6a2d; font-weight:600; }
+  .booking-discount-sub { font-size:10px; color:#4a8a4a; margin-top:0; }
   .price-original { text-decoration:line-through; color:#aaa; font-size:13px; margin-right:4px; }
   .price-discounted { color:#2d6a2d; font-weight:700; }
 
@@ -2030,6 +2030,7 @@ function bookGroomer(groomerName) {
           <div class="bk-groomer-rating">
             <span class="star">★</span>
             <span>${(_gd && _gd.rating) || '4.9'}</span>
+            <span style="color:#999;font-size:12px;font-weight:400;margin-left:4px;">· Jill's Calendar</span>
           </div>
           <div class="bk-groomer-reviews">
             <span>🐾</span>
@@ -2043,7 +2044,7 @@ function bookGroomer(groomerName) {
         <!-- Waitlist banner -->
         <div class="bk-waitlist-banner">
           <div class="bk-waitlist-label">🔔 Fully booked until ${blockedEndLabel}</div>
-          <button class="bk-waitlist-btn" onclick="joinWaitlist()">Join Waitlist for Earlier Opening ›</button>
+          <button class="bk-waitlist-btn" onclick="joinWaitlist()">Join Jill's Waitlist for Earlier Opening ›</button>
           <div class="bk-waitlist-sub">Get notified if a spot opens sooner</div>
         </div>
 
@@ -2055,9 +2056,23 @@ function bookGroomer(groomerName) {
         ${calHTML}
       </div>
 
-      <!-- Time slots -->
-      <div class="time-slots-bar" id="timeSlots" style="display:none; padding:14px 16px 0;">
-        <div class="slots-scroll" id="slotsGrid"></div>
+      <!-- Time slots — always visible, scrollable -->
+      <div class="time-slots-bar" id="timeSlots" style="padding:14px 0 0;">
+        <div class="slots-scroll" id="slotsGrid">
+          <div class="slot" onclick="selectSlot(this)">9:00 AM</div>
+          <div class="slot" onclick="selectSlot(this)">9:30 AM</div>
+          <div class="slot" onclick="selectSlot(this)">10:00 AM</div>
+          <div class="slot" onclick="selectSlot(this)">10:30 AM</div>
+          <div class="slot" onclick="selectSlot(this)">11:00 AM</div>
+          <div class="slot" onclick="selectSlot(this)">11:30 AM</div>
+          <div class="slot" onclick="selectSlot(this)">12:00 PM</div>
+          <div class="slot" onclick="selectSlot(this)">1:00 PM</div>
+          <div class="slot" onclick="selectSlot(this)">2:00 PM</div>
+          <div class="slot" onclick="selectSlot(this)">2:30 PM</div>
+          <div class="slot" onclick="selectSlot(this)">3:30 PM</div>
+          <div class="slot" onclick="selectSlot(this)">4:00 PM</div>
+          <div class="slot" onclick="selectSlot(this)">5:00 PM</div>
+        </div>
       </div>
 
       <!-- Discount -->
@@ -3057,15 +3072,15 @@ function openGroomTracker(opts) {
 
 /* Groomer profile block */
 .bk-groomer-profile {
-  display:flex; align-items:center; gap:14px;
-  padding:0 20px 16px; background:#f5f0e8;
+  display:flex; align-items:center; gap:12px;
+  padding:0 16px 10px; background:#f5f0e8;
 }
 .bk-groomer-photo {
-  width:70px; height:70px; border-radius:14px; flex-shrink:0;
+  width:60px; height:60px; border-radius:12px; flex-shrink:0;
   background:linear-gradient(135deg,#3a2a0a,#1e1608);
   display:flex; align-items:center; justify-content:center;
-  font-size:30px; overflow:hidden;
-  box-shadow:0 4px 16px rgba(0,0,0,.15);
+  font-size:26px; overflow:hidden;
+  box-shadow:0 3px 12px rgba(0,0,0,.15);
 }
 .bk-groomer-info { flex:1; }
 .bk-groomer-rating { display:flex; align-items:center; gap:6px; font-size:15px; font-weight:700; color:#1a1a1a; margin-bottom:2px; }
@@ -3073,25 +3088,25 @@ function openGroomTracker(opts) {
 .bk-groomer-reviews { display:flex; align-items:center; gap:5px; font-size:13px; color:#888; cursor:pointer; }
 .bk-groomer-reviews .chev { color:#bbb; }
 
-.booking-content { flex:1; overflow-y:auto; padding:0 16px 16px; -webkit-overflow-scrolling:touch; background:#f5f0e8; }
+.booking-content { flex:1; overflow-y:auto; padding:0 16px 6px; -webkit-overflow-scrolling:touch; background:#f5f0e8; }
 
 /* Fully booked banner */
 .bk-waitlist-banner {
   background:#fff8e8; border:1.5px solid #e8d898; border-radius:16px;
-  padding:14px 16px; margin-bottom:18px;
+  padding:12px 14px; margin-bottom:12px;
 }
-.bk-waitlist-label { display:flex; align-items:center; gap:7px; font-size:14px; font-weight:600; color:#8b7320; margin-bottom:10px; }
+.bk-waitlist-label { display:flex; align-items:center; gap:7px; font-size:13px; font-weight:600; color:#8b7320; margin-bottom:8px; }
 .bk-waitlist-btn {
   display:block; width:100%; background:#7a6318; color:#fff;
-  border:none; border-radius:12px; padding:13px;
-  font-family:'DM Sans',sans-serif; font-size:14px; font-weight:700;
-  cursor:pointer; text-align:center; transition:background .2s; margin-bottom:8px;
+  border:none; border-radius:12px; padding:11px;
+  font-family:'DM Sans',sans-serif; font-size:13px; font-weight:700;
+  cursor:pointer; text-align:center; transition:background .2s; margin-bottom:6px;
 }
 .bk-waitlist-btn:hover { background:#6a5410; }
-.bk-waitlist-sub { font-size:12px; color:#b0a060; text-align:center; }
+.bk-waitlist-sub { font-size:11px; color:#b0a060; text-align:center; }
 
 /* Calendar */
-.cal-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
+.cal-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
 .cal-month { font-size:16px; font-weight:700; color:#1a1a1a; font-family:'DM Sans',sans-serif; }
 .cal-nav { display:flex; gap:6px; }
 .cal-nav button { background:#fff; border:1.5px solid #e8e0d4; border-radius:10px; width:34px; height:34px; font-size:15px; cursor:pointer; color:#555; }
@@ -3119,11 +3134,14 @@ function openGroomTracker(opts) {
   border-top:none; padding:14px 0 0; background:transparent;
 }
 .slots-scroll {
-  display:flex; gap:8px; flex-wrap:wrap;
-  padding-right:0; scrollbar-width:none;
+  display:flex; gap:8px;
+  overflow-x:auto; padding:0 16px 4px;
+  scrollbar-width:none; -webkit-overflow-scrolling:touch;
+  flex-wrap:nowrap;
 }
 .slots-scroll::-webkit-scrollbar { display:none; }
 .slot {
+  flex-shrink:0;
   background:#fff; border:1.5px solid #e8e0d4; border-radius:24px;
   padding:10px 18px; font-size:14px; font-weight:600;
   color:#333; cursor:pointer; transition:all 0.15s; white-space:nowrap;
@@ -3135,21 +3153,21 @@ function openGroomTracker(opts) {
 /* Discount strip */
 .booking-discount {
   background:#f0faf0; border:1.5px solid #a8d8a8; border-radius:12px;
-  padding:10px 14px; margin:14px 0 0; display:flex; align-items:center; gap:10px;
+  padding:8px 12px; margin:6px 0 0; display:flex; align-items:center; gap:8px;
 }
-.booking-discount-text { font-size:13px; color:#2d6a2d; font-weight:600; }
-.booking-discount-sub { font-size:11px; color:#4a8a4a; margin-top:1px; }
+.booking-discount-text { font-size:12px; color:#2d6a2d; font-weight:600; }
+.booking-discount-sub { font-size:10px; color:#4a8a4a; margin-top:0; }
 
 .booking-footer {
   display:flex; align-items:center; justify-content:space-between;
-  padding:14px 16px 32px; border-top:1px solid #ede8dc;
+  padding:10px 16px 20px; border-top:1px solid #ede8dc;
   background:#f5f0e8;
 }
-.footer-service { font-size:12px; color:#999; margin-bottom:2px; font-family:'DM Sans',sans-serif; }
-.footer-price { font-family:'DM Serif Display',serif; font-size:26px; color:#1a1a1a; }
+.footer-service { font-size:11px; color:#999; margin-bottom:1px; font-family:'DM Sans',sans-serif; }
+.footer-price { font-family:'DM Serif Display',serif; font-size:22px; color:#1a1a1a; }
 .continue-btn {
   background:#8b7320; color:white; border:none; border-radius:14px;
-  padding:14px 32px; font-family:'DM Sans',sans-serif; font-size:15px; font-weight:700;
+  padding:12px 28px; font-family:'DM Sans',sans-serif; font-size:15px; font-weight:700;
   cursor:pointer; transition:background 0.2s;
 }
 .continue-btn:hover { background:#7a651c; }
