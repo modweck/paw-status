@@ -2185,7 +2185,7 @@ function confirmAndBook() {
         <span style="font-size:20px">📅</span>
         <div>
           <div style="font-size:11px;color:#b0a060;font-weight:700;text-transform:uppercase;letter-spacing:.06em">Date & Time</div>
-          <div style="font-size:15px;font-weight:700;color:#1a1a1a">Today · ${slot}</div>
+          <div style="font-size:15px;font-weight:700;color:#1a1a1a">${window._confirmedMonthLabel ? window._confirmedMonthLabel + ' ' + window._confirmedDate : 'Today'} · ${slot}</div>
         </div>
       </div>
       <div style="display:flex;align-items:center;gap:10px">
@@ -2219,6 +2219,9 @@ function showInProgressBanner() {
   window._sessionActive = true;
   var inprog = document.getElementById('inProgressBanner');
   if(inprog) inprog.classList.add('active');
+  // Show the top-right pill
+  var pill = document.getElementById('inSessionPill');
+  if(pill) pill.style.display = 'flex';
   // Also activate bell pill
   var bell = document.getElementById('livebell');
   if(bell) { bell.classList.add('on'); bell.dataset.mode = 'live'; }
@@ -3233,7 +3236,11 @@ function openGroomTracker(opts) {
 
 <!-- BOOKINGS SCREEN -->
 <div class="bookings-screen" id="bookingsScreen">
-  <div class="bookings-header">
+  <div class="bookings-header" style="position:relative;">
+    <div id="inSessionPill" onclick="launchTracker()" style="display:none;position:absolute;top:18px;right:16px;background:#fff;border:1.5px solid #e8d898;border-radius:30px;padding:6px 14px;font-size:12px;font-weight:700;color:#8b7320;display:none;align-items:center;gap:6px;cursor:pointer;box-shadow:0 2px 10px rgba(139,115,32,.15);">
+      <span style="width:8px;height:8px;border-radius:50%;background:#8b7320;display:inline-block;animation:ipbPulse 1.4s ease-in-out infinite;"></span>
+      <span id="inSessionPillText">In Session · ~45m</span>
+    </div>
     <div class="bookings-title">Bookings</div>
     <div class="bookings-sub">Bella's appointments</div>
   </div>
