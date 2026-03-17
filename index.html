@@ -4267,440 +4267,255 @@ function confirmModify() {
 ══════════════════════════════════════════ -->
 <style>
 #waitlistPage {
-  position: fixed; inset: 0;
-  max-width: 430px; margin: 0 auto;
-  background: #f0ebe2;
-  z-index: 3000;
-  display: flex; flex-direction: column;
-  transform: translateX(100%);
-  transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
-  font-family: 'DM Sans', sans-serif;
-  overflow: hidden;
+  position:fixed; inset:0; max-width:430px; margin:0 auto;
+  background:#f5f0e8; z-index:3000;
+  display:flex; flex-direction:column;
+  transform:translateX(100%);
+  transition:transform 0.28s cubic-bezier(0.4,0,0.2,1);
+  font-family:'DM Sans',sans-serif;
+  overflow:hidden;
 }
-#waitlistPage.wl-open { transform: translateX(0); }
+#waitlistPage.wl-open { transform:translateX(0); }
 
-/* Top bar */
 .wl-topbar {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 54px 20px 14px;
-  background: #f0ebe2;
-  flex-shrink: 0;
+  display:flex; align-items:center; justify-content:space-between;
+  padding:52px 16px 12px; background:#f5f0e8; flex-shrink:0;
 }
-.wl-back {
-  background: none; border: none; cursor: pointer;
-  font-size: 22px; color: #333; padding: 4px; line-height: 1;
-}
-.wl-logo { font-family: 'DM Serif Display', serif; font-size: 22px; }
-.wl-logo span:first-child { color: #8b7320; }
-.wl-logo span:last-child { color: #1a1a1a; }
-.wl-bell { background: none; border: none; cursor: pointer; padding: 4px; }
+.wl-back { background:none; border:none; cursor:pointer; font-size:20px; color:#333; padding:4px; line-height:1; }
+.wl-topbar-title { font-size:17px; font-weight:700; color:#1a1a1a; }
 
-/* Scroll body */
-.wl-body {
-  flex: 1; overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-  padding: 0 16px 120px;
-}
+.wl-scroll { flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:0 14px 100px; }
 
-/* Groomer card */
-.wl-groomer-card {
-  background: #fff;
-  border-radius: 18px;
-  padding: 14px 16px;
-  margin-bottom: 18px;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+/* Groomer header card */
+.wl-header-card {
+  background:#fff; border-radius:16px; padding:12px 14px;
+  margin-bottom:14px; display:flex; align-items:center; gap:12px;
+  box-shadow:0 2px 10px rgba(0,0,0,.06);
 }
-.wl-groomer-top {
-  display: flex; align-items: flex-start; gap: 14px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid #f0ece4;
-  margin-bottom: 10px;
+.wl-header-photo {
+  width:48px; height:48px; border-radius:10px; flex-shrink:0;
+  background:linear-gradient(135deg,#3a2a0a,#1e1608);
+  display:flex; align-items:center; justify-content:center; font-size:22px;
+  position:relative;
 }
-.wl-groomer-img {
-  width: 72px; height: 72px; border-radius: 12px;
-  object-fit: cover; flex-shrink: 0;
-  background: linear-gradient(135deg, #2a1a08, #4a3010);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 28px; overflow: hidden;
+.wl-header-dot {
+  position:absolute; top:3px; right:3px;
+  width:9px; height:9px; border-radius:50%; background:#34c759;
+  border:2px solid #fff;
 }
-.wl-groomer-name {
-  font-family: 'DM Serif Display', serif;
-  font-size: 20px; color: #1a1a1a; margin-bottom: 4px;
-}
-.wl-groomer-meta {
-  display: flex; align-items: center; gap: 6px;
-  font-size: 13px; color: #888; margin-bottom: 4px;
-}
-.wl-star { color: #c8a84b; }
-.wl-service-row {
-  display: flex; align-items: center; justify-content: space-between;
-  font-size: 13px; color: #aaa;
-}
-.wl-service-row .wl-chev { color: #bbb; font-size: 16px; }
-.wl-view-others {
-  font-size: 13px; color: #888;
-  cursor: pointer; display: flex; align-items: center; gap: 4px;
-}
-.wl-view-others:hover { color: #8b7320; }
+.wl-header-info { flex:1; }
+.wl-header-name { font-size:15px; font-weight:700; color:#1a1a1a; margin-bottom:2px; }
+.wl-header-meta { font-size:12px; color:#999; display:flex; align-items:center; gap:4px; }
+.wl-header-chev { color:#ccc; font-size:18px; }
 
-/* Section title */
-.wl-section-title {
-  font-family: 'DM Serif Display', serif;
-  font-size: 20px; color: #1a1a1a;
-  margin-bottom: 14px;
+/* Section label */
+.wl-label {
+  font-size:15px; font-weight:700; color:#1a1a1a;
+  margin:14px 0 8px;
 }
+.wl-label span { font-size:12px; font-weight:400; color:#bbb; margin-left:4px; }
 
-/* Time pills */
-.wl-time-pills {
-  display: flex; gap: 10px; margin-bottom: 20px;
+/* When pills */
+.wl-when-pills { display:flex; gap:8px; margin-bottom:14px; }
+.wl-when-pill {
+  flex:1; padding:10px 6px; border-radius:12px;
+  border:1.5px solid #e0d8c8; background:#fff;
+  font-size:13px; font-weight:600; color:#555;
+  cursor:pointer; text-align:center; transition:all .15s;
 }
-.wl-time-pill {
-  flex: 1; padding: 12px 8px;
-  border-radius: 12px; border: 1.5px solid #ddd;
-  background: #fff; font-size: 14px; font-weight: 600;
-  color: #333; cursor: pointer; text-align: center;
-  transition: all .15s; font-family: 'DM Sans', sans-serif;
-}
-.wl-time-pill.active {
-  border-color: #8b7320; color: #8b7320;
-  background: #fff;
-}
-.wl-time-pill .wl-bolt { margin-right: 4px; }
+.wl-when-pill.active { border-color:#8b7320; color:#8b7320; background:#fffbf0; }
 
-/* Time dropdown */
-.wl-time-row {
-  display: flex; align-items: center; justify-content: space-between;
-  margin-bottom: 18px;
+/* Time of day pills */
+.wl-tod-pills { display:flex; gap:8px; margin-bottom:14px; }
+.wl-tod-pill {
+  flex:1; padding:9px 4px; border-radius:12px;
+  border:1.5px solid #e0d8c8; background:#fff;
+  font-size:12px; font-weight:600; color:#555;
+  cursor:pointer; text-align:center; transition:all .15s;
 }
-.wl-time-label {
-  font-family: 'DM Serif Display', serif;
-  font-size: 18px; color: #1a1a1a;
-}
-.wl-time-line { flex: 1; height: 1px; background: #e8e2d8; margin: 0 14px; }
-.wl-time-select {
-  display: flex; align-items: center; gap: 8px;
-  background: #fff; border: 1.5px solid #e0dbd2;
-  border-radius: 10px; padding: 8px 14px;
-  font-size: 14px; color: #444; cursor: pointer;
-  font-family: 'DM Sans', sans-serif;
-}
-.wl-time-select svg { color: #888; }
+.wl-tod-pill.active { border-color:#8b7320; color:#8b7320; background:#fffbf0; }
 
-/* Get in faster box */
-.wl-faster-card {
-  background: #fff; border-radius: 18px;
-  padding: 16px; margin-bottom: 18px;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+/* Groomer toggle rows */
+.wl-groomer-rows { display:flex; flex-direction:column; gap:8px; margin-bottom:14px; }
+.wl-grow-row {
+  background:#fff; border-radius:14px; padding:11px 13px;
+  display:flex; align-items:center; gap:10px;
+  border:1.5px solid #ede8de; cursor:pointer; transition:all .15s;
 }
-.wl-faster-title {
-  font-size: 16px; font-weight: 700; color: #1a1a1a;
-  margin-bottom: 4px; display: flex; align-items: center; gap: 8px;
+.wl-grow-row.on { border-color:#8b7320; background:#fffbf0; }
+.wl-grow-check {
+  width:22px; height:22px; border-radius:6px; flex-shrink:0;
+  border:1.5px solid #ddd; background:#fff;
+  display:flex; align-items:center; justify-content:center;
+  font-size:12px; color:transparent; transition:all .15s;
 }
-.wl-faster-sub { font-size: 13px; color: #aaa; margin-bottom: 14px; }
+.wl-grow-row.on .wl-grow-check { background:#8b7320; border-color:#8b7320; color:#fff; }
+.wl-grow-photo {
+  width:36px; height:36px; border-radius:8px; flex-shrink:0;
+  background:linear-gradient(135deg,#3a2a0a,#1e1608);
+  display:flex; align-items:center; justify-content:center; font-size:16px;
+}
+.wl-grow-info { flex:1; min-width:0; }
+.wl-grow-name { font-size:13px; font-weight:700; color:#1a1a1a; margin-bottom:1px; }
+.wl-grow-avail { font-size:11px; font-weight:600; }
+.wl-grow-avail.green { color:#2a7a2a; }
+.wl-grow-avail.orange { color:#c07010; }
+.wl-grow-avail.red { color:#c03020; }
 
-/* Groomer rows */
-.wl-groomer-row {
-  display: flex; align-items: center; gap: 12px;
-  padding: 12px 14px; border-radius: 14px;
-  margin-bottom: 8px; cursor: pointer;
-  border: 1.5px solid transparent;
-  transition: all .15s; background: #fafaf8;
-}
-.wl-groomer-row.selected {
-  border-color: #c8a84b; background: #fffdf7;
-}
-.wl-groomer-row:last-child { margin-bottom: 0; }
-.wl-gr-avatar {
-  width: 44px; height: 44px; border-radius: 50%;
-  background: #e8dfc8; flex-shrink: 0;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 20px; overflow: hidden;
-}
-.wl-gr-name { font-size: 15px; font-weight: 600; color: #1a1a1a; flex: 1; }
-.wl-gr-avail { font-size: 13px; font-weight: 600; }
-.wl-gr-avail.green { color: #3a9a3a; }
-.wl-gr-avail.orange { color: #e07820; }
-.wl-gr-btn {
-  width: 30px; height: 30px; border-radius: 50%;
-  border: 1.5px solid #ddd; background: #fff;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 18px; color: #bbb; flex-shrink: 0;
-  transition: all .15s;
-}
-.wl-groomer-row.selected .wl-gr-btn {
-  background: #8b7320; border-color: #8b7320; color: #fff; font-size: 14px;
-}
-
-/* Notify by */
-.wl-notify-row {
-  display: flex; align-items: center; justify-content: space-between;
-  margin-bottom: 24px;
-}
-.wl-notify-label {
-  font-family: 'DM Serif Display', serif;
-  font-size: 18px; color: #1a1a1a;
-}
-.wl-notify-pills { display: flex; gap: 10px; }
+/* Notify pills */
+.wl-notify-pills { display:flex; gap:8px; margin-bottom:14px; }
 .wl-notify-pill {
-  display: flex; align-items: center; gap: 8px;
-  padding: 10px 18px; border-radius: 30px;
-  border: 1.5px solid #ddd; background: #fff;
-  font-size: 14px; font-weight: 600; color: #555;
-  cursor: pointer; transition: all .15s;
-  font-family: 'DM Sans', sans-serif;
+  flex:1; padding:10px; border-radius:12px;
+  border:1.5px solid #e0d8c8; background:#fff;
+  font-size:13px; font-weight:600; color:#555;
+  cursor:pointer; text-align:center; transition:all .15s;
+  display:flex; align-items:center; justify-content:center; gap:6px;
 }
-.wl-notify-pill.active { border-color: #8b7320; color: #8b7320; }
-.wl-notify-radio {
-  width: 18px; height: 18px; border-radius: 50%;
-  border: 2px solid #ddd; background: #fff;
-  display: flex; align-items: center; justify-content: center;
-  flex-shrink: 0; transition: all .15s;
+.wl-notify-pill.active { border-color:#8b7320; color:#8b7320; background:#fffbf0; }
+.wl-notify-check {
+  width:18px; height:18px; border-radius:50%; border:1.5px solid #ddd;
+  display:flex; align-items:center; justify-content:center;
+  font-size:10px; color:transparent; transition:all .15s; flex-shrink:0;
 }
-.wl-notify-pill.active .wl-notify-radio {
-  border-color: #8b7320; background: #8b7320;
-}
-.wl-notify-pill.active .wl-notify-radio::after {
-  content: '✓'; color: #fff; font-size: 11px; font-weight: 700;
-}
+.wl-notify-pill.active .wl-notify-check { background:#8b7320; border-color:#8b7320; color:#fff; }
 
-/* Bottom CTA */
+/* Sub text */
+.wl-sub-text { font-size:12px; color:#bbb; text-align:center; margin-top:4px; }
+
+/* CTA */
 .wl-cta-wrap {
-  position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
-  width: 100%; max-width: 430px;
-  padding: 16px 16px env(safe-area-inset-bottom, 16px);
-  background: linear-gradient(transparent, #f0ebe2 30%);
-  z-index: 10;
+  position:absolute; bottom:0; left:0; right:0;
+  padding:12px 14px env(safe-area-inset-bottom,16px);
+  background:linear-gradient(transparent, #f5f0e8 28%);
 }
 .wl-cta {
-  display: block; width: 100%;
-  background: #7a6218; color: #fff;
-  border: none; border-radius: 16px; padding: 18px;
-  font-family: 'DM Serif Display', serif; font-size: 20px;
-  cursor: pointer; text-align: center;
-  transition: background .2s, transform .1s;
-  box-shadow: 0 4px 20px rgba(122,98,24,0.35);
+  display:block; width:100%; background:#8b7320; color:#fff;
+  border:none; border-radius:14px; padding:15px;
+  font-family:'DM Sans',sans-serif; font-size:16px; font-weight:700;
+  cursor:pointer; text-align:center; transition:background .2s;
 }
-.wl-cta:active { transform: scale(0.98); }
-.wl-cta:hover { background: #6a5410; }
-</style>
+.wl-cta:hover { background:#7a651c; }
+.wl-cta:active { transform:scale(0.98); }
+
 
 <div id="waitlistPage">
-
-  <!-- Top bar -->
   <div class="wl-topbar">
     <button class="wl-back" onclick="closeWaitlistPage()">←</button>
-    <div class="wl-logo"><span>Paw</span><span>Status</span></div>
-    <button class="wl-bell">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-        <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-      </svg>
-    </button>
+    <div class="wl-topbar-title">Join Waitlist</div>
+    <div style="width:28px;"></div>
   </div>
 
-  <!-- Scrollable body -->
-  <div class="wl-body">
+  <div class="wl-scroll">
 
-    <!-- Groomer card -->
-    <div class="wl-groomer-card">
-      <div class="wl-groomer-top">
-        <!-- Storefront image -->
-        <div class="wl-groomer-img">
-          <svg width="72" height="72" viewBox="0 0 72 72" fill="none">
-            <rect width="72" height="72" rx="12" fill="#1a1008"/>
-            <rect x="8" y="32" width="56" height="32" rx="2" fill="#2a1e0a"/>
-            <rect x="12" y="36" width="20" height="24" rx="2" fill="#3a2a10"/>
-            <rect x="14" y="38" width="16" height="14" rx="1" fill="#f5c840" opacity=".15"/>
-            <rect x="40" y="36" width="18" height="10" rx="2" fill="#3a2a10"/>
-            <rect x="42" y="38" width="14" height="8" rx="1" fill="#f5c840" opacity=".12"/>
-            <rect x="26" y="48" width="20" height="14" rx="2" fill="#2e2008"/>
-            <rect x="30" y="50" width="4" height="8" fill="#4a3010" rx="1"/>
-            <rect x="38" y="50" width="4" height="8" fill="#4a3010" rx="1"/>
-            <rect x="8" y="28" width="56" height="6" rx="1" fill="#c8a840"/>
-            <text x="14" y="25" font-size="6" fill="#c8a840" font-family="sans-serif" font-weight="bold">JILL'S PET STUDIO</text>
-            <rect x="16" y="12" width="8" height="16" rx="1" fill="#3a2a08"/>
-            <rect x="48" y="10" width="8" height="18" rx="1" fill="#3a2a08"/>
-            <circle cx="20" cy="8" r="6" fill="#2a4a10"/>
-            <circle cx="52" cy="6" r="8" fill="#2a4a10" opacity=".8"/>
-            <rect x="28" y="58" width="2" height="10" fill="#8b7320" rx="1"/>
-          </svg>
-        </div>
-        <div style="flex:1;">
-          <div class="wl-groomer-name">Jill's Pet Studio</div>
-          <div class="wl-groomer-meta">
-            <span class="wl-star">★</span>
-            <span id="wlRating">4.8</span>
-            <span>·</span>
-            <span id="wlDist">0.8 mi</span>
-          </div>
-          <div class="wl-service-row">
-            <span id="wlService">Bath &amp; Brush · Bella</span>
-            <span class="wl-chev">›</span>
-          </div>
+    <!-- Groomer header -->
+    <div class="wl-header-card">
+      <div class="wl-header-photo">🐾<div class="wl-header-dot"></div></div>
+      <div class="wl-header-info">
+        <div class="wl-header-name">Happy Tails Grooming</div>
+        <div class="wl-header-meta">
+          <span style="color:#f0b429;">★</span>
+          <span id="wlRating">4.9</span>
+          <span>·</span>
+          <span id="wlService">Bath &amp; Brush · Bella</span>
         </div>
       </div>
-      <div class="wl-view-others" onclick="closeWaitlistPage()">
-        View other groomers »
-      </div>
+      <div class="wl-header-chev">›</div>
     </div>
 
-    <!-- When section -->
-    <div class="wl-section-title">When do you want a spot?</div>
-    <div class="wl-time-pills">
-      <div class="wl-time-pill active" onclick="selectWlTime(this)"><span class="wl-bolt">⚡</span>ASAP</div>
-      <div class="wl-time-pill" onclick="selectWlTime(this)">This Week</div>
-      <div class="wl-time-pill" onclick="selectWlTime(this)">Next Week</div>
+    <!-- When -->
+    <div class="wl-label">When do you want a spot?</div>
+    <div class="wl-when-pills">
+      <div class="wl-when-pill active" onclick="wlToggle(this,'.wl-when-pill')">⚡ ASAP</div>
+      <div class="wl-when-pill" onclick="wlToggle(this,'.wl-when-pill')">This week</div>
+      <div class="wl-when-pill" onclick="wlToggle(this,'.wl-when-pill')">Next week</div>
     </div>
 
     <!-- Time of day -->
-    <div class="wl-section-title" style="font-size:17px;margin-bottom:10px;">Time of day <span style="font-size:13px;color:#bbb;font-family:'DM Sans',sans-serif;font-weight:400;">(optional)</span></div>
-    <div class="wl-time-pills" style="margin-bottom:20px;">
-      <div class="wl-time-pill" onclick="selectWlTime(this)">🌅 Morning</div>
-      <div class="wl-time-pill" onclick="selectWlTime(this)">☀️ Afternoon</div>
-      <div class="wl-time-pill" onclick="selectWlTime(this)">🌙 Evening</div>
+    <div class="wl-label">Time of day <span>(optional)</span></div>
+    <div class="wl-tod-pills">
+      <div class="wl-tod-pill" onclick="wlToggle(this,'.wl-tod-pill')">🌅 Morning</div>
+      <div class="wl-tod-pill" onclick="wlToggle(this,'.wl-tod-pill')">☀️ Afternoon</div>
+      <div class="wl-tod-pill" onclick="wlToggle(this,'.wl-tod-pill')">🌙 Evening</div>
     </div>
 
-    <!-- Get in faster -->
-    <div class="wl-faster-card">
-      <div class="wl-faster-title">⚡ Get in faster</div>
-      <div class="wl-faster-sub">Add nearby groomers to increase your chances</div>
-
-      <div class="wl-groomer-row selected" onclick="toggleWlGroomer(this)">
-        <div class="wl-gr-avatar">✂️</div>
-        <div class="wl-gr-name">Jill's Pet Studio</div>
-        <div class="wl-gr-btn">✓</div>
-      </div>
-
-      <div class="wl-groomer-row" onclick="toggleWlGroomer(this)">
-        <div class="wl-gr-avatar" style="background:#e8d8c8;">
-          <svg width="28" height="28" viewBox="0 0 40 40" fill="none">
-            <circle cx="20" cy="20" r="20" fill="#d4b888"/>
-            <circle cx="20" cy="16" r="8" fill="#c8a870"/>
-            <path d="M8 34c0-6.627 5.373-12 12-12h0c6.627 0 12 5.373 12 12" fill="#b89850"/>
-          </svg>
+    <!-- Also notify for -->
+    <div class="wl-label">Also notify me for <span>(optional)</span></div>
+    <div class="wl-groomer-rows">
+      <div class="wl-grow-row on" onclick="toggleWlGrow(this)">
+        <div class="wl-grow-check">✓</div>
+        <div class="wl-grow-photo">🐾</div>
+        <div class="wl-grow-info">
+          <div class="wl-grow-name">Happy Tails Grooming</div>
+          <div class="wl-grow-avail green">● Next: Mar 25</div>
         </div>
-        <div class="wl-gr-name">Happy Tails</div>
-        <div class="wl-gr-avail green">Next: Tomorrow</div>
-        <div class="wl-gr-btn">+</div>
       </div>
-
-      <div class="wl-groomer-row" onclick="toggleWlGroomer(this)">
-        <div class="wl-gr-avatar" style="background:#d8c8d8;">
-          <svg width="28" height="28" viewBox="0 0 40 40" fill="none">
-            <circle cx="20" cy="20" r="20" fill="#c8a8c8"/>
-            <circle cx="20" cy="16" r="8" fill="#b898b8"/>
-            <path d="M8 34c0-6.627 5.373-12 12-12h0c6.627 0 12 5.373 12 12" fill="#a888a8"/>
-          </svg>
+      <div class="wl-grow-row" onclick="toggleWlGrow(this)">
+        <div class="wl-grow-check">✓</div>
+        <div class="wl-grow-photo" style="background:linear-gradient(135deg,#0a2a15,#061409);">✂️</div>
+        <div class="wl-grow-info">
+          <div class="wl-grow-name">Jill's Pet Studio</div>
+          <div class="wl-grow-avail orange">● Next: Mar 27</div>
         </div>
-        <div class="wl-gr-name">Paws &amp; Co</div>
-        <div class="wl-gr-avail orange">Next: 3 days</div>
-        <div class="wl-gr-btn">+</div>
       </div>
-    </div>
-
-    <!-- Get notified by -->
-    <div class="wl-notify-row">
-      <div class="wl-notify-label">Get notified by</div>
-      <div class="wl-notify-pills">
-        <div class="wl-notify-pill active" onclick="toggleWlNotify(this)">
-          <div class="wl-notify-radio"></div>
-          Push
-        </div>
-        <div class="wl-notify-pill" onclick="toggleWlNotify(this)">
-          <div class="wl-notify-radio"></div>
-          Text
+      <div class="wl-grow-row" onclick="toggleWlGrow(this)">
+        <div class="wl-grow-check">✓</div>
+        <div class="wl-grow-photo" style="background:linear-gradient(135deg,#0a1a3a,#06111c);">🛁</div>
+        <div class="wl-grow-info">
+          <div class="wl-grow-name">Biscuits &amp; Bath</div>
+          <div class="wl-grow-avail red">● No openings this week</div>
         </div>
       </div>
     </div>
 
-  </div><!-- end wl-body -->
+    <!-- Notify by -->
+    <div class="wl-label">Get notified by</div>
+    <div class="wl-notify-pills">
+      <div class="wl-notify-pill active" onclick="wlToggle(this,'.wl-notify-pill')">
+        <div class="wl-notify-check">✓</div> Push
+      </div>
+      <div class="wl-notify-pill" onclick="wlToggle(this,'.wl-notify-pill')">
+        <div class="wl-notify-check">✓</div> Text
+      </div>
+    </div>
+    <div class="wl-sub-text">You'll be notified instantly when a spot opens</div>
 
-  <!-- Fixed CTA -->
+  </div>
+
   <div class="wl-cta-wrap">
     <button class="wl-cta" onclick="confirmWaitlistPage()">Join Waitlist</button>
   </div>
-
-</div><!-- end #waitlistPage -->
+</div>
 
 <script>
 function openWaitlistPage() {
-  // Sync current breed/service into waitlist page
   var svc = (window.selectedService && window.selectedService.name) || 'Bath & Brush';
   var breed = window.selectedBreed || 'Bella';
   var el = document.getElementById('wlService');
   if (el) el.textContent = svc + ' · ' + breed;
-
   var page = document.getElementById('waitlistPage');
   page.style.display = 'flex';
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => page.classList.add('wl-open'));
-  });
+  requestAnimationFrame(() => requestAnimationFrame(() => page.classList.add('wl-open')));
 }
-
 function closeWaitlistPage() {
   var page = document.getElementById('waitlistPage');
   page.classList.remove('wl-open');
   setTimeout(() => { page.style.display = 'none'; }, 300);
 }
-
-function selectWlTime(el) {
-  document.querySelectorAll('.wl-time-pill').forEach(p => p.classList.remove('active'));
+function wlToggle(el, selector) {
+  document.querySelectorAll(selector).forEach(p => p.classList.remove('active'));
   el.classList.add('active');
 }
-
-function toggleWlTimeDrop(e) {
-  e.stopPropagation();
-  var drop = document.getElementById('wlTimeDrop');
-  var chev = document.getElementById('wlTimeChev');
-  var isOpen = drop.style.display === 'block';
-  drop.style.display = isOpen ? 'none' : 'block';
-  chev.style.transform = isOpen ? '' : 'rotate(180deg)';
+function toggleWlGrow(row) {
+  row.classList.toggle('on');
 }
-
-function pickWlTime(e, val) {
-  e.stopPropagation();
-  document.getElementById('wlTimeOfDay').textContent = val;
-  document.getElementById('wlTimeDrop').style.display = 'none';
-  document.getElementById('wlTimeChev').style.transform = '';
-  // highlight selected
-  document.querySelectorAll('.wl-tod-opt').forEach(function(o) {
-    o.classList.toggle('selected', o.textContent.trim().includes(val));
-  });
-}
-
-// Close dropdown if user taps outside
-document.addEventListener('click', function(e) {
-  var drop = document.getElementById('wlTimeDrop');
-  if (drop && drop.style.display === 'block') {
-    if (!e.target.closest('#wlTimeSelectBtn')) {
-      drop.style.display = 'none';
-      document.getElementById('wlTimeChev').style.transform = '';
-    }
-  }
-});
-
-function toggleWlGroomer(row) {
-  var btn = row.querySelector('.wl-gr-btn');
-  var isSelected = row.classList.toggle('selected');
-  btn.textContent = isSelected ? '✓' : '+';
-}
-
-function toggleWlNotify(pill) {
-  document.querySelectorAll('.wl-notify-pill').forEach(p => p.classList.remove('active'));
-  pill.classList.add('active');
-}
-
 function confirmWaitlistPage() {
   closeWaitlistPage();
-  // Show success toast
   var toast = document.createElement('div');
-  toast.style.cssText = 'position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:#8b7320;color:#fff;padding:14px 24px;border-radius:30px;font-size:14px;font-weight:600;z-index:5000;box-shadow:0 4px 20px rgba(139,115,32,.4);white-space:nowrap;';
-  toast.textContent = '🔔 You\'re on the waitlist! We\'ll notify you ASAP.';
+  toast.style.cssText = 'position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:#8b7320;color:#fff;padding:12px 22px;border-radius:30px;font-size:14px;font-weight:600;z-index:5000;box-shadow:0 4px 20px rgba(139,115,32,.4);white-space:nowrap;';
+  toast.textContent = "🔔 You're on the waitlist! We'll notify you ASAP.";
   document.body.appendChild(toast);
-  setTimeout(() => toast.remove(), 3500);
+  setTimeout(() => toast.remove(), 3200);
 }
-
-// Init — hidden by default
 document.getElementById('waitlistPage').style.display = 'none';
 </script>
 
