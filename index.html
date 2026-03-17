@@ -2050,8 +2050,9 @@ function selectSlot(el) {
 
 function closeBooking() {
   const overlay = document.getElementById('bookingOverlay');
+  if (!overlay) return;
   overlay.classList.remove('visible');
-  setTimeout(() => overlay.remove(), 300);
+  setTimeout(() => { if (overlay.parentNode) overlay.remove(); }, 300);
 }
 
 function continueBooking() {
