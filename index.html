@@ -1,233 +1,6 @@
 <!DOCTYPE html>
 <html lang="en"
-
-<!-- ══ GENERAL WAITLIST PAGE ══ -->
-<style>
-#generalWaitlist {
-  position:fixed; top:0; left:50%; transform:translateX(calc(-50% + 100vw));
-  width:100%; max-width:430px;
-  height:100%; background:#f5f0e8; z-index:3500;
-  display:flex; flex-direction:column;
-  transition:transform 0.28s cubic-bezier(0.4,0,0.2,1);
-  font-family:'DM Sans',sans-serif; overflow:hidden;
-}
-#generalWaitlist.gw-open { transform:translateX(-50%); }
-.gw-topbar {
-  display:flex; align-items:center; justify-content:space-between;
-  padding:50px 16px 10px; background:#f5f0e8; flex-shrink:0;
-}
-.gw-back { background:none; border:none; cursor:pointer; font-size:20px; color:#333; padding:4px; line-height:1; }
-.gw-scroll { flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:0 14px 100px; }
-.gw-sec { font-size:14px; font-weight:700; color:#1a1a1a; margin:12px 0 8px; }
-.gw-sec span { font-size:11px; font-weight:400; color:#bbb; margin-left:3px; }
-
-/* Groomer selector cards */
-.gw-groomer-pick {
-  display:flex; flex-direction:column; gap:8px; margin-bottom:14px;
-}
-.gw-groom-card {
-  background:#fff; border-radius:14px; padding:12px 14px;
-  display:flex; align-items:center; gap:12px;
-  border:1.5px solid #ede8de; cursor:pointer; transition:all .15s;
-  position:relative;
-}
-.gw-groom-card.selected { border-color:#8b7320; background:#fffbf0; }
-.gw-groom-card.disabled { opacity:.45; pointer-events:none; }
-.gw-groom-photo {
-  width:44px; height:44px; border-radius:10px; flex-shrink:0;
-  display:flex; align-items:center; justify-content:center; font-size:22px;
-}
-.gw-groom-info { flex:1; min-width:0; }
-.gw-groom-name { font-size:14px; font-weight:700; color:#1a1a1a; margin-bottom:2px; }
-.gw-groom-meta { font-size:12px; color:#999; display:flex; align-items:center; gap:4px; }
-.gw-groom-avail { font-size:12px; font-weight:600; }
-.gw-groom-avail.green { color:#2a7a2a; }
-.gw-groom-avail.orange { color:#c07010; }
-.gw-groom-avail.red { color:#c03020; }
-.gw-check {
-  width:22px; height:22px; border-radius:50%; flex-shrink:0;
-  border:1.5px solid #ddd; background:#fff;
-  display:flex; align-items:center; justify-content:center;
-  font-size:12px; color:transparent; transition:all .15s;
-}
-.gw-groom-card.selected .gw-check { background:#8b7320; border-color:#8b7320; color:#fff; }
-.gw-pick-hint { font-size:11px; color:#bbb; text-align:center; margin:-4px 0 10px; }
-
-/* Pills */
-.gw-pills { display:flex; gap:7px; flex-wrap:wrap; margin-bottom:14px; }
-.gw-pill {
-  padding:8px 14px; border-radius:20px;
-  border:1.5px solid #e0d8c8; background:#fff;
-  font-size:13px; font-weight:600; color:#555;
-  cursor:pointer; transition:all .15s; white-space:nowrap;
-}
-.gw-pill.active { border-color:#8b7320; color:#8b7320; background:#fffbf0; }
-
-/* Notify */
-.gw-notify-pills { display:flex; gap:8px; margin-bottom:6px; }
-.gw-notify-pill {
-  flex:1; padding:10px; border-radius:12px;
-  border:1.5px solid #e0d8c8; background:#fff;
-  font-size:13px; font-weight:600; color:#555;
-  cursor:pointer; text-align:center; transition:all .15s;
-  display:flex; align-items:center; justify-content:center; gap:6px;
-}
-.gw-notify-pill.active { border-color:#8b7320; color:#8b7320; background:#fffbf0; }
-.gw-notify-radio {
-  width:16px; height:16px; border-radius:50%; border:1.5px solid #ddd;
-  display:flex; align-items:center; justify-content:center;
-  font-size:9px; color:transparent; transition:all .15s; flex-shrink:0;
-}
-.gw-notify-pill.active .gw-notify-radio { background:#8b7320; border-color:#8b7320; color:#fff; }
-.gw-sub-text { font-size:11px; color:#bbb; text-align:center; margin-bottom:14px; }
-</style>
-
-<div id="generalWaitlist">
-  <div class="gw-topbar">
-    <button class="gw-back" onclick="closeGeneralWaitlist()">←</button>
-    <div style="font-size:17px;font-weight:700;color:#1a1a1a;">Get in Sooner</div>
-    <div style="width:28px;"></div>
-  </div>
-
-  <div class="gw-scroll">
-
-    <div style="font-size:13px;color:#999;margin-bottom:16px;line-height:1.5;">
-      Pick up to 3 groomers. We'll notify you the moment any of them has an opening.
-    </div>
-
-    <!-- Groomer picks -->
-    <div class="gw-sec">Choose groomers <span>(pick up to 3)</span></div>
-    <div class="gw-groomer-pick">
-
-      <div class="gw-groom-card selected" onclick="toggleGwGroomer(this)">
-        <div class="gw-groom-photo" style="background:linear-gradient(135deg,#3a2a0a,#1e1608);">🐾</div>
-        <div class="gw-groom-info">
-          <div class="gw-groom-name">Happy Tails Grooming</div>
-          <div class="gw-groom-meta">★ 4.9 · 0.3 mi</div>
-          <div class="gw-groom-avail green">● Next: Mar 25</div>
-        </div>
-        <div class="gw-check">✓</div>
-      </div>
-
-      <div class="gw-groom-card" onclick="toggleGwGroomer(this)">
-        <div class="gw-groom-photo" style="background:linear-gradient(135deg,#0a2a15,#061409);">✂️</div>
-        <div class="gw-groom-info">
-          <div class="gw-groom-name">Jill's Pet Studio</div>
-          <div class="gw-groom-meta">★ 4.9 · 0.6 mi</div>
-          <div class="gw-groom-avail orange">● Next: Mar 27</div>
-        </div>
-        <div class="gw-check">✓</div>
-      </div>
-
-      <div class="gw-groom-card" onclick="toggleGwGroomer(this)">
-        <div class="gw-groom-photo" style="background:linear-gradient(135deg,#0a1a3a,#06111c);">🛁</div>
-        <div class="gw-groom-info">
-          <div class="gw-groom-name">Biscuits &amp; Bath</div>
-          <div class="gw-groom-meta">★ 4.8 · 0.8 mi</div>
-          <div class="gw-groom-avail orange">● Next: Mar 28</div>
-        </div>
-        <div class="gw-check">✓</div>
-      </div>
-
-      <div class="gw-groom-card" onclick="toggleGwGroomer(this)">
-        <div class="gw-groom-photo" style="background:linear-gradient(135deg,#1a0a3a,#0e0620);">👑</div>
-        <div class="gw-groom-info">
-          <div class="gw-groom-name">The Wagington</div>
-          <div class="gw-groom-meta">★ 4.7 · 1.2 mi</div>
-          <div class="gw-groom-avail red">● No openings this week</div>
-        </div>
-        <div class="gw-check">✓</div>
-      </div>
-
-    </div>
-    <div class="gw-pick-hint" id="gwPickHint">1 of 3 selected</div>
-
-    <!-- When -->
-    <div class="gw-sec">When do you want a spot?</div>
-    <div class="gw-pills">
-      <div class="gw-pill gw-when active" onclick="gwSingle(this,'.gw-when')">⚡ ASAP</div>
-      <div class="gw-pill gw-when" onclick="gwSingle(this,'.gw-when')">Mon–Wed</div>
-      <div class="gw-pill gw-when" onclick="gwSingle(this,'.gw-when')">Thu–Fri</div>
-      <div class="gw-pill gw-when" onclick="gwSingle(this,'.gw-when')">This weekend</div>
-      <div class="gw-pill gw-when" onclick="gwSingle(this,'.gw-when')">Next week</div>
-      <div class="gw-pill gw-when" onclick="gwSingle(this,'.gw-when')">Flexible</div>
-    </div>
-
-    <!-- Time of day -->
-    <div class="gw-sec">Time of day <span>(optional)</span></div>
-    <div class="gw-pills">
-      <div class="gw-pill gw-tod active" onclick="gwSingle(this,'.gw-tod')">Any</div>
-      <div class="gw-pill gw-tod" onclick="gwSingle(this,'.gw-tod')">8–11am</div>
-      <div class="gw-pill gw-tod" onclick="gwSingle(this,'.gw-tod')">11–2pm</div>
-      <div class="gw-pill gw-tod" onclick="gwSingle(this,'.gw-tod')">2–5pm</div>
-      <div class="gw-pill gw-tod" onclick="gwSingle(this,'.gw-tod')">5–7pm</div>
-    </div>
-
-    <!-- Notify -->
-    <div class="gw-sec">Get notified by</div>
-    <div class="gw-notify-pills">
-      <div class="gw-notify-pill active" onclick="gwSingle(this,'.gw-notify-pill')">
-        <div class="gw-notify-radio">✓</div> Push
-      </div>
-      <div class="gw-notify-pill" onclick="gwSingle(this,'.gw-notify-pill')">
-        <div class="gw-notify-radio">✓</div> Text
-      </div>
-    </div>
-    <div class="gw-sub-text">You'll be notified the moment any selected groomer has an opening</div>
-
-    <button onclick="submitGeneralWaitlist()" style="display:block;width:100%;background:#8b7320;color:#fff;border:none;border-radius:14px;padding:15px;font-family:'DM Sans',sans-serif;font-size:16px;font-weight:700;cursor:pointer;text-align:center;margin-top:6px;box-shadow:0 4px 16px rgba(139,115,32,.3);">Get Notified of Openings</button>
-
-  </div>
-</div>
-
-<script>
-function openGeneralWaitlist() {
-  var page = document.getElementById('generalWaitlist');
-  page.style.display = 'flex';
-  requestAnimationFrame(() => requestAnimationFrame(() => page.classList.add('gw-open')));
-}
-function closeGeneralWaitlist() {
-  var page = document.getElementById('generalWaitlist');
-  page.classList.remove('gw-open');
-  setTimeout(() => { page.style.display = 'none'; }, 300);
-}
-function gwSingle(el, sel) {
-  document.querySelectorAll(sel).forEach(p => p.classList.remove('active'));
-  el.classList.add('active');
-}
-function toggleGwGroomer(card) {
-  var selected = document.querySelectorAll('.gw-groom-card.selected');
-  var isSelected = card.classList.contains('selected');
-  if (!isSelected && selected.length >= 3) return; // max 3
-  card.classList.toggle('selected');
-  // Update hint
-  var count = document.querySelectorAll('.gw-groom-card.selected').length;
-  var hint = document.getElementById('gwPickHint');
-  if (hint) hint.textContent = count + ' of 3 selected';
-  // Disable unselected cards if at max
-  document.querySelectorAll('.gw-groom-card:not(.selected)').forEach(function(c) {
-    c.classList.toggle('disabled', count >= 3);
-  });
-}
-function submitGeneralWaitlist() {
-  var selected = Array.from(document.querySelectorAll('.gw-groom-card.selected')).map(function(c) {
-    return c.querySelector('.gw-groom-name').textContent;
-  });
-  if (selected.length === 0) { alert('Please select at least one groomer.'); return; }
-  var whenEl = document.querySelector('.gw-pill.gw-when.active');
-  var when = whenEl ? whenEl.textContent.trim() : 'ASAP';
-  var todEl = document.querySelector('.gw-pill.gw-tod.active');
-  var tod = todEl ? todEl.textContent.trim() : 'Any';
-
-  closeGeneralWaitlist();
-  var toast = document.createElement('div');
-  toast.style.cssText = 'position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:#8b7320;color:#fff;padding:12px 22px;border-radius:30px;font-size:14px;font-weight:600;z-index:5000;box-shadow:0 4px 20px rgba(139,115,32,.4);white-space:nowrap;';
-  toast.textContent = '🔔 You're on the waitlist for ' + selected.length + ' groomer' + (selected.length > 1 ? 's' : '') + '!';
-  document.body.appendChild(toast);
-  setTimeout(function(){ toast.remove(); }, 3500);
-}
-document.getElementById('generalWaitlist').style.display = 'none';
-</script>>
+>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
@@ -1571,6 +1344,236 @@ body { background: #e8e3d8 !important; }
 
   </div><!-- end home-content -->
 
+
+
+<!-- ══ GENERAL WAITLIST PAGE ══ -->
+<style>
+#generalWaitlist {
+  position:fixed; inset:0; background:#f5f0e8;
+  z-index:3500; display:flex; flex-direction:column;
+  max-width:430px; margin:0 auto;
+  transform:translateX(100vw);
+  transition:transform 0.28s cubic-bezier(0.4,0,0.2,1);
+  will-change:transform;
+  pointer-events:none;
+  font-family:'DM Sans',sans-serif; overflow:hidden;
+}
+#generalWaitlist.gw-open { transform:translateX(0); pointer-events:all; }
+.gw-topbar {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:50px 16px 10px; background:#f5f0e8; flex-shrink:0;
+}
+.gw-back { background:none; border:none; cursor:pointer; font-size:20px; color:#333; padding:4px; line-height:1; }
+.gw-scroll { flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:0 14px 100px; }
+.gw-sec { font-size:14px; font-weight:700; color:#1a1a1a; margin:12px 0 8px; }
+.gw-sec span { font-size:11px; font-weight:400; color:#bbb; margin-left:3px; }
+
+/* Groomer selector cards */
+.gw-groomer-pick {
+  display:flex; flex-direction:column; gap:8px; margin-bottom:14px;
+}
+.gw-groom-card {
+  background:#fff; border-radius:14px; padding:12px 14px;
+  display:flex; align-items:center; gap:12px;
+  border:1.5px solid #ede8de; cursor:pointer; transition:all .15s;
+  position:relative;
+}
+.gw-groom-card.selected { border-color:#8b7320; background:#fffbf0; }
+.gw-groom-card.disabled { opacity:.45; pointer-events:none; }
+.gw-groom-photo {
+  width:44px; height:44px; border-radius:10px; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center; font-size:22px;
+}
+.gw-groom-info { flex:1; min-width:0; }
+.gw-groom-name { font-size:14px; font-weight:700; color:#1a1a1a; margin-bottom:2px; }
+.gw-groom-meta { font-size:12px; color:#999; display:flex; align-items:center; gap:4px; }
+.gw-groom-avail { font-size:12px; font-weight:600; }
+.gw-groom-avail.green { color:#2a7a2a; }
+.gw-groom-avail.orange { color:#c07010; }
+.gw-groom-avail.red { color:#c03020; }
+.gw-check {
+  width:22px; height:22px; border-radius:50%; flex-shrink:0;
+  border:1.5px solid #ddd; background:#fff;
+  display:flex; align-items:center; justify-content:center;
+  font-size:12px; color:transparent; transition:all .15s;
+}
+.gw-groom-card.selected .gw-check { background:#8b7320; border-color:#8b7320; color:#fff; }
+.gw-pick-hint { font-size:11px; color:#bbb; text-align:center; margin:-4px 0 10px; }
+
+/* Pills */
+.gw-pills { display:flex; gap:7px; flex-wrap:wrap; margin-bottom:14px; }
+.gw-pill {
+  padding:8px 14px; border-radius:20px;
+  border:1.5px solid #e0d8c8; background:#fff;
+  font-size:13px; font-weight:600; color:#555;
+  cursor:pointer; transition:all .15s; white-space:nowrap;
+}
+.gw-pill.active { border-color:#8b7320; color:#8b7320; background:#fffbf0; }
+
+/* Notify */
+.gw-notify-pills { display:flex; gap:8px; margin-bottom:6px; }
+.gw-notify-pill {
+  flex:1; padding:10px; border-radius:12px;
+  border:1.5px solid #e0d8c8; background:#fff;
+  font-size:13px; font-weight:600; color:#555;
+  cursor:pointer; text-align:center; transition:all .15s;
+  display:flex; align-items:center; justify-content:center; gap:6px;
+}
+.gw-notify-pill.active { border-color:#8b7320; color:#8b7320; background:#fffbf0; }
+.gw-notify-radio {
+  width:16px; height:16px; border-radius:50%; border:1.5px solid #ddd;
+  display:flex; align-items:center; justify-content:center;
+  font-size:9px; color:transparent; transition:all .15s; flex-shrink:0;
+}
+.gw-notify-pill.active .gw-notify-radio { background:#8b7320; border-color:#8b7320; color:#fff; }
+.gw-sub-text { font-size:11px; color:#bbb; text-align:center; margin-bottom:14px; }
+</style>
+
+<div id="generalWaitlist">
+  <div class="gw-topbar">
+    <button class="gw-back" onclick="closeGeneralWaitlist()">←</button>
+    <div style="font-size:17px;font-weight:700;color:#1a1a1a;">Get in Sooner</div>
+    <div style="width:28px;"></div>
+  </div>
+
+  <div class="gw-scroll">
+
+    <div style="font-size:13px;color:#999;margin-bottom:16px;line-height:1.5;">
+      Pick up to 3 groomers. We'll notify you the moment any of them has an opening.
+    </div>
+
+    <!-- Groomer picks -->
+    <div class="gw-sec">Choose groomers <span>(pick up to 3)</span></div>
+    <div class="gw-groomer-pick">
+
+      <div class="gw-groom-card selected" onclick="toggleGwGroomer(this)">
+        <div class="gw-groom-photo" style="background:linear-gradient(135deg,#3a2a0a,#1e1608);">🐾</div>
+        <div class="gw-groom-info">
+          <div class="gw-groom-name">Happy Tails Grooming</div>
+          <div class="gw-groom-meta">★ 4.9 · 0.3 mi</div>
+          <div class="gw-groom-avail green">● Next: Mar 25</div>
+        </div>
+        <div class="gw-check">✓</div>
+      </div>
+
+      <div class="gw-groom-card" onclick="toggleGwGroomer(this)">
+        <div class="gw-groom-photo" style="background:linear-gradient(135deg,#0a2a15,#061409);">✂️</div>
+        <div class="gw-groom-info">
+          <div class="gw-groom-name">Jill's Pet Studio</div>
+          <div class="gw-groom-meta">★ 4.9 · 0.6 mi</div>
+          <div class="gw-groom-avail orange">● Next: Mar 27</div>
+        </div>
+        <div class="gw-check">✓</div>
+      </div>
+
+      <div class="gw-groom-card" onclick="toggleGwGroomer(this)">
+        <div class="gw-groom-photo" style="background:linear-gradient(135deg,#0a1a3a,#06111c);">🛁</div>
+        <div class="gw-groom-info">
+          <div class="gw-groom-name">Biscuits &amp; Bath</div>
+          <div class="gw-groom-meta">★ 4.8 · 0.8 mi</div>
+          <div class="gw-groom-avail orange">● Next: Mar 28</div>
+        </div>
+        <div class="gw-check">✓</div>
+      </div>
+
+      <div class="gw-groom-card" onclick="toggleGwGroomer(this)">
+        <div class="gw-groom-photo" style="background:linear-gradient(135deg,#1a0a3a,#0e0620);">👑</div>
+        <div class="gw-groom-info">
+          <div class="gw-groom-name">The Wagington</div>
+          <div class="gw-groom-meta">★ 4.7 · 1.2 mi</div>
+          <div class="gw-groom-avail red">● No openings this week</div>
+        </div>
+        <div class="gw-check">✓</div>
+      </div>
+
+    </div>
+    <div class="gw-pick-hint" id="gwPickHint">1 of 3 selected</div>
+
+    <!-- When -->
+    <div class="gw-sec">When do you want a spot?</div>
+    <div class="gw-pills">
+      <div class="gw-pill gw-when active" onclick="gwSingle(this,'.gw-when')">⚡ ASAP</div>
+      <div class="gw-pill gw-when" onclick="gwSingle(this,'.gw-when')">Mon–Wed</div>
+      <div class="gw-pill gw-when" onclick="gwSingle(this,'.gw-when')">Thu–Fri</div>
+      <div class="gw-pill gw-when" onclick="gwSingle(this,'.gw-when')">This weekend</div>
+      <div class="gw-pill gw-when" onclick="gwSingle(this,'.gw-when')">Next week</div>
+      <div class="gw-pill gw-when" onclick="gwSingle(this,'.gw-when')">Flexible</div>
+    </div>
+
+    <!-- Time of day -->
+    <div class="gw-sec">Time of day <span>(optional)</span></div>
+    <div class="gw-pills">
+      <div class="gw-pill gw-tod active" onclick="gwSingle(this,'.gw-tod')">Any</div>
+      <div class="gw-pill gw-tod" onclick="gwSingle(this,'.gw-tod')">8–11am</div>
+      <div class="gw-pill gw-tod" onclick="gwSingle(this,'.gw-tod')">11–2pm</div>
+      <div class="gw-pill gw-tod" onclick="gwSingle(this,'.gw-tod')">2–5pm</div>
+      <div class="gw-pill gw-tod" onclick="gwSingle(this,'.gw-tod')">5–7pm</div>
+    </div>
+
+    <!-- Notify -->
+    <div class="gw-sec">Get notified by</div>
+    <div class="gw-notify-pills">
+      <div class="gw-notify-pill active" onclick="gwSingle(this,'.gw-notify-pill')">
+        <div class="gw-notify-radio">✓</div> Push
+      </div>
+      <div class="gw-notify-pill" onclick="gwSingle(this,'.gw-notify-pill')">
+        <div class="gw-notify-radio">✓</div> Text
+      </div>
+    </div>
+    <div class="gw-sub-text">You'll be notified the moment any selected groomer has an opening</div>
+
+    <button onclick="submitGeneralWaitlist()" style="display:block;width:100%;background:#8b7320;color:#fff;border:none;border-radius:14px;padding:15px;font-family:'DM Sans',sans-serif;font-size:16px;font-weight:700;cursor:pointer;text-align:center;margin-top:6px;box-shadow:0 4px 16px rgba(139,115,32,.3);">Get Notified of Openings</button>
+
+  </div>
+</div>
+
+<script>
+function openGeneralWaitlist() {
+  var page = document.getElementById('generalWaitlist');
+  page.style.visibility = 'visible';
+  page.classList.add('gw-open');
+}
+function closeGeneralWaitlist() {
+  var page = document.getElementById('generalWaitlist');
+  page.classList.remove('gw-open');
+}
+function gwSingle(el, sel) {
+  document.querySelectorAll(sel).forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+}
+function toggleGwGroomer(card) {
+  var selected = document.querySelectorAll('.gw-groom-card.selected');
+  var isSelected = card.classList.contains('selected');
+  if (!isSelected && selected.length >= 3) return; // max 3
+  card.classList.toggle('selected');
+  // Update hint
+  var count = document.querySelectorAll('.gw-groom-card.selected').length;
+  var hint = document.getElementById('gwPickHint');
+  if (hint) hint.textContent = count + ' of 3 selected';
+  // Disable unselected cards if at max
+  document.querySelectorAll('.gw-groom-card:not(.selected)').forEach(function(c) {
+    c.classList.toggle('disabled', count >= 3);
+  });
+}
+function submitGeneralWaitlist() {
+  var selected = Array.from(document.querySelectorAll('.gw-groom-card.selected')).map(function(c) {
+    return c.querySelector('.gw-groom-name').textContent;
+  });
+  if (selected.length === 0) { alert('Please select at least one groomer.'); return; }
+  var whenEl = document.querySelector('.gw-pill.gw-when.active');
+  var when = whenEl ? whenEl.textContent.trim() : 'ASAP';
+  var todEl = document.querySelector('.gw-pill.gw-tod.active');
+  var tod = todEl ? todEl.textContent.trim() : 'Any';
+
+  closeGeneralWaitlist();
+  var toast = document.createElement('div');
+  toast.style.cssText = 'position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:#8b7320;color:#fff;padding:12px 22px;border-radius:30px;font-size:14px;font-weight:600;z-index:5000;box-shadow:0 4px 20px rgba(139,115,32,.4);white-space:nowrap;';
+  toast.textContent = '🔔 You\'re on the waitlist for ' + selected.length + ' groomer' + (selected.length > 1 ? 's' : '') + '!';
+  document.body.appendChild(toast);
+  setTimeout(function(){ toast.remove(); }, 3500);
+}
+// generalWaitlist starts hidden via transform
+</script>
 </div><!-- end .phone -->
 
 <!-- RESULTS PAGE — slides in from right -->
