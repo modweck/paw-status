@@ -289,7 +289,7 @@ function mapRow(r) {
     dogName: dog.name || 'Unknown',
     breed: dog.breed || '',
     ownerName: owner.name || 'Guest',
-    playerId: owner.onesignal_player_id || null,
+    ownerPhone: owner.phone || null,
     service: r.service,
     price: r.price,
     groomerName: groomer.name || 'Groomer',
@@ -369,22 +369,22 @@ async function updateStatus(apptId, newStatus) {
   addToLog(appt, newStatus);
 
   try {
-    const resp = await fetch('/.netlify/functions/send-notification', {
+    const resp = await fetch('/.netlify/functions/send-sms', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         type: newStatus,
-        playerId: appt.playerId,
+        toPhone: appt.ownerPhone,
         dogName: appt.dogName,
         salonName: appt.salonName,
         appointmentTime: appt.time,
       }),
     });
     const result = await resp.json();
-    if (result.success) showToast('✅ ' + appt.ownerName + ' notified!');
-    else showToast('📱 Status saved (push unavailable)');
+    if (result.success) showToast('📩 SMS sent to ' + appt.ownerName);
+    else showToast('📱 Status saved (SMS failed: ' + (result.error || resp.status) + ')');
   } catch (err) {
-    showToast('📱 Status saved (push unavailable)');
+    showToast('📱 Status saved (SMS unavailable locally)');
   }
 }
 
