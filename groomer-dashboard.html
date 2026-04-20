@@ -221,7 +221,10 @@
     <div class="date-badge" id="todayDate"></div>
   </div>
 
-  <div class="section-title">Today's Appointments</div>
+  <div class="section-title" style="display:flex;align-items:center;gap:10px;">
+    <span>Upcoming Appointments</span>
+    <button id="refreshBtn" onclick="loadAppointments()" style="margin-left:auto;background:#1a1a1a;color:#f0f0f0;border:1px solid #2a2a2a;border-radius:999px;padding:4px 12px;font-size:11px;cursor:pointer;font-family:inherit;">↻ Refresh</button>
+  </div>
   <div id="appointmentsList"></div>
 
   <div class="log-section">
@@ -237,41 +240,8 @@
   <div class="toast" id="toast">✅ Notification sent!</div>
 
 <script>
-const appointments = [
-  {
-    id: 'appt_001',
-    dogName: 'Max',
-    breed: 'Goldendoodle',
-    ownerName: 'Sarah',
-    time: '10:00 AM',
-    service: 'Full Groom',
-    playerId: 'OWNER_ONESIGNAL_PLAYER_ID_HERE',
-    currentStatus: 0,
-    emoji: '🐩',
-  },
-  {
-    id: 'appt_002',
-    dogName: 'Bella',
-    breed: 'French Bulldog',
-    ownerName: 'Mike',
-    time: '12:30 PM',
-    service: 'Bath + Nail Trim',
-    playerId: 'OWNER_ONESIGNAL_PLAYER_ID_HERE_2',
-    currentStatus: 0,
-    emoji: '🐾',
-  },
-  {
-    id: 'appt_003',
-    dogName: 'Cooper',
-    breed: 'Golden Retriever',
-    ownerName: 'Jessica',
-    time: '2:00 PM',
-    service: 'Full Groom',
-    playerId: 'OWNER_ONESIGNAL_PLAYER_ID_HERE_3',
-    currentStatus: 0,
-    emoji: '🦮',
-  },
-];
+const SUPABASE_URL = 'https://faizrqajtdttcklflcbz.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_R4rLnRKIxwCeWywdRTwrFA_F-16fCeC';
 
 const STAGES = [
   { key: 'booked',           label: 'Booked',     icon: '📅' },
@@ -280,105 +250,153 @@ const STAGES = [
   { key: 'drying',           label: 'Drying',     icon: '💨' },
   { key: 'almost_ready',     label: 'Almost!',    icon: '✂️' },
   { key: 'ready_for_pickup', label: 'Ready!',     icon: '🎉' },
+  { key: 'picked_up',        label: 'Picked Up',  icon: '👋' },
 ];
 
-const NEXT_ACTION = [
-  { label: 'Check In Dog',                        type: 'checked_in',      style: 'btn-primary' },
-  { label: 'Start Bathing 🛁',                    type: 'bathing',         style: 'btn-primary' },
-  { label: 'Start Drying 💨',                     type: 'drying',          style: 'btn-primary' },
-  { label: 'Almost Ready — Notify Owner ✂️',      type: 'almost_ready',    style: 'btn-primary' },
-  { label: '🎉 Dog is Ready for Pickup!',         type: 'ready_for_pickup',style: 'btn-ready'   },
-];
+const NEXT_ACTION = {
+  booked:           { label: 'Check In Dog',                   type: 'checked_in',       style: 'btn-primary' },
+  checked_in:       { label: 'Start Bathing 🛁',                type: 'bathing',          style: 'btn-primary' },
+  bathing:          { label: 'Start Drying 💨',                 type: 'drying',           style: 'btn-primary' },
+  drying:           { label: 'Almost Ready — Notify Owner ✂️',  type: 'almost_ready',     style: 'btn-primary' },
+  almost_ready:     { label: '🎉 Dog is Ready for Pickup!',     type: 'ready_for_pickup', style: 'btn-ready'   },
+  ready_for_pickup: { label: '✅ Mark as Picked Up',            type: 'picked_up',        style: 'btn-primary' },
+};
 
+let appointments = [];
 let notificationLog = [];
+
+async function loadAppointments() {
+  const now = new Date();
+  const nowIso = now.toISOString();
+  const url = SUPABASE_URL + '/rest/v1/appointments' +
+    '?select=id,service,price,scheduled_at,status,dogs(name,breed,customers(name,phone,onesignal_player_id)),groomers(name,salon)' +
+    '&scheduled_at=gte.' + encodeURIComponent(new Date(now.getTime() - 24*3600*1000).toISOString()) +
+    '&order=scheduled_at.asc&limit=30';
+  const r = await fetch(url, { headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY } });
+  if (!r.ok) { console.error('load failed', await r.text()); return; }
+  const rows = await r.json();
+  appointments = rows.map(mapRow);
+  renderAppointments();
+}
+
+function mapRow(r) {
+  const dog = r.dogs || {};
+  const owner = (dog.customers) || {};
+  const groomer = r.groomers || {};
+  const when = new Date(r.scheduled_at);
+  return {
+    id: r.id,
+    dogName: dog.name || 'Unknown',
+    breed: dog.breed || '',
+    ownerName: owner.name || 'Guest',
+    playerId: owner.onesignal_player_id || null,
+    service: r.service,
+    price: r.price,
+    groomerName: groomer.name || 'Groomer',
+    salonName: groomer.salon || groomer.name || 'Salon',
+    status: r.status,
+    scheduledAt: when,
+    time: when.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }),
+    dateLabel: when.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }),
+    emoji: '🐾',
+  };
+}
+
+function statusIndex(status) {
+  const i = STAGES.findIndex(s => s.key === status);
+  return i < 0 ? 0 : i;
+}
 
 function renderAppointments() {
   const container = document.getElementById('appointmentsList');
-
-  container.innerHTML = appointments.map((appt, idx) => {
-    const isCompleted = appt.currentStatus >= STAGES.length - 1;
-    const isActive = appt.currentStatus > 0 && !isCompleted;
+  if (!appointments.length) {
+    container.innerHTML = '<div class="empty-state"><div class="emoji">📅</div><p>No upcoming appointments yet.<br>Book one from the customer app.</p></div>';
+    return;
+  }
+  container.innerHTML = appointments.map((appt) => {
+    const idx = statusIndex(appt.status);
+    const isCompleted = appt.status === 'picked_up';
+    const isActive = idx > 0 && !isCompleted;
     const cardClass = isCompleted ? 'completed' : isActive ? 'active' : '';
+    const visibleStages = STAGES.slice(0, 6);
 
-    const progressBar = STAGES.map((stage, i) => {
-      const isDone = i < appt.currentStatus;
-      const isCurrent = i === appt.currentStatus;
-      const dotClass = isDone ? 'done' : isCurrent ? 'active' : '';
-      const labelClass = isDone ? 'done' : isCurrent ? 'active' : '';
-      const lineClass = isDone ? 'done' : '';
-      return `
-        <div class="progress-step">
-          <div class="step-dot ${dotClass}"></div>
-          <div class="step-label ${labelClass}">${stage.label}</div>
-        </div>
-        ${i < STAGES.length - 1 ? `<div class="progress-line ${lineClass}"></div>` : ''}
-      `;
+    const progressBar = visibleStages.map((stage, i) => {
+      const isDone = i < idx;
+      const isCurrent = i === idx;
+      return '<div class="progress-step">' +
+        '<div class="step-dot ' + (isDone ? 'done' : isCurrent ? 'active' : '') + '"></div>' +
+        '<div class="step-label ' + (isDone ? 'done' : isCurrent ? 'active' : '') + '">' + stage.label + '</div>' +
+        '</div>' +
+        (i < visibleStages.length - 1 ? '<div class="progress-line ' + (isDone ? 'done' : '') + '"></div>' : '');
     }).join('');
 
-    const nextAction = NEXT_ACTION[appt.currentStatus];
+    const nextAction = NEXT_ACTION[appt.status];
     const actionBtn = isCompleted
-      ? `<button class="action-btn btn-disabled" disabled>✅ Picked Up</button>`
+      ? '<button class="action-btn btn-disabled" disabled>✅ Picked Up</button>'
       : nextAction
-        ? `<button class="action-btn ${nextAction.style}" onclick="updateStatus(${idx}, '${nextAction.type}')">${nextAction.label}</button>`
+        ? '<button class="action-btn ' + nextAction.style + '" onclick="updateStatus(\'' + appt.id + '\', \'' + nextAction.type + '\')">' + nextAction.label + '</button>'
         : '';
 
-    return `
-      <div class="dog-card ${cardClass}" id="card-${idx}">
-        <div class="dog-header">
-          <div class="dog-avatar">${appt.emoji}</div>
-          <div class="dog-info">
-            <h3>${appt.dogName}</h3>
-            <p>${appt.breed} · ${appt.service}</p>
-          </div>
-          <div class="time-badge">${appt.time}</div>
-        </div>
-        <div class="progress-track">${progressBar}</div>
-        ${actionBtn}
-      </div>
-    `;
+    return '<div class="dog-card ' + cardClass + '" id="card-' + appt.id + '">' +
+      '<div class="dog-header">' +
+        '<div class="dog-avatar">' + appt.emoji + '</div>' +
+        '<div class="dog-info">' +
+          '<h3>' + appt.dogName + '</h3>' +
+          '<p>' + (appt.breed ? appt.breed + ' · ' : '') + appt.service + '</p>' +
+          '<p style="font-size:11px;color:#666;margin-top:2px;">' + appt.salonName + ' · owner: ' + appt.ownerName + '</p>' +
+        '</div>' +
+        '<div class="time-badge">' + appt.dateLabel + ' · ' + appt.time + '</div>' +
+      '</div>' +
+      '<div class="progress-track">' + progressBar + '</div>' +
+      actionBtn +
+    '</div>';
   }).join('');
 }
 
-async function updateStatus(apptIdx, notificationType) {
-  const appt = appointments[apptIdx];
-  appt.currentStatus += 1;
+async function updateStatus(apptId, newStatus) {
+  const appt = appointments.find(a => a.id === apptId);
+  if (!appt) return;
+
+  const r = await fetch(SUPABASE_URL + '/rest/v1/appointments?id=eq.' + apptId, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY, Prefer: 'return=minimal' },
+    body: JSON.stringify({ status: newStatus, status_updated_at: new Date().toISOString() })
+  });
+  if (!r.ok) { showToast('⚠️ Could not update — ' + r.status); return; }
+
+  appt.status = newStatus;
   renderAppointments();
+  addToLog(appt, newStatus);
 
   try {
-    const response = await fetch('/.netlify/functions/send-notification', {
+    const resp = await fetch('/.netlify/functions/send-notification', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        type: notificationType,
+        type: newStatus,
         playerId: appt.playerId,
         dogName: appt.dogName,
-        salonName: 'Groomingdales',
+        salonName: appt.salonName,
         appointmentTime: appt.time,
       }),
     });
-    const result = await response.json();
-    if (result.success) {
-      showToast(`✅ ${appt.ownerName} notified!`);
-      addToLog(appt, notificationType);
-    } else {
-      showToast('⚠️ Notification failed — try again');
-    }
+    const result = await resp.json();
+    if (result.success) showToast('✅ ' + appt.ownerName + ' notified!');
+    else showToast('📱 Status saved (push unavailable)');
   } catch (err) {
-    showToast(`📱 ${appt.ownerName} would be notified!`);
-    addToLog(appt, notificationType);
+    showToast('📱 Status saved (push unavailable)');
   }
 }
 
 function addToLog(appt, type) {
   const stage = STAGES.find(s => s.key === type);
   const now = new Date();
-  const timeStr = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
   notificationLog.unshift({
-    icon: stage?.icon || '🔔',
+    icon: (stage && stage.icon) || '🔔',
     dogName: appt.dogName,
     ownerName: appt.ownerName,
-    type: stage?.label || type,
-    time: timeStr,
+    type: (stage && stage.label) || type,
+    time: now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }),
   });
   renderLog();
 }
@@ -386,16 +404,16 @@ function addToLog(appt, type) {
 function renderLog() {
   const container = document.getElementById('notificationLog');
   if (notificationLog.length === 0) {
-    container.innerHTML = `<div class="empty-state"><div class="emoji">🔔</div><p>Notifications you send will appear here</p></div>`;
+    container.innerHTML = '<div class="empty-state"><div class="emoji">🔔</div><p>Notifications you send will appear here</p></div>';
     return;
   }
-  container.innerHTML = notificationLog.map(entry => `
-    <div class="log-item">
-      <div class="log-icon">${entry.icon}</div>
-      <div class="log-text"><strong>${entry.ownerName}</strong> notified — ${entry.dogName} status updated to <strong>${entry.type}</strong></div>
-      <div class="log-time">${entry.time}</div>
-    </div>
-  `).join('');
+  container.innerHTML = notificationLog.map(entry =>
+    '<div class="log-item">' +
+      '<div class="log-icon">' + entry.icon + '</div>' +
+      '<div class="log-text"><strong>' + entry.ownerName + '</strong> notified — ' + entry.dogName + ' status updated to <strong>' + entry.type + '</strong></div>' +
+      '<div class="log-time">' + entry.time + '</div>' +
+    '</div>'
+  ).join('');
 }
 
 function showToast(message) {
@@ -409,7 +427,8 @@ document.getElementById('todayDate').textContent = new Date().toLocaleDateString
   weekday: 'long', month: 'short', day: 'numeric'
 });
 
-renderAppointments();
+loadAppointments();
+setInterval(loadAppointments, 15000);
 </script>
 </body>
 </html>

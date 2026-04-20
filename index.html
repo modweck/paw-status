@@ -181,7 +181,12 @@
   .gc-info { flex:1; min-width:0; }
   .gc-name-row { display:flex; align-items:baseline; justify-content:space-between; gap:4px; margin-bottom:3px; }
   .gc-name { font-size:15px; font-weight:700; color:var(--text); line-height:1.2; }
-  .gc-dist { font-size:11px; color:var(--muted); white-space:nowrap; }
+  .gc-dist { font-size:11px; color:var(--gold); font-weight:700; background:var(--gold-pale); border:1px solid var(--gold-border); padding:2px 7px; border-radius:10px; white-space:nowrap; }
+
+  .radius-row { display:flex; align-items:center; gap:6px; padding:10px 14px 2px; border-top:1px solid #f5f5f5; }
+  .radius-label { font-size:9px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:var(--gold-light); margin-right:4px; }
+  .radius-pill { flex:1; background:#f5f5f5; border:1.5px solid #eee; border-radius:18px; padding:6px 0; font-family:'DM Sans',sans-serif; font-size:12px; font-weight:600; color:#666; cursor:pointer; transition:all 0.15s; text-align:center; }
+  .radius-pill.active { background:var(--gold-pale); border-color:var(--gold-light); color:var(--gold); }
   .gc-rating-row { display:flex; align-items:center; gap:5px; font-size:12px; color:#666; margin-bottom:5px; }
   .gc-star { color:#f0b429; font-size:13px; }
   .gc-avail { display:flex; align-items:center; gap:5px; font-size:12px; }
@@ -1189,6 +1194,14 @@ body { background: #e8e3d8 !important; }
         <div id="locationSuggestions" style="display:none;"></div>
         <div class="location-confirmed" id="locationConfirmed"><span>✓</span><span id="locationText">Location set</span></div>
         <button class="hsc-use-location" onclick="shareLocation()">🎯 Use current</button>
+        <div class="radius-row">
+          <span class="radius-label">Radius</span>
+          <button type="button" class="radius-pill" onclick="setRadius(1, this)">1 mi</button>
+          <button type="button" class="radius-pill" onclick="setRadius(2, this)">2 mi</button>
+          <button type="button" class="radius-pill active" onclick="setRadius(3, this)">3 mi</button>
+          <button type="button" class="radius-pill" onclick="setRadius(4, this)">4 mi</button>
+          <button type="button" class="radius-pill" onclick="setRadius(5, this)">5 mi</button>
+        </div>
       </div>
 
       <!-- Dog + Service two-col -->
@@ -1589,8 +1602,8 @@ function submitGeneralWaitlist() {
     </button>
   </div>
   <div class="sort-bar">
-    <button class="sort-pill active" onclick="sortResults('rating', this)">Recommended</button>
-    <button class="sort-pill" onclick="sortResults('soonest', this)">Soonest</button>
+    <button class="sort-pill active" onclick="sortResults('recommended', this)">Recommended</button>
+    <button class="sort-pill" onclick="sortResults('distance', this)">Nearest</button>
     <button class="sort-pill" onclick="sortResults('rating', this)">Top Rated</button>
     <button class="sort-pill" onclick="sortResults('price', this)">Price</button>
     <button class="sort-pill deals-pill" onclick="sortResults('deals', this)">🏷️ Deals</button>
@@ -1698,6 +1711,62 @@ const GROOMERS = [
 
 window.GROOMERS_DATA = GROOMERS;
 let selectedBreed = null, selectedService = null, renderedGroomers = [];
+
+const SUPABASE_URL = 'https://faizrqajtdttcklflcbz.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_R4rLnRKIxwCeWywdRTwrFA_F-16fCeC';
+window.USER_COORDS = null;
+let selectedRadiusMi = 3;
+
+function setRadius(mi, btn) {
+  selectedRadiusMi = mi;
+  document.querySelectorAll('.radius-pill').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+async function geocodeAddress(addr) {
+  try {
+    const r = await fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&q=' + encodeURIComponent(addr));
+    const j = await r.json();
+    if (j && j[0]) return { lat: parseFloat(j[0].lat), lng: parseFloat(j[0].lon) };
+  } catch (e) {}
+  return null;
+}
+
+async function fetchNearbyGroomers(lat, lng, radiusMeters) {
+  const r = await fetch(SUPABASE_URL + '/rest/v1/rpc/nearby_groomers', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY },
+    body: JSON.stringify({ user_lat: lat, user_lng: lng, radius_meters: radiusMeters || 8000 })
+  });
+  if (!r.ok) return [];
+  return r.json();
+}
+
+function supabaseToGroomer(g) {
+  const miles = g.distance_meters / 1609.34;
+  const short = (g.address || '').split(',')[0];
+  return {
+    name: g.name,
+    address: short,
+    neighborhood: detectNeighborhood(g.address || ''),
+    rating: g.rating ? Number(g.rating).toFixed(1) : '—',
+    reviews: g.review_count || 0,
+    emoji: '🐾',
+    nextAvail: 'TBD',
+    firstGroom: false,
+    featured: false,
+    discountPct: 0,
+    isJill: false,
+    img: g.photo_url || null,
+    links: { website: null, instagram: null, editorial: null, menu: null },
+    distanceLabel: miles.toFixed(1) + ' mi',
+    distanceVal: miles,
+    lat: g.lat,
+    lng: g.lng,
+    fullAddress: g.address,
+    _supabaseId: g.id,
+  };
+}
 
 // Build breed list
 const grid = document.getElementById('breedGrid');
@@ -1952,6 +2021,7 @@ function selectAddress(addr) {
   document.getElementById('locationSuggestions').style.display = 'none';
   document.getElementById('locationConfirmed').classList.add('show');
   document.getElementById('locationText').textContent = '📍 ' + display;
+  geocodeAddress(addr).then(function(c) { if (c) window.USER_COORDS = c; });
   checkReady();
 }
 
@@ -1976,6 +2046,7 @@ function shareLocation() {
   navigator.geolocation.getCurrentPosition(function(pos) {
     var lat = pos.coords.latitude;
     var lng = pos.coords.longitude;
+    window.USER_COORDS = { lat: lat, lng: lng };
     fetch('https://nominatim.openstreetmap.org/reverse?format=json&lat=' + lat + '&lon=' + lng)
       .then(function(r) { return r.json(); })
       .then(function(data) {
@@ -2060,6 +2131,11 @@ function renderGroomerCards(groomers) {
             </div>
           </div>
           ${isYourGroomer ? `<div style="font-size:11px;color:#34c759;font-weight:700;margin-bottom:2px;">● Jill — Your groomer</div>` : ''}
+          ${g.address ? `<div style="font-size:11px;color:#888;margin-bottom:3px;display:flex;align-items:center;gap:4px;">
+            <span style="color:#e05a6a;">📍</span>
+            <span>${g.address}${g.neighborhood ? ' · ' + g.neighborhood : ''}</span>
+            ${g.lat && g.lng ? `<a href="https://www.google.com/maps/dir/?api=1&destination=${g.lat},${g.lng}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="margin-left:auto;color:var(--gold);font-weight:700;text-decoration:none;">🧭 Directions</a>` : ''}
+          </div>` : ''}
           <div class="gc-rating-row">
             <span class="gc-star">★</span>
             <span>${g.rating}</span>
@@ -2087,7 +2163,14 @@ function sortResults(by, btn) {
   btn.classList.add('active');
   let sorted = [...renderedGroomers];
 
-  if (by === 'rating') {
+  if (by === 'recommended') {
+    sorted.sort((a, b) => {
+      const ra = parseInt(a.reviews) || 0;
+      const rb = parseInt(b.reviews) || 0;
+      if (rb !== ra) return rb - ra;
+      return (a.distanceVal || 999) - (b.distanceVal || 999);
+    });
+  } else if (by === 'rating') {
     sorted.sort((a, b) => parseFloat(b.rating) - parseFloat(a.rating));
     // Pin Happy Tails first regardless of rating
     const top = sorted.find(g => g.featured);
@@ -2104,14 +2187,6 @@ function sortResults(by, btn) {
     sorted = top ? [top, ...rest] : rest;
   }
 
-  // For non-rating, non-deals sorts: shuffle to give fresh feel
-  if (by !== 'deals' && by !== 'rating') {
-    for (let i = sorted.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [sorted[i], sorted[j]] = [sorted[j], sorted[i]];
-    }
-  }
-
   const toRender = sorted;
   const dealsNote = document.getElementById('dealsNote');
   if(dealsNote) dealsNote.style.display = (by==='deals' && toRender.length) ? 'flex' : 'none';
@@ -2119,43 +2194,65 @@ function sortResults(by, btn) {
   document.getElementById('groomerCards').scrollTop = 0;
 }
 
-function findGroomers() {
+async function findGroomers() {
   const mult = SIZE_MULT[selectedBreed] || 1.0;
   const cards = document.getElementById('groomerCards');
-  cards.innerHTML = '';
+  cards.innerHTML = '<div style="text-align:center;padding:40px;color:#999;font-size:13px;">Finding groomers near you…</div>';
 
-  const loc = document.getElementById('locationInput').value.trim() || document.getElementById('locationText').textContent;
   document.getElementById('rpTitle').textContent = 'Groomers Near You';
   document.getElementById('rpSub').textContent = `${selectedBreed} · ${selectedService.name}`;
-  const rpCount = document.getElementById('rpCount'); if(rpCount) rpCount.textContent = `${GROOMERS.length} found`;
-
-  const imgStyles = ['warm','cool','green','purple'];
-  const distances = ['0.3 mi','0.6 mi','0.8 mi','1.2 mi'];
-  const distanceVals = [0.3, 0.6, 0.8, 1.2];
-
-  renderedGroomers = GROOMERS.map((g, i) => ({
-    ...g,
-    price: Math.round(selectedService.base * mult * (g.isJill ? 0.95 : 1)),
-    distanceLabel: distances[i],
-    distanceVal: distanceVals[i],
-    imgStyle: imgStyles[i],
-    nextAvail: g.nextAvail || 'TBD'
-  }));
-
-  // On initial load: pin Happy Tails (isJill) to top
-  const topGroomer = renderedGroomers.find(g => g.featured);
-  const others = renderedGroomers.filter(g => !g.featured);
-  const initialOrder = topGroomer ? [topGroomer, ...others] : renderedGroomers;
-  renderGroomerCards(initialOrder);
-
-  // Reset sort pills to Rating
-  document.querySelectorAll('.sort-pill').forEach(p => p.classList.remove('active'));
-  document.querySelector('.sort-pill').classList.add('active');
 
   const page = document.getElementById('resultsPage');
   page.style.pointerEvents = '';
   page.style.visibility = 'visible';
   page.classList.add('show');
+
+  let coords = window.USER_COORDS;
+  if (!coords) {
+    const typed = document.getElementById('locationInput').value.trim();
+    if (typed) coords = await geocodeAddress(typed);
+    if (coords) window.USER_COORDS = coords;
+  }
+
+  let groomerList = [];
+  if (coords) {
+    const rows = await fetchNearbyGroomers(coords.lat, coords.lng, Math.round(selectedRadiusMi * 1609.34));
+    groomerList = rows.map(supabaseToGroomer);
+  }
+
+  if (groomerList.length === 0) {
+    const distances = ['0.3 mi','0.6 mi','0.8 mi','1.2 mi'];
+    const distanceVals = [0.3, 0.6, 0.8, 1.2];
+    groomerList = GROOMERS.map((g, i) => ({
+      ...g,
+      distanceLabel: distances[i],
+      distanceVal: distanceVals[i],
+    }));
+  }
+
+  const rpCount = document.getElementById('rpCount');
+  if (rpCount) rpCount.textContent = `${groomerList.length} found`;
+
+  const imgStyles = ['warm','cool','green','purple'];
+  renderedGroomers = groomerList.map((g, i) => ({
+    ...g,
+    price: Math.round(selectedService.base * mult * (g.isJill ? 0.95 : 1)),
+    imgStyle: g.imgStyle || imgStyles[i % imgStyles.length],
+    nextAvail: g.nextAvail || 'TBD'
+  }));
+
+  window.GROOMERS_DATA = renderedGroomers;
+
+  const initialOrder = [...renderedGroomers].sort((a, b) => {
+    const ra = parseInt(a.reviews) || 0;
+    const rb = parseInt(b.reviews) || 0;
+    if (rb !== ra) return rb - ra;
+    return (a.distanceVal || 999) - (b.distanceVal || 999);
+  });
+  renderGroomerCards(initialOrder);
+
+  document.querySelectorAll('.sort-pill').forEach(p => p.classList.remove('active'));
+  document.querySelector('.sort-pill').classList.add('active');
   document.getElementById('groomerCards').scrollTop = 0;
 }
 
@@ -2197,8 +2294,9 @@ function bookGroomer(groomerName) {
   // Build calendar
   const today = new Date();
   const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-  const blockedStart = new Date(todayStart); blockedStart.setDate(todayStart.getDate() + 1);
-  const blockedUntil = new Date(todayStart); blockedUntil.setDate(todayStart.getDate() + 7);
+  // No blocked window — any day from tomorrow onward is bookable.
+  const blockedStart = new Date(todayStart);
+  const blockedUntil = new Date(todayStart);
   const year = today.getFullYear(); const month = today.getMonth();
   const monthName = today.toLocaleString('default',{month:'long'});
   const firstDay = new Date(year, month, 1).getDay();
@@ -2259,8 +2357,8 @@ function bookGroomer(groomerName) {
         <div class="bk-groomer-photo">🐾</div>
         <div class="bk-groomer-info">
           <div class="bk-next-avail-row">
-            <div class="bk-next-avail-label">🟢 Next: Mar 25 · 2:00 PM</div>
-            <button class="bk-next-avail-btn" onclick="bookGroomerDirect('${groomerName}','2:00 PM')">Book this →</button>
+            <div class="bk-next-avail-label">🟢 Earliest: ${new Date(todayStart.getTime()+86400000).toLocaleDateString('en-US',{month:'short',day:'numeric'})} · 9:00 AM</div>
+            <button class="bk-next-avail-btn" onclick="bookGroomerDirect('${groomerName}','9:00 AM')">Book this →</button>
           </div>
           <div class="bk-groomer-rating">
             <span class="star">★</span>
@@ -2272,13 +2370,6 @@ function bookGroomer(groomerName) {
       </div>
 
       <div class="booking-content">
-        <!-- Waitlist banner -->
-        <div class="bk-waitlist-banner">
-          <div class="bk-waitlist-label">🔔 No availability before ${blockedEndLabel}</div>
-          <button class="bk-waitlist-btn" onclick="openWaitlistPage()">Join Jill's Waitlist for Earlier Opening ›</button>
-          <div class="bk-waitlist-sub">Get notified if a spot opens sooner</div>
-        </div>
-
         <!-- Calendar -->
         <div class="cal-header">
           <div class="cal-month">${monthName} ${year}</div>
@@ -2494,7 +2585,7 @@ function addNote(text) {
   ta.focus();
 }
 
-function confirmAndBook() {
+async function confirmAndBook() {
   var notes = document.getElementById('groomerNotes') ? document.getElementById('groomerNotes').value : '';
   var groomerName = window._currentGroomer || 'Happy Tails Grooming';
   var serviceLabel = selectedService ? selectedService.name : 'Full Groom';
@@ -2506,9 +2597,33 @@ function confirmAndBook() {
   var discountPct = hasDiscount ? (groomerData.discountPct||10) : 0;
   var finalPrice = hasDiscount ? Math.round(price*(1-discountPct/100)) : price;
 
+  // Require customer + dog before inserting appointment
+  var auth = await PawAuth.requireAuth();
+
+  // Build scheduled_at timestamp from _confirmedMonthLabel + _confirmedDate + slot
+  var scheduledAt = buildScheduledAt(window._confirmedMonthLabel, window._confirmedDate, slot);
+
+  // Insert appointment row
+  if (groomerData && groomerData._supabaseId) {
+    try {
+      await fetch(SUPABASE_URL + '/rest/v1/appointments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY, Prefer: 'return=minimal' },
+        body: JSON.stringify({
+          dog_id: auth.dog.id,
+          groomer_id: groomerData._supabaseId,
+          service: serviceLabel,
+          price: finalPrice,
+          scheduled_at: scheduledAt,
+          status: 'booked'
+        })
+      });
+    } catch (e) { console.error('Appointment insert failed', e); }
+  }
+
   // store tracker opts for later
   window._pendingTrackerOpts = {
-    dogName: 'Bella', breed: breedLabel,
+    dogName: auth.dog.name, breed: breedLabel,
     service: serviceLabel, groomer: groomerName,
     timeSlot: slot, notes: notes
   };
@@ -2571,6 +2686,25 @@ function confirmAndBook() {
     switchTab('appointments');
     showInProgressBanner();
   }, 3100);
+}
+
+function buildScheduledAt(monthLabel, dayStr, slot) {
+  var now = new Date();
+  var d = new Date(now);
+  if (monthLabel && dayStr) {
+    var monthIdx = new Date(Date.parse(monthLabel + ' 1, 2000')).getMonth();
+    var day = parseInt(dayStr, 10);
+    var year = now.getFullYear();
+    if (monthIdx < now.getMonth()) year += 1;
+    d = new Date(year, monthIdx, day);
+  }
+  var m = (slot || '').match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+  if (m) {
+    var h = parseInt(m[1], 10) % 12;
+    if (m[3].toUpperCase() === 'PM') h += 12;
+    d.setHours(h, parseInt(m[2], 10), 0, 0);
+  }
+  return d.toISOString();
 }
 
 function showInProgressBanner() {
@@ -3659,7 +3793,7 @@ function openGroomTracker(opts) {
       <span id="inSessionPillText">In Session · ~45m</span>
     </div>
     <div class="bookings-title">Bookings</div>
-    <div class="bookings-sub">Bella's appointments</div>
+    <div class="bookings-sub" id="bookingsSub">Your appointments</div>
   </div>
 
   <!-- IN PROGRESS BANNER -->
@@ -3682,88 +3816,21 @@ function openGroomTracker(opts) {
     </div>
   </div>
   <div class="bookings-section-label">UPCOMING</div>
-  <div class="booking-upcoming-card">
-    <div class="buc-left">
-      <div class="buc-date-box">
-        <div class="buc-month">MAR</div>
-        <div class="buc-day">20</div>
-      </div>
-    </div>
-    <div class="buc-info">
-      <div class="buc-groomer">Happy Tails Grooming</div>
-      <div class="buc-detail">Full Groom · Golden Retriever</div>
-      <div class="buc-time">📍 SoHo · 11:00 AM</div>
-      <div class="buc-status-row">
-        <span class="buc-status confirmed">✓ Confirmed</span>
-        <button class="buc-rebook-btn" onclick="openGroomerChat('Happy Tails Grooming')" style="background:#e8f0ff;border-color:#b0c8f0;color:#3a6abf">💬 Message</button>
-        <button class="buc-rebook-btn" onclick="rebookAppointment('Happy Tails Grooming')">✎ Modify</button>
-        <button class="buc-cancel-btn" onclick="showCancelFlow()">Cancel</button>
-      </div>
-    </div>
+  <div id="bookingsUpcomingList"></div>
+
+  <div class="bookings-section-label" style="margin-top:20px" id="bookingsHistoryLabel">GROOM HISTORY</div>
+  <div class="groom-history-list" id="bookingsHistoryList"></div>
+
+  <div id="bookingsEmpty" style="display:none;text-align:center;padding:40px 20px;color:#999;">
+    <div style="font-size:48px;margin-bottom:12px;">📅</div>
+    <div style="font-size:15px;color:#555;margin-bottom:4px;font-weight:600;">No bookings yet</div>
+    <div style="font-size:13px;">Find a groomer on the Explore tab to book your first appointment.</div>
   </div>
 
-  <!-- Past bookings -->
-  <div class="bookings-section-label" style="margin-top:20px">GROOM HISTORY</div>
-
-  <div class="groom-history-list">
-
-    <div class="gh-card">
-      <div class="gh-left">
-        <div class="gh-avatar">🐾</div>
-        <div class="gh-line"></div>
-      </div>
-      <div class="gh-body">
-        <div class="gh-top">
-          <div class="gh-groomer">Happy Tails Grooming</div>
-          <div class="gh-date">Feb 18, 2026</div>
-        </div>
-        <div class="gh-service">Full Groom · Bath, Cut, Blow Dry</div>
-        <div class="gh-price">$92 paid</div>
-        <div class="gh-actions">
-          <button class="gh-btn" onclick="rebookAppointment('Happy Tails Grooming')">↩ Rebook</button>
-          <div class="gh-stars">★★★★★</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="gh-card">
-      <div class="gh-left">
-        <div class="gh-avatar">✂️</div>
-        <div class="gh-line"></div>
-      </div>
-      <div class="gh-body">
-        <div class="gh-top">
-          <div class="gh-groomer">Jill's Pet Studio</div>
-          <div class="gh-date">Jan 5, 2026</div>
-        </div>
-        <div class="gh-service">Bath & Brush · Nail Trim add-on</div>
-        <div class="gh-price">$68 paid</div>
-        <div class="gh-actions">
-          <button class="gh-btn" onclick="rebookAppointment('Jill\'s Pet Studio')">↩ Rebook</button>
-          <div class="gh-stars">★★★★☆</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="gh-card">
-      <div class="gh-left">
-        <div class="gh-avatar">🛁</div>
-        <div class="gh-line last"></div>
-      </div>
-      <div class="gh-body">
-        <div class="gh-top">
-          <div class="gh-groomer">Biscuits & Bath</div>
-          <div class="gh-date">Nov 22, 2025</div>
-        </div>
-        <div class="gh-service">Full Groom · Teeth Cleaning add-on</div>
-        <div class="gh-price">$110 paid</div>
-        <div class="gh-actions">
-          <button class="gh-btn" onclick="rebookAppointment('Biscuits & Bath')">↩ Rebook</button>
-          <div class="gh-stars">★★★★★</div>
-        </div>
-      </div>
-    </div>
-
+  <div id="bookingsSignIn" style="display:none;text-align:center;padding:40px 20px;color:#999;">
+    <div style="font-size:48px;margin-bottom:12px;">👋</div>
+    <div style="font-size:15px;color:#555;margin-bottom:12px;font-weight:600;">Sign in to see your bookings</div>
+    <button onclick="paOpenModal()" style="background:#8b7320;color:#fff;border:none;border-radius:12px;padding:12px 20px;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;">Sign in</button>
   </div>
 </div>
 
@@ -4141,6 +4208,7 @@ function switchTab(tab) {
     bs.classList.add('active');
     if(ms) ms.classList.remove('active');
     if(as) as.classList.remove('active');
+    loadMyBookings();
   } else if(tab === 'mydog') {
     if(ms) ms.classList.add('active');
     bs.classList.remove('active');
@@ -4990,6 +5058,461 @@ function finalConfirmWaitlist() {
 }
 document.getElementById('waitlistPage').style.display = 'none';
 </script>
+
+<!-- ══ SIGN-IN / ADD-DOG MODAL ══ -->
+<style>
+  .pa-modal-backdrop { position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:5000; display:none; align-items:center; justify-content:center; padding:16px; font-family:'DM Sans',sans-serif; }
+  .pa-modal-backdrop.show { display:flex; }
+  .pa-modal { background:#fff; border-radius:20px; width:100%; max-width:400px; overflow:hidden; box-shadow:0 30px 80px rgba(0,0,0,0.3); }
+  .pa-modal-header { padding:22px 24px 8px; }
+  .pa-modal-title { font-family:'DM Serif Display',serif; font-size:22px; color:#1a1a1a; line-height:1.2; }
+  .pa-modal-sub { font-size:13px; color:#999; margin-top:4px; }
+  .pa-modal-body { padding:12px 24px 20px; }
+  .pa-field { margin-bottom:12px; }
+  .pa-field label { display:block; font-size:10px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:#c8a84b; margin-bottom:6px; }
+  .pa-field input, .pa-field select { width:100%; border:1.5px solid #eee; border-radius:12px; padding:12px 14px; font-family:'DM Sans',sans-serif; font-size:14px; color:#1a1a1a; background:#fff; outline:none; transition:border-color 0.15s; }
+  .pa-field input:focus, .pa-field select:focus { border-color:#c8a84b; }
+  .pa-row { display:flex; gap:10px; }
+  .pa-row > * { flex:1; }
+  .pa-btn { width:100%; background:#8b7320; color:#fff; border:none; border-radius:12px; padding:14px; font-family:'DM Sans',sans-serif; font-size:15px; font-weight:600; cursor:pointer; transition:background 0.15s; }
+  .pa-btn:hover { background:#7a651c; }
+  .pa-btn:disabled { background:#d0c5a0; cursor:not-allowed; }
+  .pa-err { color:#c0392b; font-size:12px; margin-top:8px; min-height:16px; }
+  .pa-header-chip { position:fixed; top:14px; right:14px; z-index:11; background:#fff; border:1.5px solid #e8d898; border-radius:20px; padding:5px 12px; font-family:'DM Sans',sans-serif; font-size:12px; font-weight:600; color:#8b7320; cursor:pointer; box-shadow:0 2px 8px rgba(0,0,0,0.05); display:none; }
+  .pa-header-chip.show { display:inline-flex; align-items:center; gap:6px; }
+</style>
+
+<div class="pa-modal-backdrop" id="paModal">
+  <div class="pa-modal">
+    <div class="pa-modal-header">
+      <div class="pa-modal-title" id="paModalTitle">Welcome to PawStatus 🐾</div>
+      <div class="pa-modal-sub" id="paModalSub">Sign in so we can notify you during your dog's groom.</div>
+    </div>
+    <div class="pa-modal-body">
+      <div id="paStep1">
+        <div class="pa-field">
+          <label>Your name</label>
+          <input type="text" id="paName" placeholder="Jane Smith" autocomplete="name"/>
+        </div>
+        <div class="pa-field">
+          <label>Phone</label>
+          <input type="tel" id="paPhone" placeholder="(555) 123-4567" autocomplete="tel"/>
+        </div>
+        <button class="pa-btn" id="paNextBtn" onclick="paNextStep()">Continue →</button>
+        <div class="pa-err" id="paErr1"></div>
+      </div>
+      <div id="paStep2" style="display:none;">
+        <div class="pa-field">
+          <label>Dog's name</label>
+          <input type="text" id="paDogName" placeholder="Bella"/>
+        </div>
+        <div class="pa-row">
+          <div class="pa-field">
+            <label>Breed</label>
+            <select id="paDogBreed"></select>
+          </div>
+          <div class="pa-field">
+            <label>Size</label>
+            <select id="paDogSize">
+              <option value="toy">Toy (&lt;10 lb)</option>
+              <option value="small">Small (10–25 lb)</option>
+              <option value="medium" selected>Medium (25–55 lb)</option>
+              <option value="large">Large (55–85 lb)</option>
+              <option value="xlarge">XL (&gt;85 lb)</option>
+            </select>
+          </div>
+        </div>
+        <button class="pa-btn" id="paFinishBtn" onclick="paFinish()">Finish →</button>
+        <div class="pa-err" id="paErr2"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="pa-header-chip" id="paHeaderChip" onclick="paSignOut()">
+  <span>👤</span><span id="paChipName">Signed in</span><span style="color:#c8b78a;">·</span><span style="font-size:11px;color:#aaa;">sign out</span>
+</div>
+
+<script>
+const PawAuth = {
+  LS_CUSTOMER: 'ps_customer',
+  LS_DOG: 'ps_dog',
+  _resolver: null,
+
+  getCustomer() { try { return JSON.parse(localStorage.getItem(this.LS_CUSTOMER) || 'null'); } catch { return null; } },
+  getDog() { try { return JSON.parse(localStorage.getItem(this.LS_DOG) || 'null'); } catch { return null; } },
+
+  async upsertCustomer(name, phone) {
+    const r = await fetch(SUPABASE_URL + '/rest/v1/customers?on_conflict=phone', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY, Prefer: 'resolution=merge-duplicates,return=representation' },
+      body: JSON.stringify({ name, phone })
+    });
+    if (!r.ok) throw new Error('Could not save your info: ' + await r.text());
+    const rows = await r.json();
+    return rows[0];
+  },
+
+  async insertDog(customerId, name, breed, size) {
+    const r = await fetch(SUPABASE_URL + '/rest/v1/dogs', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY, Prefer: 'return=representation' },
+      body: JSON.stringify({ customer_id: customerId, name, breed, size })
+    });
+    if (!r.ok) throw new Error('Could not save your dog: ' + await r.text());
+    const rows = await r.json();
+    return rows[0];
+  },
+
+  requireAuth() {
+    return new Promise((resolve) => {
+      const c = this.getCustomer();
+      const d = this.getDog();
+      if (c && d) return resolve({ customer: c, dog: d });
+      this._resolver = resolve;
+      paOpenModal();
+    });
+  },
+
+  updateHeaderChip() {
+    const chip = document.getElementById('paHeaderChip');
+    const c = this.getCustomer();
+    const d = this.getDog();
+    if (c && d) {
+      chip.classList.add('show');
+      document.getElementById('paChipName').textContent = (d.name || c.name) + ' 🐾';
+    } else {
+      chip.classList.remove('show');
+    }
+  },
+};
+
+function paOpenModal() {
+  const c = PawAuth.getCustomer();
+  const d = PawAuth.getDog();
+  if (c) {
+    document.getElementById('paName').value = c.name || '';
+    document.getElementById('paPhone').value = c.phone || '';
+  }
+  if (d) {
+    document.getElementById('paDogName').value = d.name || '';
+    document.getElementById('paDogBreed').value = d.breed || '';
+    document.getElementById('paDogSize').value = d.size || 'medium';
+  }
+  const breedSel = document.getElementById('paDogBreed');
+  if (breedSel.options.length === 0 && typeof BREEDS !== 'undefined') {
+    BREEDS.forEach(b => { const o = document.createElement('option'); o.value = b; o.textContent = b; breedSel.appendChild(o); });
+    breedSel.value = selectedBreed || 'Mutt / Mixed Breed';
+  }
+  document.getElementById('paStep1').style.display = c ? 'none' : 'block';
+  document.getElementById('paStep2').style.display = c ? 'block' : 'none';
+  document.getElementById('paModalTitle').textContent = c ? 'Add your dog' : 'Sign in to book';
+  document.getElementById('paModal').classList.add('show');
+}
+
+function paCloseModal() {
+  document.getElementById('paModal').classList.remove('show');
+}
+
+async function paNextStep() {
+  const name = document.getElementById('paName').value.trim();
+  const phone = document.getElementById('paPhone').value.trim();
+  const err = document.getElementById('paErr1');
+  err.textContent = '';
+  if (!name || !phone) { err.textContent = 'Name and phone are required.'; return; }
+  const btn = document.getElementById('paNextBtn');
+  btn.disabled = true; btn.textContent = 'Saving…';
+  try {
+    const customer = await PawAuth.upsertCustomer(name, phone);
+    localStorage.setItem(PawAuth.LS_CUSTOMER, JSON.stringify(customer));
+    document.getElementById('paStep1').style.display = 'none';
+    document.getElementById('paStep2').style.display = 'block';
+    document.getElementById('paModalTitle').textContent = 'Add your dog';
+    document.getElementById('paModalSub').textContent = 'So your groomer knows who they\'re working with.';
+    btn.disabled = false; btn.textContent = 'Continue →';
+  } catch (e) {
+    err.textContent = e.message;
+    btn.disabled = false; btn.textContent = 'Continue →';
+  }
+}
+
+async function paFinish() {
+  const customer = PawAuth.getCustomer();
+  const name = document.getElementById('paDogName').value.trim();
+  const breed = document.getElementById('paDogBreed').value;
+  const size = document.getElementById('paDogSize').value;
+  const err = document.getElementById('paErr2');
+  err.textContent = '';
+  if (!name) { err.textContent = 'Dog\'s name is required.'; return; }
+  const btn = document.getElementById('paFinishBtn');
+  btn.disabled = true; btn.textContent = 'Saving…';
+  try {
+    const dog = await PawAuth.insertDog(customer.id, name, breed, size);
+    localStorage.setItem(PawAuth.LS_DOG, JSON.stringify(dog));
+    paCloseModal();
+    PawAuth.updateHeaderChip();
+    btn.disabled = false; btn.textContent = 'Finish →';
+    if (PawAuth._resolver) { PawAuth._resolver({ customer, dog }); PawAuth._resolver = null; }
+  } catch (e) {
+    err.textContent = e.message;
+    btn.disabled = false; btn.textContent = 'Finish →';
+  }
+}
+
+function paSignOut() {
+  if (!confirm('Sign out and clear your dog info?')) return;
+  localStorage.removeItem(PawAuth.LS_CUSTOMER);
+  localStorage.removeItem(PawAuth.LS_DOG);
+  PawAuth.updateHeaderChip();
+}
+
+PawAuth.updateHeaderChip();
+
+// Require sign-in on page load. If no customer + dog, show modal immediately.
+if (!PawAuth.getCustomer() || !PawAuth.getDog()) {
+  paOpenModal();
+}
+
+const BOOKING_ACTIVE_STATUSES = ['checked_in','bathing','drying','almost_ready','ready_for_pickup'];
+const BOOKING_STAGE_LABELS = { booked:'Booked', checked_in:'Checked In', bathing:'Bathing', drying:'Drying', almost_ready:'Almost Ready', ready_for_pickup:'Ready for Pickup', picked_up:'Picked Up', cancelled:'Cancelled', no_show:'No Show' };
+const MONTH_SHORT = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+
+async function loadMyBookings() {
+  const customer = PawAuth.getCustomer();
+  const dog = PawAuth.getDog();
+  const upcoming = document.getElementById('bookingsUpcomingList');
+  const history = document.getElementById('bookingsHistoryList');
+  const historyLabel = document.getElementById('bookingsHistoryLabel');
+  const emptyState = document.getElementById('bookingsEmpty');
+  const signInState = document.getElementById('bookingsSignIn');
+  const sub = document.getElementById('bookingsSub');
+  const inProg = document.getElementById('inProgressBanner');
+  const pill = document.getElementById('inSessionPill');
+
+  upcoming.innerHTML = '';
+  history.innerHTML = '';
+  emptyState.style.display = 'none';
+  signInState.style.display = 'none';
+  if (inProg) inProg.classList.remove('active');
+  if (pill) pill.style.display = 'none';
+
+  if (!customer || !dog) {
+    signInState.style.display = 'block';
+    historyLabel.style.display = 'none';
+    sub.textContent = 'Sign in to see your appointments';
+    return;
+  }
+
+  sub.textContent = dog.name + "'s appointments";
+
+  const url = SUPABASE_URL + '/rest/v1/appointments' +
+    '?select=id,service,price,scheduled_at,status,status_updated_at,dogs!inner(id,name,breed,customer_id),groomers(name,salon,address)' +
+    '&dogs.customer_id=eq.' + encodeURIComponent(customer.id) +
+    '&order=scheduled_at.desc&limit=50';
+  let rows = [];
+  try {
+    const r = await fetch(url, { headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY } });
+    if (r.ok) rows = await r.json();
+    else console.error('bookings load failed', await r.text());
+  } catch (e) { console.error('bookings fetch err', e); }
+
+  const now = Date.now();
+  const active = rows.find(r => BOOKING_ACTIVE_STATUSES.includes(r.status));
+  if (active) showLiveBanner(active);
+
+  const upcomingRows = rows.filter(r =>
+    !['picked_up','cancelled','no_show'].includes(r.status) &&
+    new Date(r.scheduled_at).getTime() > now - 24*3600*1000
+  ).sort((a,b) => new Date(a.scheduled_at) - new Date(b.scheduled_at));
+
+  const historyRows = rows.filter(r =>
+    ['picked_up','cancelled','no_show'].includes(r.status) ||
+    new Date(r.scheduled_at).getTime() < now - 24*3600*1000
+  );
+
+  if (!upcomingRows.length && !historyRows.length) {
+    emptyState.style.display = 'block';
+    historyLabel.style.display = 'none';
+    return;
+  }
+
+  upcomingRows.forEach(r => upcoming.appendChild(renderUpcomingCard(r)));
+  if (historyRows.length) {
+    historyLabel.style.display = '';
+    historyRows.forEach((r, i) => history.appendChild(renderHistoryCard(r, i === historyRows.length - 1)));
+  } else {
+    historyLabel.style.display = 'none';
+  }
+}
+
+function renderUpcomingCard(r) {
+  const when = new Date(r.scheduled_at);
+  const el = document.createElement('div');
+  el.className = 'booking-upcoming-card';
+  const statusLabel = BOOKING_STAGE_LABELS[r.status] || r.status;
+  const isActive = BOOKING_ACTIVE_STATUSES.includes(r.status);
+  const neighborhood = (r.groomers && r.groomers.address) ? (r.groomers.address.split(',')[1] || '').trim() : '';
+  const controls = isActive
+    ? '<span class="buc-status confirmed">● ' + statusLabel + '</span>'
+    : '<span class="buc-status confirmed">✓ ' + statusLabel + '</span>' +
+      '<button class="buc-rebook-btn" onclick="modifyAppointment(\'' + r.id + '\')">✎ Modify</button>' +
+      '<button class="buc-cancel-btn" onclick="cancelAppointment(\'' + r.id + '\')">Cancel</button>';
+  el.innerHTML =
+    '<div class="buc-left"><div class="buc-date-box">' +
+      '<div class="buc-month">' + MONTH_SHORT[when.getMonth()] + '</div>' +
+      '<div class="buc-day">' + when.getDate() + '</div>' +
+    '</div></div>' +
+    '<div class="buc-info">' +
+      '<div class="buc-groomer">' + (r.groomers ? r.groomers.name : 'Groomer') + '</div>' +
+      '<div class="buc-detail">' + r.service + ' · ' + (r.dogs ? r.dogs.breed || r.dogs.name : '') + '</div>' +
+      '<div class="buc-time">📍 ' + (neighborhood || 'NYC') + ' · ' + when.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}) + '</div>' +
+      '<div class="buc-status-row">' + controls + '</div>' +
+    '</div>';
+  return el;
+}
+
+async function cancelAppointment(id) {
+  if (!confirm('Cancel this appointment? This cannot be undone.')) return;
+  const r = await fetch(SUPABASE_URL + '/rest/v1/appointments?id=eq.' + id, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY, Prefer: 'return=minimal' },
+    body: JSON.stringify({ status: 'cancelled', status_updated_at: new Date().toISOString() })
+  });
+  if (!r.ok) { alert('Could not cancel — ' + r.status); return; }
+  loadMyBookings();
+}
+
+function modifyAppointment(id) {
+  const existing = document.getElementById('modifyModal');
+  if (existing) existing.remove();
+  const now = new Date();
+  const days = [];
+  for (let i = 1; i <= 14; i++) {
+    const d = new Date(now); d.setDate(now.getDate() + i); days.push(d);
+  }
+  const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const slots = ['9:00 AM','10:00 AM','11:00 AM','12:00 PM','1:00 PM','2:00 PM','3:00 PM','4:00 PM'];
+  const overlay = document.createElement('div');
+  overlay.id = 'modifyModal';
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:5500;background:rgba(0,0,0,0.5);display:flex;align-items:flex-end;justify-content:center;font-family:"DM Sans",sans-serif;';
+  overlay.innerHTML =
+    '<div style="background:#fff;width:100%;max-width:430px;border-radius:24px 24px 0 0;padding:24px 20px;max-height:80vh;overflow-y:auto;">' +
+      '<div style="font-family:\'DM Serif Display\',serif;font-size:22px;margin-bottom:4px;">Modify appointment</div>' +
+      '<div style="font-size:13px;color:#999;margin-bottom:18px;">Pick a new date and time.</div>' +
+      '<div style="font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#c8a84b;margin-bottom:8px;">New date</div>' +
+      '<div id="modifyDays" style="display:flex;gap:8px;overflow-x:auto;padding-bottom:8px;margin-bottom:16px;">' +
+        days.map((d, i) => '<div class="modify-day" data-iso="' + d.toISOString() + '" style="flex-shrink:0;min-width:58px;text-align:center;border:1.5px solid #eee;border-radius:14px;padding:8px 0;cursor:pointer;" onclick="selectModifyDay(' + i + ', this)">' +
+          '<div style="font-size:10px;color:#999;text-transform:uppercase;">' + dayNames[d.getDay()] + '</div>' +
+          '<div style="font-size:18px;font-weight:700;">' + d.getDate() + '</div>' +
+          '<div style="font-size:10px;color:#999;">' + monthNames[d.getMonth()] + '</div>' +
+        '</div>').join('') +
+      '</div>' +
+      '<div style="font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#c8a84b;margin-bottom:8px;">New time</div>' +
+      '<div id="modifySlots" style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:20px;">' +
+        slots.map(s => '<div class="modify-slot" data-slot="' + s + '" style="border:1.5px solid #eee;border-radius:12px;padding:10px 0;text-align:center;font-size:13px;cursor:pointer;" onclick="selectModifySlot(this)">' + s + '</div>').join('') +
+      '</div>' +
+      '<button id="modifySaveBtn" onclick="saveModify(\'' + id + '\')" style="width:100%;background:#8b7320;color:#fff;border:none;border-radius:12px;padding:14px;font-family:inherit;font-size:15px;font-weight:600;cursor:pointer;margin-bottom:8px;" disabled>Save changes</button>' +
+      '<button onclick="document.getElementById(\'modifyModal\').remove()" style="width:100%;background:transparent;color:#999;border:none;padding:10px;font-family:inherit;font-size:14px;cursor:pointer;">Cancel</button>' +
+    '</div>';
+  document.body.appendChild(overlay);
+}
+
+window._modifyDate = null;
+window._modifySlot = null;
+function selectModifyDay(i, el) {
+  window._modifyDate = el.dataset.iso;
+  document.querySelectorAll('.modify-day').forEach(d => { d.style.borderColor = '#eee'; d.style.background = ''; });
+  el.style.borderColor = '#8b7320'; el.style.background = '#fff8e8';
+  updateModifySaveBtn();
+}
+function selectModifySlot(el) {
+  window._modifySlot = el.dataset.slot;
+  document.querySelectorAll('.modify-slot').forEach(s => { s.style.borderColor = '#eee'; s.style.background = ''; });
+  el.style.borderColor = '#8b7320'; el.style.background = '#fff8e8';
+  updateModifySaveBtn();
+}
+function updateModifySaveBtn() {
+  const btn = document.getElementById('modifySaveBtn');
+  if (btn) btn.disabled = !(window._modifyDate && window._modifySlot);
+}
+async function saveModify(id) {
+  const dateIso = window._modifyDate;
+  const slot = window._modifySlot;
+  if (!dateIso || !slot) return;
+  const d = new Date(dateIso);
+  const m = slot.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+  if (m) {
+    let h = parseInt(m[1], 10) % 12;
+    if (m[3].toUpperCase() === 'PM') h += 12;
+    d.setHours(h, parseInt(m[2], 10), 0, 0);
+  }
+  const btn = document.getElementById('modifySaveBtn');
+  btn.disabled = true; btn.textContent = 'Saving…';
+  const r = await fetch(SUPABASE_URL + '/rest/v1/appointments?id=eq.' + id, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY, Prefer: 'return=minimal' },
+    body: JSON.stringify({ scheduled_at: d.toISOString(), status: 'booked', status_updated_at: new Date().toISOString() })
+  });
+  if (!r.ok) { alert('Could not save — ' + r.status); btn.disabled = false; btn.textContent = 'Save changes'; return; }
+  document.getElementById('modifyModal').remove();
+  window._modifyDate = null; window._modifySlot = null;
+  loadMyBookings();
+}
+
+function renderHistoryCard(r, isLast) {
+  const when = new Date(r.scheduled_at);
+  const dateLabel = when.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  const statusLabel = BOOKING_STAGE_LABELS[r.status] || r.status;
+  const el = document.createElement('div');
+  el.className = 'gh-card';
+  el.innerHTML =
+    '<div class="gh-left">' +
+      '<div class="gh-avatar">🐾</div>' +
+      '<div class="gh-line' + (isLast ? ' last' : '') + '"></div>' +
+    '</div>' +
+    '<div class="gh-body">' +
+      '<div class="gh-top">' +
+        '<div class="gh-groomer">' + (r.groomers ? r.groomers.name : 'Groomer') + '</div>' +
+        '<div class="gh-date">' + dateLabel + '</div>' +
+      '</div>' +
+      '<div class="gh-service">' + r.service + '</div>' +
+      (r.price ? '<div class="gh-price">$' + r.price + (r.status === 'picked_up' ? ' paid' : '') + '</div>' : '') +
+      '<div class="gh-actions">' +
+        '<span style="font-size:11px;color:' + (r.status === 'picked_up' ? '#34c759' : '#c0392b') + ';font-weight:700;">' + statusLabel + '</span>' +
+      '</div>' +
+    '</div>';
+  return el;
+}
+
+function showLiveBanner(active) {
+  const banner = document.getElementById('inProgressBanner');
+  const pill = document.getElementById('inSessionPill');
+  if (!banner) return;
+  banner.classList.add('active');
+  const stageTitle = banner.querySelector('.ipb-title');
+  const stageSub = banner.querySelector('.ipb-sub');
+  const dogName = PawAuth.getDog() ? PawAuth.getDog().name : 'Your dog';
+  const groomerName = active.groomers ? active.groomers.name : 'the groomer';
+  const stageLabel = BOOKING_STAGE_LABELS[active.status] || active.status;
+  if (stageTitle) stageTitle.textContent = dogName + ' is at ' + groomerName + ' 🐾';
+  if (stageSub) stageSub.textContent = 'Status: ' + stageLabel;
+  const activeIdx = BOOKING_ACTIVE_STATUSES.indexOf(active.status);
+  for (let i = 0; i < 5; i++) {
+    const dot = document.getElementById('ipbDot' + i);
+    if (dot) dot.classList.toggle('active', i === activeIdx);
+  }
+  if (pill) {
+    pill.style.display = 'flex';
+    const text = document.getElementById('inSessionPillText');
+    if (text) text.textContent = stageLabel;
+  }
+}
+
+window.addEventListener('DOMContentLoaded', () => setInterval(() => {
+  const bs = document.getElementById('bookingsScreen');
+  if (bs && bs.classList.contains('active')) loadMyBookings();
+}, 15000));
 </script>
 
 </body>
