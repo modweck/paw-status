@@ -1,7 +1,8 @@
 // netlify/functions/send-sms.js
 // Sends SMS status updates via Twilio.
 // Env vars required on Netlify:
-//   TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_FROM_NUMBER
+//   TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN
+//   Either TWILIO_MESSAGING_SERVICE_SID (preferred) or TWILIO_FROM_NUMBER
 
 exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') {
@@ -18,9 +19,10 @@ exports.handler = async (event) => {
 
   const ACCOUNT_SID = process.env.TWILIO_ACCOUNT_SID;
   const AUTH_TOKEN = process.env.TWILIO_AUTH_TOKEN;
+  const MESSAGING_SID = process.env.TWILIO_MESSAGING_SERVICE_SID;
   const FROM_NUMBER = process.env.TWILIO_FROM_NUMBER;
 
-  if (!ACCOUNT_SID || !AUTH_TOKEN || !FROM_NUMBER) {
+  if (!ACCOUNT_SID || !AUTH_TOKEN || (!MESSAGING_SID && !FROM_NUMBER)) {
     return { statusCode: 500, body: JSON.stringify({ error: 'Twilio not configured on the server' }) };
   }
 
@@ -44,7 +46,8 @@ exports.handler = async (event) => {
 
   const form = new URLSearchParams();
   form.set('To', to);
-  form.set('From', FROM_NUMBER);
+  if (MESSAGING_SID) form.set('MessagingServiceSid', MESSAGING_SID);
+  else form.set('From', FROM_NUMBER);
   form.set('Body', message);
 
   try {
