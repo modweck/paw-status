@@ -2618,6 +2618,22 @@ async function confirmAndBook() {
           status: 'booked'
         })
       });
+      // Send booking-confirmation SMS to the customer
+      try {
+        const when = new Date(scheduledAt);
+        const whenLabel = when.toLocaleDateString('en-US', { month:'short', day:'numeric' }) + ' at ' + when.toLocaleTimeString('en-US', { hour:'numeric', minute:'2-digit' });
+        fetch('/.netlify/functions/send-sms', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            type: 'booked',
+            toPhone: auth.customer.phone,
+            dogName: auth.dog.name,
+            salonName: groomerName,
+            appointmentTime: whenLabel,
+          }),
+        });
+      } catch (e) { console.error('Booking SMS failed', e); }
     } catch (e) { console.error('Appointment insert failed', e); }
   }
 
