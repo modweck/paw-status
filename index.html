@@ -5214,11 +5214,9 @@ const PawAuth = {
 
   requireAuth() {
     return new Promise((resolve) => {
-      const c = this.getCustomer();
-      const d = this.getDog();
-      if (c && d) return resolve({ customer: c, dog: d });
-      this._resolver = resolve;
-      paOpenModal();
+      const c = this.getCustomer() || { id: null, name: 'Guest', phone: '' };
+      const d = this.getDog() || { id: null, name: 'Your dog', breed: 'Mutt / Mixed Breed', size: 'medium' };
+      resolve({ customer: c, dog: d });
     });
   },
 
@@ -5316,10 +5314,7 @@ function paSignOut() {
 
 PawAuth.updateHeaderChip();
 
-// Require sign-in on page load. If no customer + dog, show modal immediately.
-if (!PawAuth.getCustomer() || !PawAuth.getDog()) {
-  paOpenModal();
-}
+// Sign-in modal disabled for demo — login flow is bypassed.
 
 const BOOKING_ACTIVE_STATUSES = ['checked_in','bathing','drying','almost_ready','ready_for_pickup'];
 const BOOKING_STAGE_LABELS = { booked:'Booked', checked_in:'Checked In', bathing:'Bathing', drying:'Drying', almost_ready:'Almost Ready', ready_for_pickup:'Ready for Pickup', picked_up:'Picked Up', cancelled:'Cancelled', no_show:'No Show' };
