@@ -1,10 +1,26 @@
 [build]
-  publish = "."
+  command = "npm run build"
+  publish = "dist"
   functions = "netlify/functions"
 
 [[redirects]]
-  from = "/groomer"
-  to = "/groomer-dashboard.html"
+  from = "/api/groomer-photo"
+  to = "/.netlify/functions/groomer-photo"
+  status = 200
+
+[[redirects]]
+  from = "/api/guest-booking"
+  to = "/.netlify/functions/guest-booking"
+  status = 200
+
+[[redirects]]
+  from = "/api/guest-booking-claim"
+  to = "/.netlify/functions/guest-booking-claim"
+  status = 200
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
   status = 200
 
 [[headers]]

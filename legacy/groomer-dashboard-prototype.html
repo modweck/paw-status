@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>PawStatus — Groomer Dashboard</title>
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <script src="config/public-env.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -240,8 +241,28 @@
   <div class="toast" id="toast">✅ Notification sent!</div>
 
 <script>
-const SUPABASE_URL = 'https://faizrqajtdttcklflcbz.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_R4rLnRKIxwCeWywdRTwrFA_F-16fCeC';
+const PAW_STATUS_CONFIG = window.PAW_STATUS_CONFIG || {};
+const SUPABASE_URL = PAW_STATUS_CONFIG.SUPABASE_URL || '';
+const SUPABASE_KEY = PAW_STATUS_CONFIG.SUPABASE_PUBLISHABLE_KEY || '';
+const ENABLE_GROOMER_DASHBOARD = PAW_STATUS_CONFIG.ENABLE_GROOMER_DASHBOARD === true;
+
+function hasSupabaseConfig() {
+  return Boolean(SUPABASE_URL && SUPABASE_KEY);
+}
+
+function isLocalDashboardContext() {
+  return location.protocol === 'file:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+}
+
+function isGroomerDashboardAllowed() {
+  return ENABLE_GROOMER_DASHBOARD || isLocalDashboardContext();
+}
+
+function warnMissingSupabaseConfig(action) {
+  console.error(
+    `Missing public Supabase config for ${action}. Copy config/public-env.example.js to config/public-env.js or run scripts/write-public-env.js with SUPABASE_URL and SUPABASE_PUBLISHABLE_KEY set.`
+  );
+}
 
 const STAGES = [
   { key: 'booked',           label: 'Booked',     icon: '📅' },
@@ -266,6 +287,19 @@ let appointments = [];
 let notificationLog = [];
 
 async function loadAppointments() {
+  if (!isGroomerDashboardAllowed()) {
+    document.getElementById('appointmentsList').innerHTML =
+      '<div class="empty-state"><div class="emoji">🔒</div><p>Groomer dashboard is disabled until groomer auth is wired.</p></div>';
+    return;
+  }
+
+  if (!hasSupabaseConfig()) {
+    warnMissingSupabaseConfig('groomer dashboard appointments');
+    document.getElementById('appointmentsList').innerHTML =
+      '<div class="empty-state"><div class="emoji">⚠️</div><p>Supabase is not configured for this local copy.</p></div>';
+    return;
+  }
+
   const now = new Date();
   const nowIso = now.toISOString();
   const url = SUPABASE_URL + '/rest/v1/appointments' +
@@ -354,6 +388,17 @@ function renderAppointments() {
 }
 
 async function updateStatus(apptId, newStatus) {
+  if (!isGroomerDashboardAllowed()) {
+    showToast('🔒 Dashboard disabled');
+    return;
+  }
+
+  if (!hasSupabaseConfig()) {
+    warnMissingSupabaseConfig('groomer status update');
+    showToast('⚠️ Supabase is not configured');
+    return;
+  }
+
   const appt = appointments.find(a => a.id === apptId);
   if (!appt) return;
 

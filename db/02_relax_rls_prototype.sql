@@ -1,6 +1,13 @@
--- Prototype: allow public read/write on customer/dog/appointment tables.
--- This REPLACES the auth-gated policies until real auth is wired up.
--- When real auth ships, drop these and restore the original policies in schema.sql.
+-- DANGER: PROTOTYPE ONLY.
+-- This file allows public read/write on customer, dog, and appointment tables.
+-- Do not apply this migration to a production Supabase project.
+-- It replaces the auth-gated policies until real auth is wired up.
+-- When real auth ships, drop these policies and restore production-safe policies.
+
+do $$
+begin
+  raise exception 'Refusing to run db/02_relax_rls_prototype.sql. This prototype-only file opens customer, dog, and appointment tables to public read/write.';
+end $$;
 
 drop policy if exists "customers see own row" on customers;
 drop policy if exists "customers update own row" on customers;

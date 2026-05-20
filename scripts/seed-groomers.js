@@ -70,8 +70,16 @@ const FIELD_MASK = [
   'places.rating',
   'places.userRatingCount',
   'places.regularOpeningHours',
-  'places.photos',
 ].join(',');
+
+const DEFAULT_GROOMER_SERVICES = [
+  'full-groom',
+  'bath-brush',
+  'haircut',
+  'nail-trim',
+  'ear-cleaning',
+  'de-shed',
+];
 
 async function searchText(query) {
   const res = await fetch('https://places.googleapis.com/v1/places:searchText', {
@@ -91,10 +99,6 @@ async function searchText(query) {
 function toRow(p) {
   const lat = p.location?.latitude;
   const lng = p.location?.longitude;
-  const photoRef = p.photos?.[0]?.name;
-  const photoUrl = photoRef
-    ? `https://places.googleapis.com/v1/${photoRef}/media?maxWidthPx=600&key=${GOOGLE_KEY}`
-    : null;
   return {
     google_place_id: p.id ?? null,
     name: p.displayName?.text ?? null,
@@ -108,7 +112,8 @@ function toRow(p) {
     rating: p.rating ?? null,
     review_count: p.userRatingCount ?? null,
     hours: p.regularOpeningHours ? { weekday_text: p.regularOpeningHours.weekdayDescriptions } : null,
-    photo_url: photoUrl ?? null,
+    services: DEFAULT_GROOMER_SERVICES,
+    photo_url: null,
     price_base: 75,
   };
 }
