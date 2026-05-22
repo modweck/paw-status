@@ -18,7 +18,8 @@ Recommended path:
 
 - Use Vite + React for the rebuild.
 - Keep the current static HTML files only as reference during migration.
-- Move source code into `src/`.
+- Move source code into `apps/web/src/`.
+- Keep the repo as an npm workspace monorepo so the future backend and shared packages can live alongside the web app.
 - Keep deployment on Netlify unless the product needs a different host later.
 
 Why this direction:
@@ -31,15 +32,18 @@ Why this direction:
 Initial target structure:
 
 ```text
-src/
-  api/
-  auth/
-  customer/
-  groomer/
-  admin/
-  components/
-  styles/
-  utils/
+apps/web/
+  src/
+    api/
+    auth/
+    customer/
+    groomer/
+    styles/
+  netlify/functions/
+  server/
+apps/api/
+packages/core/
+supabase/
 ```
 
 ## Supabase Direction

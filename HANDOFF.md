@@ -1,8 +1,34 @@
 # PawStatus Handoff
 
-Last updated: 2026-05-19
+Last updated: 2026-05-20
 
 This is the next-dev pickup note for turning PawStatus from prototype into a production-quality app.
+
+## Latest Restart Note: 2026-05-20 Monorepo Layout
+
+The repo is now structured as a small npm workspace monorepo while keeping the
+existing Netlify deployment path intact.
+
+What changed:
+
+- Moved the deployable Vite + React app from the repo root into `apps/web`.
+- Moved current Netlify functions and their server helpers into `apps/web/netlify/functions` and `apps/web/server`.
+- Added `apps/api` as the reserved home for a future proper backend service.
+- Added `packages/core` as the reserved home for shared booking/search/customer contracts and validation helpers.
+- Kept `supabase/`, `db/`, `docs/`, `legacy/`, and `scripts/` at the repo root as project infrastructure.
+- Updated root npm scripts so `npm run dev`, `npm test`, and `npm run build` still work from the repo root.
+- Updated `netlify.toml` so Netlify runs the root build command and publishes `apps/web/dist`.
+
+Current monorepo map:
+
+```text
+apps/web/       Netlify-deployed web app and current serverless functions
+apps/api/       Reserved future backend
+packages/core/  Reserved shared domain contracts and validation helpers
+supabase/       Supabase migrations/config/seed
+docs/           Handoff, roadmap, security, and product notes
+legacy/         Static prototype references
+```
 
 ## Latest Restart Note: 2026-05-19 Guest Booking Implemented Locally
 
@@ -10,8 +36,8 @@ Signed-out guest booking is now implemented locally through server-side Netlify 
 
 What changed:
 
-- Added `/api/guest-booking` backed by `netlify/functions/guest-booking.js` and `server/guestBooking.js`. It validates the booking packet, uses the server-only Supabase secret/service key, creates a guest `customers` row with `auth_user_id = null`, creates the linked `dogs` row, and creates an `appointment_requests` row. It does not create confirmed `appointments`.
-- Added `/api/guest-booking-claim` backed by `netlify/functions/guest-booking-claim.js`. It requires a Supabase access token, verifies that the signed-in email matches the guest booking email, then links or moves the guest rows onto the verified customer account.
+- Added `/api/guest-booking` backed by `apps/web/netlify/functions/guest-booking.js` and `apps/web/server/guestBooking.js`. It validates the booking packet, uses the server-only Supabase secret/service key, creates a guest `customers` row with `auth_user_id = null`, creates the linked `dogs` row, and creates an `appointment_requests` row. It does not create confirmed `appointments`.
+- Added `/api/guest-booking-claim` backed by `apps/web/netlify/functions/guest-booking-claim.js`. It requires a Supabase access token, verifies that the signed-in email matches the guest booking email, then links or moves the guest rows onto the verified customer account.
 - Added and pushed `supabase/migrations/20260519213308_add_guest_booking_claims.sql` with hashed guest-claim token metadata on `appointment_requests`.
 - Replaced the signed-out booking gate with a guest booking form plus compact sign-in. The groomer card CTA now says `Book as guest` for signed-out users.
 - Added location autosuggest with real geocoding suggestions while users type. Selecting a suggestion uses its coordinates directly instead of geocoding the same text again.
@@ -51,7 +77,7 @@ What was reported after end-to-end testing:
 
 Implementation notes:
 
-- Changed `src/customer/CustomerApp.jsx`, `src/layout/AppShell.jsx`, `src/App.jsx`, `src/customer/GroomerCard.jsx`, `src/customer/BookingRequestPanel.jsx`, `src/customer/CustomerOwnershipPanel.jsx`, `src/auth/AuthProvider.jsx`, `src/auth/LoginPanel.jsx`, `src/api/customers.js`, and `src/api/geocoding.js`.
+- Changed `apps/web/src/customer/CustomerApp.jsx`, `apps/web/src/layout/AppShell.jsx`, `apps/web/src/App.jsx`, `apps/web/src/customer/GroomerCard.jsx`, `apps/web/src/customer/BookingRequestPanel.jsx`, `apps/web/src/customer/CustomerOwnershipPanel.jsx`, `apps/web/src/auth/AuthProvider.jsx`, `apps/web/src/auth/LoginPanel.jsx`, `apps/web/src/api/customers.js`, and `apps/web/src/api/geocoding.js`.
 - Added and pushed `supabase/migrations/20260519180621_add_customer_username.sql`; remote verification confirmed `public.customers.username` exists.
 - Added and pushed `supabase/migrations/20260519182415_fix_appointment_request_policy_recursion.sql`; remote verification confirmed an authenticated-role `appointment_requests` query no longer errors with RLS recursion.
 - Supabase Auth password support follows current Supabase JS docs: signed-in users call `supabase.auth.updateUser({ password })`; password sign-in calls `supabase.auth.signInWithPassword({ email, password })`.
@@ -64,7 +90,7 @@ The `/groomer` route is now open as a groomer onboarding entry point. Signed-out
 
 Confirmed appointment creation is still not implemented. `appointment_requests` capture customer intent, groomer review states, and optional external booking-channel handoff; `appointments` should remain reserved for real confirmed bookings once verified groomer operations or integrations can actually confirm slots.
 
-The customer surface now has bottom-nav routes for Explore, My Dog, Bookings, Account, and Groomer. My Dog captures richer dog profile details, preferred service, preferred groomer, last groomed date, and usual grooming cadence, then renders grooming tracker cards such as `<dog name> Needs Grooming Soon`. Service selectors are grouped into titled sections from `src/data/services.js` so the catalog is easier to scan. Booking requests auto-select the saved dog preference when the groomer is in the current result set, narrow service choices to the selected groomer's advertised services when that data exists, and append the selected dog's size/breed/temperament/notes into the request notes. The waitlist/cancellation card is display-only for now. Favorite groomer tracking outside the dog profile is still local browser state until a real account-level favorite table is added.
+The customer surface now has bottom-nav routes for Explore, My Dog, Bookings, Account, and Groomer. My Dog captures richer dog profile details, preferred service, preferred groomer, last groomed date, and usual grooming cadence, then renders grooming tracker cards such as `<dog name> Needs Grooming Soon`. Service selectors are grouped into titled sections from `apps/web/src/data/services.js` so the catalog is easier to scan. Booking requests auto-select the saved dog preference when the groomer is in the current result set, narrow service choices to the selected groomer's advertised services when that data exists, and append the selected dog's size/breed/temperament/notes into the request notes. The waitlist/cancellation card is display-only for now. Favorite groomer tracking outside the dog profile is still local browser state until a real account-level favorite table is added.
 
 Customer auth defaults to magic links, but signed-in customers can now optionally add `customers.username` and set a Supabase Auth password from Account. Password sign-in uses the same auth user/email; magic links remain available.
 
@@ -91,7 +117,7 @@ What changed in the latest pass:
 - Opened `/groomer` as the groomer onboarding entry point while keeping request handling gated behind `ENABLE_GROOMER_DASHBOARD`.
 - Added onboarding-only groomer workspace loading so signed-in groomers can create an account or request a claim without querying request-handling tables while the dashboard flag is off.
 - Added the groomer-owned request handling slice behind `ENABLE_GROOMER_DASHBOARD`.
-- Added `src/api/groomerAccounts.js` with verified-user groomer account creation, membership loading, public groomer-profile search for claims, pending claim requests, owned request loading, booking-channel loading, calendar-connection loading, and constrained request status updates.
+- Added `apps/web/src/api/groomerAccounts.js` with verified-user groomer account creation, membership loading, public groomer-profile search for claims, pending claim requests, owned request loading, booking-channel loading, calendar-connection loading, and constrained request status updates.
 - Replaced the old `/groomer` shell with an authenticated groomer workspace. Signed-out users see magic-link sign-in, signed-in users without a groomer account can create one, accounts without verified memberships can request a profile claim, and verified memberships can view/update owned `appointment_requests`.
 - Added booking-channel and calendar-connection metadata display. OAuth/token sync is still not implemented and should stay server-side later.
 - Added and pushed `supabase/migrations/20260517040729_add_groomer_account_request_handling.sql` to the linked Supabase project.
@@ -110,17 +136,17 @@ What changed in the latest pass:
 - Added a Supabase migration for `nearby_groomers` to return `google_place_id` and `website`, and stopped the seed script from storing Google media URLs with API keys.
 - Converted the shipped app from static prototype HTML to a Vite + React app.
 - Moved the old static customer and groomer dashboard files into `legacy/` as reference-only material.
-- Added a real source layout under `src/` with separated config, Supabase client, auth, public groomer API mapping, customer UI, groomer gate, app shell, styles, and tests.
+- Added a real source layout under `apps/web/src/` with separated config, Supabase client, auth, public groomer API mapping, customer UI, groomer gate, app shell, styles, and tests.
 - Kept public groomer discovery as the safe public surface.
 - Stopped shipping the old browser-side customer/dog/appointment writes as the live app path.
 - Replaced the old public groomer operations dashboard with a gated `/groomer` shell.
 - Kept `db/02_relax_rls_prototype.sql` guarded so it refuses to reopen public customer/dog/appointment writes.
-- Updated Netlify to build `dist/` with `npm run build`.
-- Current verification: `npm test`, `npm run build`, `node --check` for SMS, notification, groomer-photo, guest-booking, guest-booking-claim, `server/guestBooking.js`, and `scripts/seed-groomers.js`; `git diff --check`; local `/`, `/bookings`, and `/groomer` HTTP 200; mobile Chrome screenshots for `/` and `/bookings`; `supabase db push --linked --dry-run`; `supabase db push --linked`; `supabase migration list --linked`; and live column verification for the guest-claim fields on `appointment_requests`.
+- Updated Netlify to build `apps/web/dist/` with `npm run build`.
+- Current verification: `npm test`, `npm run build`, `node --check` for SMS, notification, groomer-photo, guest-booking, guest-booking-claim, `apps/web/server/guestBooking.js`, and `scripts/seed-groomers.js`; `git diff --check`; local `/`, `/bookings`, and `/groomer` HTTP 200; mobile Chrome screenshots for `/` and `/bookings`; `supabase db push --linked --dry-run`; `supabase db push --linked`; `supabase migration list --linked`; and live column verification for the guest-claim fields on `appointment_requests`.
 
 Next move:
 
-- Clean up Supabase advisor findings: pin `nearby_groomers` function `search_path`, rewrite RLS policies that call `auth.uid()` directly as `(select auth.uid())`, and decide whether to move or lock down public PostGIS extension objects such as `spatial_ref_sys` / exposed PostGIS RPC helpers.
+- Clean up Supabase advisor findings: pin `nearby_groomers` function `search_path`, rewrite RLS policies that call `auth.uid()` directly as `(select auth.uid())`, and move PostGIS out of `public` or apply owner-level lockdown for extension objects such as `spatial_ref_sys` / exposed PostGIS RPC helpers. A normal CLI migration for `alter table public.spatial_ref_sys enable row level security` failed with `must be owner of table spatial_ref_sys`, so this likely needs the Supabase-documented PostGIS relocation/support path.
 - Live-test the new Netlify guest booking functions with real env values.
 - Rotate the Google Places API key when ready and update local plus Netlify env.
 - Deploy the React/Netlify changes so `/api/groomer-photo` exists outside local Vite dev.
@@ -131,10 +157,10 @@ Next move:
 
 ## Current State
 
-- The live frontend is now a Vite + React source app under `src/`.
+- The live frontend is now a Vite + React source app under `apps/web/src/`.
 - The old static customer and groomer files are preserved under `legacy/` as migration references only.
-- Netlify builds with `npm run build` and publishes `dist/`.
-- Vite exposes only selected public env values from `vite.config.js`.
+- Netlify builds with `npm run build` and publishes `apps/web/dist/`.
+- Vite exposes only selected public env values from `apps/web/vite.config.js`.
 - `/groomer` is open for groomer sign-in, account creation, and pending public groomer-profile claim requests. `ENABLE_GROOMER_DASHBOARD=true` gates the request-handling workspace, and verified memberships are still required before request data is visible.
 - Live Supabase hardening was applied on 2026-05-06.
 - Anonymous users can still read public groomer search data.
@@ -185,7 +211,7 @@ Target outcome:
 
 ## Next Task List
 
-- [x] Replace the live static HTML app with a Vite + React app under `src/`.
+- [x] Replace the live static HTML app with a Vite + React app under `apps/web/src/`.
 - [x] Move old static app files to `legacy/`.
 - [x] Add modular config, Supabase client, auth, groomer API, customer UI, and groomer gate modules.
 - [x] Add focused unit tests for public config, magic-link redirect URLs, and groomer row mapping.
@@ -281,7 +307,7 @@ Do not reintroduce public `ALL` policies on `customers`, `dogs`, or `appointment
 Current source map:
 
 ```text
-src/
+apps/web/src/
   api/          public groomer data, customer/dog/request ownership APIs, guest booking calls, and external API adapters
   auth/         Supabase session and magic-link UI
   config/       selected public app config and flags
@@ -299,12 +325,12 @@ Run these lightweight checks after edits:
 ```bash
 npm test
 npm run build
-node --check netlify/functions/send-sms.js
-node --check netlify/functions/send-notification.js
-node --check netlify/functions/groomer-photo.js
-node --check netlify/functions/guest-booking.js
-node --check netlify/functions/guest-booking-claim.js
-node --check server/guestBooking.js
+node --check apps/web/netlify/functions/send-sms.js
+node --check apps/web/netlify/functions/send-notification.js
+node --check apps/web/netlify/functions/groomer-photo.js
+node --check apps/web/netlify/functions/guest-booking.js
+node --check apps/web/netlify/functions/guest-booking-claim.js
+node --check apps/web/server/guestBooking.js
 node --check scripts/seed-groomers.js
 git diff --check
 ```

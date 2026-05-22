@@ -1,7 +1,7 @@
 [build]
   command = "npm run build"
-  publish = "dist"
-  functions = "netlify/functions"
+  publish = "apps/web/dist"
+  functions = "apps/web/netlify/functions"
 
 [[redirects]]
   from = "/api/groomer-photo"

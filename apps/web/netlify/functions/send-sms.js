@@ -1,10 +1,12 @@
-// netlify/functions/send-sms.js
+// apps/web/netlify/functions/send-sms.js
 // Sends SMS status updates via Twilio.
 // Env vars required on Netlify:
 //   TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN
 //   Either TWILIO_MESSAGING_SERVICE_SID (preferred) or TWILIO_FROM_NUMBER
 
-exports.handler = async (event) => {
+export async function handler(event) {
+  // TODO(backend): Require authenticated backend callers and verify the booking
+  // or status transition before sending any customer-facing SMS.
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: 'Method Not Allowed' };
   }
@@ -15,6 +17,8 @@ exports.handler = async (event) => {
 
   const { type, toPhone, dogName, salonName, appointmentTime } = body;
 
+  // TODO(backend): Stop accepting arbitrary phone/name/template payloads from
+  // callers; load notification context from appointment/request ids server-side.
   if (!toPhone) return { statusCode: 400, body: JSON.stringify({ error: 'toPhone required' }) };
 
   const ACCOUNT_SID = process.env.TWILIO_ACCOUNT_SID;
@@ -51,6 +55,8 @@ exports.handler = async (event) => {
   form.set('Body', message);
 
   try {
+    // TODO(backend): Persist notification attempts, Twilio response ids, and
+    // retry/error state so support can trace missed or duplicate messages.
     const resp = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${ACCOUNT_SID}/Messages.json`, {
       method: 'POST',
       headers: {
@@ -67,7 +73,7 @@ exports.handler = async (event) => {
   } catch (err) {
     return { statusCode: 500, body: JSON.stringify({ error: err.message }) };
   }
-};
+}
 
 function normalizePhone(raw) {
   const digits = String(raw || '').replace(/\D/g, '');

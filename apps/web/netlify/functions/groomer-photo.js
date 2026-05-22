@@ -6,6 +6,8 @@ const jsonHeaders = {
 };
 
 export async function handler(event) {
+  // TODO(backend): Move this proxy behind apps/api so photo access can share
+  // backend auth, caching, provider quotas, and observability.
   if (event.httpMethod !== 'GET') {
     return {
       statusCode: 405,

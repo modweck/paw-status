@@ -32,8 +32,8 @@ This repo is a working prototype for a dog groomer booking app with customer sea
 - [x] Protect groomer request handling in the shipped app behind auth, verified membership, and the dashboard feature flag instead of exposing the legacy dashboard.
 - [x] Stop exposing customer phone numbers to a public dashboard.
 - [x] Validate groomer request status transitions with database constraints/RLS so users cannot jump requests to arbitrary states.
-- [ ] Add request validation to `netlify/functions/send-sms.js`.
-- [ ] Add request validation, invalid JSON handling, missing env checks, and non-2xx upstream handling to `netlify/functions/send-notification.js`.
+- [ ] Add request validation to `apps/web/netlify/functions/send-sms.js`.
+- [ ] Add request validation, invalid JSON handling, missing env checks, and non-2xx upstream handling to `apps/web/netlify/functions/send-notification.js`.
 - [ ] Replace the placeholder `https://yourapp.com/booking/...` URL in `send-notification.js`.
 - [ ] Decide whether OneSignal is still part of the product or remove the unused function.
 
@@ -51,6 +51,7 @@ This repo is a working prototype for a dog groomer booking app with customer sea
 - [x] Choose a basic build structure: Vite vanilla modules or Vite/React.
 - [x] Add `package.json` with scripts for `dev`, `build`, and `test`.
 - [x] Split the shipped app path out of the 5,584-line `index.html` and preserve the old file under `legacy/`.
+- [x] Move the deployable app into `apps/web` and reserve `apps/api` plus `packages/core` for backend/shared code.
 - [x] Move Supabase constants and API calls into an API module.
 - [x] Move auth/customer ownership logic into its own module.
 - [x] Move dog profile logic into its own module.
@@ -81,7 +82,8 @@ This repo is a working prototype for a dog groomer booking app with customer sea
 - [x] Add guest-claim metadata if needed so verified signed-in users can link prior guest booking rows to their account safely.
 - [ ] Pin `nearby_groomers` to an explicit Postgres `search_path` so the public RPC is harder to misuse.
 - [ ] Rewrite RLS policies that call `auth.uid()` directly to use `(select auth.uid())` where appropriate, reducing per-row policy overhead.
-- [ ] Decide whether to move PostGIS out of `public` or lock down exposed PostGIS helper tables/functions reported by Supabase advisors.
+- [ ] Resolve the `public.spatial_ref_sys` advisor error by moving PostGIS out of `public` into an unexposed schema such as `extensions`/`gis`, or by running owner-level SQL to enable RLS on the extension-owned table. Normal `supabase db push --linked` migrations currently fail on this table with `must be owner of table spatial_ref_sys`.
+- [ ] Lock down exposed PostGIS helper RPCs such as `st_estimatedextent`, or move PostGIS out of `public` so those extension functions are no longer part of the public API surface.
 - [x] Fix recursive groomer/customer/dog `appointment_requests` policies by moving cross-table ownership checks into private helper functions.
 - [ ] Re-run `supabase db advisors --linked` after the cleanup migration and record remaining accepted warnings.
 - [ ] Add appointment status transition rules or constraints if needed.

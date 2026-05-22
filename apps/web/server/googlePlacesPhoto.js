@@ -3,6 +3,8 @@ const DEFAULT_MAX_WIDTH = 600;
 const MIN_MAX_WIDTH = 80;
 const MAX_MAX_WIDTH = 1600;
 
+// TODO(backend): Move Google Places access behind apps/api with request quotas,
+// caching, attribution persistence rules, and groomer/place ownership checks.
 export class GooglePlacesPhotoError extends Error {
   constructor(publicMessage, statusCode = 500) {
     super(publicMessage);
@@ -75,6 +77,8 @@ export async function fetchGooglePlacePhoto({
   maxWidth,
   placeId,
 } = {}) {
+  // TODO(backend): Cache positive and negative lookups to control Google API
+  // spend while still respecting Places photo freshness/attribution rules.
   const key = requireApiKey(apiKey);
   const id = requirePlaceId(placeId);
   const requestFetch = requireFetch(fetchImpl);

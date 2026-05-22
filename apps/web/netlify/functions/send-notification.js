@@ -1,8 +1,9 @@
-// netlify/functions/send-notification.js
-// Drop this in your netlify/functions folder - same as search-bars.js etc.
+// apps/web/netlify/functions/send-notification.js
 // Set ONESIGNAL_APP_ID and ONESIGNAL_API_KEY in Netlify environment variables
 
-exports.handler = async (event) => {
+export async function handler(event) {
+  // TODO(backend): Decide whether OneSignal stays. If it does, move this behind
+  // authenticated apps/api notification commands with audit logs and retries.
 
   // Only allow POST requests
   if (event.httpMethod !== 'POST') {
@@ -10,6 +11,8 @@ exports.handler = async (event) => {
   }
 
   const { type, playerId, dogName, salonName, appointmentTime } = JSON.parse(event.body);
+  // TODO(backend): Add invalid JSON handling, required-field validation, missing
+  // env checks, and non-2xx OneSignal response handling before this can ship.
 
   const ONESIGNAL_APP_ID = process.env.ONESIGNAL_APP_ID;
   const ONESIGNAL_API_KEY = process.env.ONESIGNAL_API_KEY;
@@ -90,6 +93,8 @@ exports.handler = async (event) => {
         headings: { en: notification.title },
         contents: { en: notification.message },
         chrome_web_icon: '/images/paw-icon.png',
+        // TODO(backend): Replace this placeholder with PUBLIC_APP_URL plus a
+        // real booking/request route generated from trusted server data.
         url: `https://yourapp.com/booking/${dogName.toLowerCase()}`,
         ttl: 259200,
       }),
@@ -114,4 +119,4 @@ exports.handler = async (event) => {
       body: JSON.stringify({ error: 'Failed to send notification' }),
     };
   }
-};
+}

@@ -13,6 +13,8 @@ const PREFERRED_WINDOW_VALUES = new Set([
 const TIME_OF_DAY_VALUES = new Set(['morning', 'afternoon', 'evening']);
 const REQUEST_TIMING_TYPES = new Set(['first-available', 'preferred-date', 'backup-date']);
 
+// TODO(backend): Move these request contracts into packages/core so the web app,
+// Netlify functions, and future apps/api service validate the same shapes.
 export const jsonHeaders = {
   'Cache-Control': 'no-store',
   'Content-Type': 'application/json',
@@ -174,6 +176,8 @@ export function createServerSupabaseClient(env = process.env) {
 }
 
 function toPublicError(error) {
+  // TODO(backend): Replace raw Error-message matching with typed errors and
+  // structured public error codes so Supabase/provider details never leak.
   const statusCode =
     /required|valid|choose|expired|match|sign in/i.test(error.message) ? 400 : 500;
 
@@ -184,6 +188,8 @@ function toPublicError(error) {
 }
 
 async function fetchGroomer(supabase, groomerId) {
+  // TODO(backend): Move groomer eligibility checks here: active profile,
+  // supported service, supported dog size, booking channel, and service area.
   const { data, error } = await supabase
     .from('groomers')
     .select('id, website')
@@ -198,12 +204,17 @@ async function fetchGroomer(supabase, groomerId) {
 }
 
 export async function createGuestBooking({ supabase, input, now = new Date() }) {
+  // TODO(backend): Add abuse controls before this service-key write path:
+  // rate limiting, origin checks, bot protection, and idempotency keys.
   const claimToken = createGuestClaimToken();
   const groomer = await fetchGroomer(supabase, input.groomerId);
   const rows = buildGuestBookingRows(input, { claimToken, groomer, now });
   let customerId = '';
 
   try {
+    // TODO(backend): Replace this multi-step insert/cleanup flow with a single
+    // Postgres RPC transaction so partial customer/dog/request writes cannot
+    // survive network or permission failures.
     const { data: customer, error: customerError } = await supabase
       .from('customers')
       .insert(rows.customer)
@@ -249,6 +260,8 @@ export async function createGuestBooking({ supabase, input, now = new Date() }) 
       customerEmail: customer.email,
     };
   } catch (error) {
+    // TODO(backend): Once the write path is transactional, remove this best-effort
+    // cleanup and record failed booking attempts for support/debugging.
     if (customerId) {
       await supabase.from('customers').delete().eq('id', customerId);
     }
@@ -278,6 +291,8 @@ function unwrapJoinedRow(value) {
 }
 
 export async function claimGuestBooking({ supabase, accessToken, claimToken, now = new Date() }) {
+  // TODO(backend): Move claim/merge into a transaction that locks the request row
+  // and handles duplicate dogs, existing customers, and repeated clicks safely.
   const user = await getUserForAccessToken(supabase, accessToken);
   const tokenHash = hashGuestClaimToken(cleanRequiredText(claimToken, 'Claim token is required.'));
   const { data: request, error: requestError } = await supabase
@@ -346,6 +361,8 @@ export async function claimGuestBooking({ supabase, accessToken, claimToken, now
     }
 
     await supabase.from('customers').delete().eq('id', guestCustomer.id);
+    // TODO(backend): Add an audit event so support can see when guest rows were
+    // merged into an existing verified customer account.
     return { claimed: true, requestId: request.id };
   }
 
@@ -381,6 +398,8 @@ function jsonResponse(statusCode, body) {
 }
 
 export async function handleGuestBookingEvent(event, env = process.env) {
+  // TODO(backend): Keep this as a thin Netlify adapter once apps/api exists;
+  // business logic should live behind the proper backend boundary.
   if (event.httpMethod !== 'POST') {
     return jsonResponse(405, { error: 'Method Not Allowed' });
   }
@@ -398,6 +417,8 @@ export async function handleGuestBookingEvent(event, env = process.env) {
 }
 
 export async function handleGuestBookingClaimEvent(event, env = process.env) {
+  // TODO(backend): Require a CSRF/origin strategy before browser-authenticated
+  // POST endpoints move beyond prototype/MVP traffic.
   if (event.httpMethod !== 'POST') {
     return jsonResponse(405, { error: 'Method Not Allowed' });
   }

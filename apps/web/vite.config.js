@@ -1,6 +1,8 @@
 import { defineConfig } from 'vitest/config';
 import { loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import { fetchGooglePlacePhoto, toPublicPhotoError } from './server/googlePlacesPhoto.js';
 import {
@@ -8,8 +10,18 @@ import {
   handleGuestBookingEvent,
 } from './server/guestBooking.js';
 
+const webRoot = dirname(fileURLToPath(import.meta.url));
+const repoRoot = resolve(webRoot, '../..');
+
+function loadAppEnv(mode) {
+  return {
+    ...loadEnv(mode, repoRoot, ''),
+    ...loadEnv(mode, webRoot, ''),
+  };
+}
+
 function publicAppConfig(mode) {
-  const env = loadEnv(mode, process.cwd(), '');
+  const env = loadAppEnv(mode);
 
   return {
     SUPABASE_URL: env.SUPABASE_URL || env.VITE_SUPABASE_URL || '',
@@ -102,7 +114,7 @@ function guestBookingDevPlugin(env) {
 }
 
 export default defineConfig(({ mode }) => {
-  const env = loadEnv(mode, process.cwd(), '');
+  const env = loadAppEnv(mode);
 
   return {
     plugins: [react(), groomerPhotoDevPlugin(env), guestBookingDevPlugin(env)],

@@ -94,21 +94,22 @@ Recommended direction:
 
 Tasks:
 
-- [ ] Add `package.json`.
-- [ ] Add a real dev server.
-- [ ] Add source folders under `src/`.
-- [ ] Split customer app routes/views from groomer dashboard routes/views.
-- [ ] Move Supabase calls into API modules.
-- [ ] Move auth into a dedicated module/provider.
-- [ ] Move booking state into focused hooks or services.
-- [ ] Move reusable UI into components.
-- [ ] Move CSS into organized app styles or component styles.
+- [x] Add `package.json`.
+- [x] Add a real dev server.
+- [x] Add source folders under `apps/web/src/`.
+- [x] Split customer app routes/views from groomer dashboard routes/views.
+- [x] Move Supabase calls into API modules.
+- [x] Move auth into a dedicated module/provider.
+- [x] Move booking state into focused modules.
+- [x] Move CSS into organized app styles.
+- [x] Move the deployable frontend into `apps/web` as part of a monorepo layout.
+- [ ] Move reusable UI into dedicated component modules as the UI grows.
 - [ ] Remove inline event handlers over time.
 
 Suggested structure:
 
 ```text
-src/
+apps/web/src/
   app/
   auth/
   api/
@@ -122,7 +123,7 @@ src/
 
 Deliverable:
 
-- [ ] The current app is replaced by a maintainable source-based frontend.
+- [x] The current app is replaced by a maintainable source-based frontend.
 
 ## Phase 5: Build Real Booking
 

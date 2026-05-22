@@ -2,7 +2,9 @@
 
 PawStatus is a prototype dog grooming booking product. The current repo contains:
 
-- A Vite + React customer app in `src/`
+- A small npm workspace monorepo with the deployable web app in `apps/web`
+- A Vite + React customer app in `apps/web/src/`
+- Reserved backend/shared package slots in `apps/api` and `packages/core`
 - A gated groomer dashboard route rendered by the React app
 - Legacy static prototypes in `legacy/`
 - Netlify functions for guest booking, Google photo proxying, SMS, and push notifications
@@ -28,6 +30,19 @@ Use the docs in `docs/` before extending the app:
 
 - `docs/PRO_LEVEL_ROADMAP.md`
 - `docs/POLISH_REWORK_TASKS.md`
+- `docs/SUPABASE_POSTGRES_TERMS.md`
+
+## Repo Layout
+
+```text
+apps/web/       Netlify-deployed Vite + React app and current Netlify functions
+apps/api/       Reserved for the future proper backend service
+packages/core/  Reserved shared domain contracts and validation helpers
+supabase/       Supabase CLI config, migrations, and seed file
+db/             Historical/prototype schema notes
+docs/           Product, security, and handoff notes
+legacy/         Static prototype references only
+```
 
 ## Known Supabase Project
 
@@ -73,7 +88,7 @@ The customer app also has bottom navigation routes for My Dog, Bookings, and Acc
 
 Customer auth defaults to Supabase magic links. Users who are already signed in can optionally add a username and password from Account, and future sign-ins can use either the magic link or password path against the same Supabase Auth user/email.
 
-Service filtering is driven by `src/data/services.js` plus the `groomers.services` JSONB field. The linked Supabase project has the service-aware `nearby_groomers(service_id)` RPC applied, so customer search only returns groomers whose `services` array contains the selected service. Booking requests also narrow the service dropdown to the currently selected groomer's advertised services when that data is present.
+Service filtering is driven by `apps/web/src/data/services.js` plus the `groomers.services` JSONB field. The linked Supabase project has the service-aware `nearby_groomers(service_id)` RPC applied, so customer search only returns groomers whose `services` array contains the selected service. Booking requests also narrow the service dropdown to the currently selected groomer's advertised services when that data is present.
 
 Legacy files remain for reference only:
 
@@ -82,13 +97,14 @@ legacy/customer-prototype.html
 legacy/groomer-dashboard-prototype.html
 ```
 
-Netlify builds with `npm run build` and publishes `dist/`.
+Netlify runs the root `npm run build` command, which delegates to the
+`@paw-status/web` workspace and publishes `apps/web/dist/`.
 
 ## Environment Variables
 
 Copy `.env.example` to `.env` for local scripts. Configure the same values in Netlify for deployed builds and functions.
 
-`vite.config.js` exposes only selected public values to browser code:
+`apps/web/vite.config.js` exposes only selected public values to browser code:
 
 ```text
 SUPABASE_URL
@@ -133,12 +149,12 @@ Current lightweight checks:
 ```bash
 npm test
 npm run build
-node --check netlify/functions/send-sms.js
-node --check netlify/functions/send-notification.js
-node --check netlify/functions/groomer-photo.js
-node --check netlify/functions/guest-booking.js
-node --check netlify/functions/guest-booking-claim.js
-node --check server/guestBooking.js
+node --check apps/web/netlify/functions/send-sms.js
+node --check apps/web/netlify/functions/send-notification.js
+node --check apps/web/netlify/functions/groomer-photo.js
+node --check apps/web/netlify/functions/guest-booking.js
+node --check apps/web/netlify/functions/guest-booking-claim.js
+node --check apps/web/server/guestBooking.js
 node --check scripts/seed-groomers.js
 git diff --check
 ```
@@ -172,7 +188,7 @@ The current direction is:
 
 1. Keep Supabase as the backend.
 2. Keep Netlify unless deployment needs change.
-3. Continue migrating the frontend through Vite + React.
+3. Keep the live frontend in `apps/web` with Vite + React.
 4. Split the product into customer, groomer, and admin surfaces.
 5. Add real Supabase Auth and RLS before new product features.
 6. Replace hardcoded appointment slots with real availability.
