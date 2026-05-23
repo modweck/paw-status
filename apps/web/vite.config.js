@@ -10,6 +10,7 @@ import {
   handleGuestBookingEvent,
 } from './server/guestBooking.js';
 import {
+  getGroomerVerificationAuditTrail,
   listPendingGroomerMembershipClaims,
   reviewGroomerMembershipClaim,
 } from '../api/src/admin/groomerVerification.js';
@@ -119,6 +120,7 @@ function guestBookingDevPlugin(env) {
 }
 
 const REVIEW_PATH_PATTERN = /^\/api\/admin\/groomer-membership-claims\/([^/]+)\/review$/;
+const AUDIT_EVENTS_PATH = '/api/admin/groomer-membership-claims/audit-events';
 
 function getAdminBearerToken(request) {
   const authorization =
@@ -134,10 +136,12 @@ function adminGroomerClaimsDevPlugin(env) {
     configureServer(server) {
       server.middlewares.use(async (request, response, next) => {
         const url = request.url || '';
-        const isList = url === '/api/admin/groomer-membership-claims';
-        const reviewMatch = url.match(REVIEW_PATH_PATTERN);
+        const pathname = url.split('?')[0];
+        const isList = pathname === '/api/admin/groomer-membership-claims';
+        const isAuditEvents = pathname === AUDIT_EVENTS_PATH;
+        const reviewMatch = pathname.match(REVIEW_PATH_PATTERN);
 
-        if (!isList && !reviewMatch) {
+        if (!isList && !isAuditEvents && !reviewMatch) {
           next();
           return;
         }
@@ -158,6 +162,31 @@ function adminGroomerClaimsDevPlugin(env) {
             const claims = await listPendingGroomerMembershipClaims({ accessToken, env });
             response.statusCode = 200;
             response.end(JSON.stringify({ claims }));
+          } catch (error) {
+            response.statusCode = error.status || 500;
+            response.end(JSON.stringify(toPublicAdminErrorBody(error)));
+          }
+          return;
+        }
+
+        if (isAuditEvents) {
+          if (request.method !== 'GET') {
+            response.statusCode = 405;
+            response.end(JSON.stringify({ error: 'Method Not Allowed' }));
+            return;
+          }
+
+          const requestUrl = new URL(url, 'http://localhost');
+          try {
+            const events = await getGroomerVerificationAuditTrail(
+              { accessToken, env },
+              {
+                membershipId: requestUrl.searchParams.get('membershipId') || '',
+                limit: requestUrl.searchParams.get('limit') || '',
+              },
+            );
+            response.statusCode = 200;
+            response.end(JSON.stringify({ events }));
           } catch (error) {
             response.statusCode = error.status || 500;
             response.end(JSON.stringify(toPublicAdminErrorBody(error)));

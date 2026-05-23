@@ -14,6 +14,7 @@ const PUBLIC_ADMIN_ERROR_MESSAGES = Object.freeze({
   ADMIN_REVIEW_NOT_PENDING: 'This claim is no longer pending review.',
   ADMIN_REVIEW_QUERY_FAILED: 'Failed to update the groomer claim.',
   ADMIN_REVIEW_MEMBERSHIP_MALFORMED: 'Invalid groomer claim id in the request path.',
+  ADMIN_REVIEW_AUDIT_QUERY_FAILED: 'Failed to load the review audit trail.',
 });
 
 const DEFAULT_PUBLIC_MESSAGE = 'Admin verification request failed.';
