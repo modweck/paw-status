@@ -2,10 +2,13 @@
 
 import { describe, expect, it } from 'vitest';
 
-import { listPendingGroomerMembershipClaims } from './groomerVerification.js';
+import {
+  listPendingGroomerMembershipClaims,
+  reviewGroomerMembershipClaim,
+} from './groomerVerification.js';
 
-function fakeSupabaseClient({ getUser, fromResult }) {
-  const built = {
+function fakeSupabaseClient({ getUser, listResult, updateResult, capturedUpdate } = {}) {
+  const builder = {
     select() {
       return this;
     },
@@ -13,7 +16,14 @@ function fakeSupabaseClient({ getUser, fromResult }) {
       return this;
     },
     order() {
-      return Promise.resolve(fromResult);
+      return Promise.resolve(listResult || { data: [], error: null });
+    },
+    update(values) {
+      if (capturedUpdate) capturedUpdate.values = values;
+      return this;
+    },
+    maybeSingle() {
+      return Promise.resolve(updateResult || { data: null, error: null });
     },
   };
 
@@ -22,7 +32,7 @@ function fakeSupabaseClient({ getUser, fromResult }) {
       getUser: getUser || (async () => ({ data: { user: null }, error: { message: 'no' } })),
     },
     from() {
-      return built;
+      return builder;
     },
   };
 }
@@ -44,7 +54,7 @@ describe('listPendingGroomerMembershipClaims', () => {
   it('shapes each pending claim with account and groomer fields', async () => {
     const supabase = fakeSupabaseClient({
       getUser: async () => adminUserPayload,
-      fromResult: {
+      listResult: {
         data: [
           {
             id: 'membership-1',
@@ -102,7 +112,7 @@ describe('listPendingGroomerMembershipClaims', () => {
   it('returns an empty array when no pending claims exist', async () => {
     const supabase = fakeSupabaseClient({
       getUser: async () => adminUserPayload,
-      fromResult: { data: [], error: null },
+      listResult: { data: [], error: null },
     });
 
     await expect(
@@ -117,7 +127,7 @@ describe('listPendingGroomerMembershipClaims', () => {
   it('wraps Supabase query errors with a 500 status', async () => {
     const supabase = fakeSupabaseClient({
       getUser: async () => adminUserPayload,
-      fromResult: { data: null, error: { message: 'boom' } },
+      listResult: { data: null, error: { message: 'boom' } },
     });
 
     await expect(
@@ -132,7 +142,7 @@ describe('listPendingGroomerMembershipClaims', () => {
   it('handles missing nested account or groomer rows defensively', async () => {
     const supabase = fakeSupabaseClient({
       getUser: async () => adminUserPayload,
-      fromResult: {
+      listResult: {
         data: [
           {
             id: 'membership-2',
@@ -161,5 +171,145 @@ describe('listPendingGroomerMembershipClaims', () => {
       phone: null,
       website: null,
     });
+  });
+});
+
+describe('reviewGroomerMembershipClaim', () => {
+  const validInput = { membershipId: 'membership-1', decision: 'verify' };
+
+  it('throws 400 when membershipId is missing', async () => {
+    await expect(
+      reviewGroomerMembershipClaim(
+        { accessToken: adminAccessToken, env: adminEnv },
+        { ...validInput, membershipId: '   ' },
+      ),
+    ).rejects.toMatchObject({ status: 400, code: 'ADMIN_REVIEW_MEMBERSHIP_REQUIRED' });
+  });
+
+  it('throws 400 when decision is missing or unknown', async () => {
+    await expect(
+      reviewGroomerMembershipClaim(
+        { accessToken: adminAccessToken, env: adminEnv },
+        { ...validInput, decision: '' },
+      ),
+    ).rejects.toMatchObject({ status: 400, code: 'ADMIN_REVIEW_DECISION_INVALID' });
+
+    await expect(
+      reviewGroomerMembershipClaim(
+        { accessToken: adminAccessToken, env: adminEnv },
+        { ...validInput, decision: 'maybe' },
+      ),
+    ).rejects.toMatchObject({ status: 400, code: 'ADMIN_REVIEW_DECISION_INVALID' });
+  });
+
+  it('throws 401 when no token is provided even with valid input', async () => {
+    await expect(
+      reviewGroomerMembershipClaim({ accessToken: '', env: adminEnv }, validInput),
+    ).rejects.toMatchObject({ status: 401 });
+  });
+
+  it('verifies a pending claim and writes verified status', async () => {
+    const capturedUpdate = {};
+    const supabase = fakeSupabaseClient({
+      getUser: async () => adminUserPayload,
+      updateResult: {
+        data: {
+          id: 'membership-1',
+          role: 'owner',
+          status: 'verified',
+          updated_at: '2026-05-23T15:00:00Z',
+        },
+        error: null,
+      },
+      capturedUpdate,
+    });
+
+    const result = await reviewGroomerMembershipClaim(
+      { accessToken: adminAccessToken, env: adminEnv, supabase },
+      { membershipId: 'membership-1', decision: 'verify' },
+    );
+
+    expect(capturedUpdate.values).toMatchObject({ status: 'verified' });
+    expect(capturedUpdate.values.updated_at).toEqual(expect.any(String));
+    expect(result).toEqual({
+      id: 'membership-1',
+      role: 'owner',
+      status: 'verified',
+      updatedAt: '2026-05-23T15:00:00Z',
+    });
+  });
+
+  it('rejects a pending claim and writes rejected status', async () => {
+    const capturedUpdate = {};
+    const supabase = fakeSupabaseClient({
+      getUser: async () => adminUserPayload,
+      updateResult: {
+        data: {
+          id: 'membership-1',
+          role: 'owner',
+          status: 'rejected',
+          updated_at: '2026-05-23T15:00:00Z',
+        },
+        error: null,
+      },
+      capturedUpdate,
+    });
+
+    await reviewGroomerMembershipClaim(
+      { accessToken: adminAccessToken, env: adminEnv, supabase },
+      { membershipId: 'membership-1', decision: 'reject' },
+    );
+
+    expect(capturedUpdate.values).toMatchObject({ status: 'rejected' });
+  });
+
+  it('returns 409 when the claim is no longer pending (concurrency)', async () => {
+    const supabase = fakeSupabaseClient({
+      getUser: async () => adminUserPayload,
+      updateResult: { data: null, error: null },
+    });
+
+    await expect(
+      reviewGroomerMembershipClaim(
+        { accessToken: adminAccessToken, env: adminEnv, supabase },
+        validInput,
+      ),
+    ).rejects.toMatchObject({ status: 409, code: 'ADMIN_REVIEW_NOT_PENDING' });
+  });
+
+  it('wraps Supabase update errors with a 500 status', async () => {
+    const supabase = fakeSupabaseClient({
+      getUser: async () => adminUserPayload,
+      updateResult: { data: null, error: { message: 'boom' } },
+    });
+
+    await expect(
+      reviewGroomerMembershipClaim(
+        { accessToken: adminAccessToken, env: adminEnv, supabase },
+        validInput,
+      ),
+    ).rejects.toMatchObject({ status: 500, code: 'ADMIN_REVIEW_QUERY_FAILED' });
+  });
+
+  it('accepts decision values regardless of case and surrounding whitespace', async () => {
+    const supabase = fakeSupabaseClient({
+      getUser: async () => adminUserPayload,
+      updateResult: {
+        data: {
+          id: 'membership-1',
+          role: 'owner',
+          status: 'verified',
+          updated_at: '2026-05-23T15:00:00Z',
+        },
+        error: null,
+      },
+    });
+
+    await expect(
+      reviewGroomerMembershipClaim(
+        { accessToken: adminAccessToken, env: adminEnv, supabase },
+        { membershipId: 'membership-1', decision: '  VERIFY  ' },
+      ),
+    ).resolves.toMatchObject({ status: 'verified' });
   });
 });

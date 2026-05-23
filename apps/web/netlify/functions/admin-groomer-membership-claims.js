@@ -1,3 +1,4 @@
+import { toPublicAdminErrorBody } from '../../../api/src/admin/adminErrors.js';
 import { listPendingGroomerMembershipClaims } from '../../../api/src/admin/groomerVerification.js';
 
 function json(statusCode, body) {
@@ -14,8 +15,6 @@ function getBearerToken(event) {
 }
 
 export async function handler(event) {
-  // TODO(admin): Keep this as a thin Netlify adapter only until apps/api has a
-  // chosen runtime. The real route must verify this bearer token server-side.
   if (event.httpMethod !== 'GET') {
     return json(405, { error: 'Method Not Allowed' });
   }
@@ -24,13 +23,9 @@ export async function handler(event) {
     const claims = await listPendingGroomerMembershipClaims({
       accessToken: getBearerToken(event),
       env: process.env,
-      requestId: event.headers?.['x-nf-request-id'] || '',
     });
     return json(200, { claims });
   } catch (error) {
-    return json(error.status || 500, {
-      code: error.code || 'ADMIN_GROOMER_VERIFICATION_ERROR',
-      error: error.message,
-    });
+    return json(error.status || 500, toPublicAdminErrorBody(error));
   }
 }

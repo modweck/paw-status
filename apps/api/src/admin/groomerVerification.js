@@ -16,10 +16,22 @@ export const GROOMER_VERIFICATION_ROUTES = Object.freeze([
   },
 ]);
 
+const DECISION_TO_STATUS = Object.freeze({
+  verify: 'verified',
+  reject: 'rejected',
+});
+
 function notImplemented(operation) {
   const error = new Error(`${operation} is not implemented yet.`);
   error.code = 'ADMIN_GROOMER_VERIFICATION_NOT_IMPLEMENTED';
   error.status = 501;
+  return error;
+}
+
+function reviewError(status, code, message) {
+  const error = new Error(message);
+  error.status = status;
+  error.code = code;
   return error;
 }
 
@@ -76,17 +88,68 @@ export async function listPendingGroomerMembershipClaims({
   return (data || []).map(shapeClaim);
 }
 
-export async function reviewGroomerMembershipClaim(_context = {}, _input = {}) {
-  // TODO(admin): Validate membershipId, decision, reviewer note, and idempotency
-  // key before touching the database.
-  // TODO(admin): Re-check admin authorization inside this command; never trust a
-  // client-provided role or route-level check alone.
-  // TODO(admin): Update only pending groomer_memberships to verified/rejected in
-  // a transaction or RPC so concurrent reviewers cannot double-approve.
-  // TODO(admin): Write an audit event with reviewer auth user id, previous
-  // status, next status, reason/note, request id, and timestamp.
-  // TODO(admin): Notify the groomer after the database update succeeds.
-  throw notImplemented('reviewGroomerMembershipClaim');
+export async function reviewGroomerMembershipClaim(
+  { accessToken = '', env = process.env, supabase } = {},
+  { membershipId = '', decision = '', reviewerNote = '' } = {},
+) {
+  // TODO(admin): Persist reviewerNote and the reviewer auth user id in a
+  // dedicated audit table. The audit path is part of the next admin slice.
+  // TODO(admin): Notify the groomer once an audit log exists so notification
+  // events have a stable correlation id.
+  if (String(reviewerNote || '').trim()) {
+    // eslint-disable-next-line no-console
+    console.warn(
+      '[admin] reviewerNote received but audit log is not yet implemented; note discarded',
+    );
+  }
+
+  const cleanedId = String(membershipId || '').trim();
+  if (!cleanedId) {
+    throw reviewError(
+      400,
+      'ADMIN_REVIEW_MEMBERSHIP_REQUIRED',
+      'Choose a groomer claim to review.',
+    );
+  }
+
+  const cleanedDecision = String(decision || '').trim().toLowerCase();
+  const nextStatus = DECISION_TO_STATUS[cleanedDecision];
+  if (!nextStatus) {
+    throw reviewError(400, 'ADMIN_REVIEW_DECISION_INVALID', 'Choose verify or reject.');
+  }
+
+  const { supabase: client } = await requireAdminContext({ accessToken, env, supabase });
+
+  const { data, error } = await client
+    .from('groomer_memberships')
+    .update({ status: nextStatus, updated_at: new Date().toISOString() })
+    .eq('id', cleanedId)
+    .eq('status', 'pending')
+    .select('id, role, status, updated_at')
+    .maybeSingle();
+
+  if (error) {
+    const wrapped = new Error('Failed to update the groomer claim.');
+    wrapped.status = 500;
+    wrapped.code = 'ADMIN_REVIEW_QUERY_FAILED';
+    wrapped.cause = error;
+    throw wrapped;
+  }
+
+  if (!data) {
+    throw reviewError(
+      409,
+      'ADMIN_REVIEW_NOT_PENDING',
+      'This claim is no longer pending review.',
+    );
+  }
+
+  return {
+    id: data.id,
+    role: data.role,
+    status: data.status,
+    updatedAt: data.updated_at,
+  };
 }
 
 export async function getGroomerVerificationAuditTrail(_context = {}, _membershipId = '') {

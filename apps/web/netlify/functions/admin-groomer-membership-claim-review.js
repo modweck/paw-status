@@ -1,3 +1,4 @@
+import { safeDecodeMembershipId, toPublicAdminErrorBody } from '../../../api/src/admin/adminErrors.js';
 import { reviewGroomerMembershipClaim } from '../../../api/src/admin/groomerVerification.js';
 
 function json(statusCode, body) {
@@ -13,14 +14,12 @@ function getBearerToken(event) {
   return authorization.startsWith('Bearer ') ? authorization.slice('Bearer '.length).trim() : '';
 }
 
-function getMembershipId(event) {
+function getRawMembershipSegment(event) {
   const match = String(event.path || '').match(/\/groomer-membership-claims\/([^/]+)\/review$/);
-  return match ? decodeURIComponent(match[1]) : '';
+  return match ? match[1] : '';
 }
 
 export async function handler(event) {
-  // TODO(admin): Keep this as a thin Netlify adapter only until apps/api has a
-  // chosen runtime. The real route must verify this bearer token server-side.
   if (event.httpMethod !== 'POST') {
     return json(405, { error: 'Method Not Allowed' });
   }
@@ -33,22 +32,13 @@ export async function handler(event) {
   }
 
   try {
+    const membershipId = safeDecodeMembershipId(getRawMembershipSegment(event));
     const claim = await reviewGroomerMembershipClaim(
-      {
-        accessToken: getBearerToken(event),
-        env: process.env,
-        requestId: event.headers?.['x-nf-request-id'] || '',
-      },
-      {
-        ...body,
-        membershipId: getMembershipId(event),
-      },
+      { accessToken: getBearerToken(event), env: process.env },
+      { ...body, membershipId },
     );
     return json(200, { claim });
   } catch (error) {
-    return json(error.status || 500, {
-      code: error.code || 'ADMIN_GROOMER_VERIFICATION_ERROR',
-      error: error.message,
-    });
+    return json(error.status || 500, toPublicAdminErrorBody(error));
   }
 }

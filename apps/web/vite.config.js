@@ -9,7 +9,11 @@ import {
   handleGuestBookingClaimEvent,
   handleGuestBookingEvent,
 } from './server/guestBooking.js';
-import { listPendingGroomerMembershipClaims } from '../api/src/admin/groomerVerification.js';
+import {
+  listPendingGroomerMembershipClaims,
+  reviewGroomerMembershipClaim,
+} from '../api/src/admin/groomerVerification.js';
+import { safeDecodeMembershipId, toPublicAdminErrorBody } from '../api/src/admin/adminErrors.js';
 
 const webRoot = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(webRoot, '../..');
@@ -114,23 +118,14 @@ function guestBookingDevPlugin(env) {
   };
 }
 
-const PUBLIC_ADMIN_ERROR_MESSAGES = {
-  ADMIN_AUTH_REQUIRED: 'Sign in to continue.',
-  ADMIN_AUTH_INVALID: 'Sign in to continue.',
-  ADMIN_AUTH_FORBIDDEN: 'You are not authorized to use the admin area.',
-  ADMIN_ALLOWLIST_EMPTY: 'Admin allowlist is not configured on the server.',
-  ADMIN_SUPABASE_ENV_MISSING: 'Server is misconfigured.',
-  ADMIN_GROOMER_CLAIMS_QUERY_FAILED: 'Failed to load pending groomer claims.',
-};
+const REVIEW_PATH_PATTERN = /^\/api\/admin\/groomer-membership-claims\/([^/]+)\/review$/;
 
-function toPublicAdminErrorBody(error) {
-  const code = error?.code || 'ADMIN_GROOMER_VERIFICATION_ERROR';
-  return {
-    code,
-    error:
-      PUBLIC_ADMIN_ERROR_MESSAGES[code] ||
-      'Admin verification request failed.',
-  };
+function getAdminBearerToken(request) {
+  const authorization =
+    request.headers?.authorization || request.headers?.Authorization || '';
+  return authorization.startsWith('Bearer ')
+    ? authorization.slice('Bearer '.length).trim()
+    : '';
 }
 
 function adminGroomerClaimsDevPlugin(env) {
@@ -138,7 +133,11 @@ function adminGroomerClaimsDevPlugin(env) {
     name: 'paw-status-admin-groomer-claims-dev',
     configureServer(server) {
       server.middlewares.use(async (request, response, next) => {
-        if (request.url !== '/api/admin/groomer-membership-claims') {
+        const url = request.url || '';
+        const isList = url === '/api/admin/groomer-membership-claims';
+        const reviewMatch = url.match(REVIEW_PATH_PATTERN);
+
+        if (!isList && !reviewMatch) {
           next();
           return;
         }
@@ -146,22 +145,51 @@ function adminGroomerClaimsDevPlugin(env) {
         response.setHeader('Cache-Control', 'no-store');
         response.setHeader('Content-Type', 'application/json');
 
-        if (request.method !== 'GET') {
+        const accessToken = getAdminBearerToken(request);
+
+        if (isList) {
+          if (request.method !== 'GET') {
+            response.statusCode = 405;
+            response.end(JSON.stringify({ error: 'Method Not Allowed' }));
+            return;
+          }
+
+          try {
+            const claims = await listPendingGroomerMembershipClaims({ accessToken, env });
+            response.statusCode = 200;
+            response.end(JSON.stringify({ claims }));
+          } catch (error) {
+            response.statusCode = error.status || 500;
+            response.end(JSON.stringify(toPublicAdminErrorBody(error)));
+          }
+          return;
+        }
+
+        // Review path: POST /api/admin/groomer-membership-claims/:id/review
+        if (request.method !== 'POST') {
           response.statusCode = 405;
           response.end(JSON.stringify({ error: 'Method Not Allowed' }));
           return;
         }
 
-        const authorization =
-          request.headers?.authorization || request.headers?.Authorization || '';
-        const accessToken = authorization.startsWith('Bearer ')
-          ? authorization.slice('Bearer '.length).trim()
-          : '';
+        let body = {};
+        try {
+          const raw = await readRequestBody(request);
+          body = raw ? JSON.parse(raw) : {};
+        } catch {
+          response.statusCode = 400;
+          response.end(JSON.stringify({ error: 'Invalid JSON' }));
+          return;
+        }
 
         try {
-          const claims = await listPendingGroomerMembershipClaims({ accessToken, env });
+          const membershipId = safeDecodeMembershipId(reviewMatch[1]);
+          const claim = await reviewGroomerMembershipClaim(
+            { accessToken, env },
+            { ...body, membershipId },
+          );
           response.statusCode = 200;
-          response.end(JSON.stringify({ claims }));
+          response.end(JSON.stringify({ claim }));
         } catch (error) {
           response.statusCode = error.status || 500;
           response.end(JSON.stringify(toPublicAdminErrorBody(error)));
