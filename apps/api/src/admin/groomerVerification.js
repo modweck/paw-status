@@ -1,5 +1,7 @@
-// Skeleton for the future admin-only groomer verification backend.
-// Current Netlify deploy does not execute this package yet.
+// Admin-only groomer verification backend. Wired to the Netlify functions under
+// apps/web/netlify/functions/admin-groomer-*.js.
+
+import { requireAdminContext } from './adminAuthorization.js';
 
 export const GROOMER_VERIFICATION_ROUTES = Object.freeze([
   {
@@ -21,16 +23,57 @@ function notImplemented(operation) {
   return error;
 }
 
-export async function listPendingGroomerMembershipClaims(_context = {}) {
-  // TODO(admin): Verify the Supabase access token server-side with
-  // supabase.auth.getUser() or equivalent backend auth middleware.
-  // TODO(admin): Authorize only trusted PawStatus admins. Do not rely on
-  // user-editable metadata; use app_metadata or an admin table.
-  // TODO(admin): Query pending groomer_memberships with joined groomer_accounts
-  // and public groomers fields needed for review.
-  // TODO(admin): Return only safe review data: account email/name/phone, groomer
-  // profile name/address/website, created_at, and prior review metadata.
-  throw notImplemented('listPendingGroomerMembershipClaims');
+function shapeClaim(row) {
+  const account = row.groomer_account || {};
+  const groomer = row.groomer || {};
+
+  return {
+    id: row.id,
+    role: row.role,
+    createdAt: row.created_at,
+    account: {
+      id: account.id || null,
+      name: account.name || null,
+      email: account.email || null,
+      phone: account.phone || null,
+    },
+    groomer: {
+      id: groomer.id || null,
+      name: groomer.name || null,
+      salon: groomer.salon || null,
+      address: groomer.address || null,
+      phone: groomer.phone || null,
+      website: groomer.website || null,
+    },
+  };
+}
+
+export async function listPendingGroomerMembershipClaims({
+  accessToken = '',
+  env = process.env,
+  supabase,
+} = {}) {
+  const { supabase: client } = await requireAdminContext({ accessToken, env, supabase });
+
+  const { data, error } = await client
+    .from('groomer_memberships')
+    .select(
+      `id, role, created_at,
+       groomer_account:groomer_accounts ( id, name, email, phone ),
+       groomer:groomers ( id, name, salon, address, phone, website )`,
+    )
+    .eq('status', 'pending')
+    .order('created_at', { ascending: true });
+
+  if (error) {
+    const wrapped = new Error('Failed to load pending groomer claims.');
+    wrapped.status = 500;
+    wrapped.code = 'ADMIN_GROOMER_CLAIMS_QUERY_FAILED';
+    wrapped.cause = error;
+    throw wrapped;
+  }
+
+  return (data || []).map(shapeClaim);
 }
 
 export async function reviewGroomerMembershipClaim(_context = {}, _input = {}) {

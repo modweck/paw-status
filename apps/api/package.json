@@ -3,5 +3,8 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "scripts": {}
+  "scripts": {},
+  "dependencies": {
+    "@supabase/supabase-js": "^2.76.1"
+  }
 }

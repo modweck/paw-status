@@ -9,6 +9,7 @@ import {
   handleGuestBookingClaimEvent,
   handleGuestBookingEvent,
 } from './server/guestBooking.js';
+import { listPendingGroomerMembershipClaims } from '../api/src/admin/groomerVerification.js';
 
 const webRoot = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(webRoot, '../..');
@@ -113,11 +114,73 @@ function guestBookingDevPlugin(env) {
   };
 }
 
+const PUBLIC_ADMIN_ERROR_MESSAGES = {
+  ADMIN_AUTH_REQUIRED: 'Sign in to continue.',
+  ADMIN_AUTH_INVALID: 'Sign in to continue.',
+  ADMIN_AUTH_FORBIDDEN: 'You are not authorized to use the admin area.',
+  ADMIN_ALLOWLIST_EMPTY: 'Admin allowlist is not configured on the server.',
+  ADMIN_SUPABASE_ENV_MISSING: 'Server is misconfigured.',
+  ADMIN_GROOMER_CLAIMS_QUERY_FAILED: 'Failed to load pending groomer claims.',
+};
+
+function toPublicAdminErrorBody(error) {
+  const code = error?.code || 'ADMIN_GROOMER_VERIFICATION_ERROR';
+  return {
+    code,
+    error:
+      PUBLIC_ADMIN_ERROR_MESSAGES[code] ||
+      'Admin verification request failed.',
+  };
+}
+
+function adminGroomerClaimsDevPlugin(env) {
+  return {
+    name: 'paw-status-admin-groomer-claims-dev',
+    configureServer(server) {
+      server.middlewares.use(async (request, response, next) => {
+        if (request.url !== '/api/admin/groomer-membership-claims') {
+          next();
+          return;
+        }
+
+        response.setHeader('Cache-Control', 'no-store');
+        response.setHeader('Content-Type', 'application/json');
+
+        if (request.method !== 'GET') {
+          response.statusCode = 405;
+          response.end(JSON.stringify({ error: 'Method Not Allowed' }));
+          return;
+        }
+
+        const authorization =
+          request.headers?.authorization || request.headers?.Authorization || '';
+        const accessToken = authorization.startsWith('Bearer ')
+          ? authorization.slice('Bearer '.length).trim()
+          : '';
+
+        try {
+          const claims = await listPendingGroomerMembershipClaims({ accessToken, env });
+          response.statusCode = 200;
+          response.end(JSON.stringify({ claims }));
+        } catch (error) {
+          response.statusCode = error.status || 500;
+          response.end(JSON.stringify(toPublicAdminErrorBody(error)));
+        }
+      });
+    },
+  };
+}
+
 export default defineConfig(({ mode }) => {
   const env = loadAppEnv(mode);
 
   return {
-    plugins: [react(), groomerPhotoDevPlugin(env), guestBookingDevPlugin(env)],
+    plugins: [
+      react(),
+      groomerPhotoDevPlugin(env),
+      guestBookingDevPlugin(env),
+      adminGroomerClaimsDevPlugin(env),
+    ],
     define: {
       __APP_CONFIG__: JSON.stringify(publicAppConfig(mode)),
     },
@@ -129,6 +192,11 @@ export default defineConfig(({ mode }) => {
       environment: 'jsdom',
       globals: true,
       setupFiles: './src/test/setup.js',
+      include: [
+        'src/**/*.{test,spec}.{js,jsx}',
+        'server/**/*.{test,spec}.{js,jsx}',
+        '../api/src/**/*.{test,spec}.{js,jsx}',
+      ],
       define: {
         __APP_CONFIG__: JSON.stringify({}),
       },
