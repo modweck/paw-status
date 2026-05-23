@@ -28,6 +28,7 @@ Known unsafe or demo-only areas:
 
 Use the docs in `docs/` before extending the app:
 
+- `docs/PRODUCTION_COMPLETION_CHECKLIST.md`
 - `docs/PRO_LEVEL_ROADMAP.md`
 - `docs/POLISH_REWORK_TASKS.md`
 - `docs/SUPABASE_POSTGRES_TERMS.md`
@@ -80,6 +81,7 @@ The app serves:
 /bookings -> customer app scrolled to booking/sign-in flow
 /account -> customer app scrolled to account
 /groomer -> gated groomer account and request-handling dashboard
+/admin -> admin login and dashboard shell for groomer/admin access review
 ```
 
 The customer app asks the browser for location permission on first load. If permission is granted, groomer discovery uses the user's current coordinates without storing them and refreshes the visible location label from reverse geocoding. If permission is denied or unavailable, the location input stays empty until the user enters an address or ZIP code. As users type a location, the app loads address suggestions and uses the selected suggestion's coordinates for search.
@@ -113,6 +115,12 @@ ENABLE_GROOMER_DASHBOARD
 ```
 
 Leave `ENABLE_GROOMER_DASHBOARD=false` for production until pending groomer claims can be reviewed and verified. It can be enabled locally to test groomer account creation and verified-membership request handling.
+
+The `/admin` route uses the same Supabase Auth session shell as the customer and
+groomer routes. It currently shows the admin dashboard structure and approval
+controls, but production approval still needs server-side admin authorization,
+service-role updates, and audit logging before it can verify groomers or approve
+additional admins.
 
 Required for seeding groomers and server-side Google Places thumbnails:
 

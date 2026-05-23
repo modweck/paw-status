@@ -22,6 +22,26 @@ Still next:
 - Real calendar OAuth/token sync, server-side only
 - Confirmed `appointments` creation
 
+## Admin Verification Skeleton
+
+Added skeleton structure:
+
+- `apps/api/src/admin/groomerVerification.js`
+- `apps/api/src/admin/adminAccess.js`
+- `apps/api/src/admin/README.md`
+- `apps/web/src/admin/AdminVerificationPanel.jsx`
+- `apps/web/src/api/adminVerification.js`
+- shared status/review constants in `packages/core/src/index.js`
+
+The `/admin` route now has a Supabase-auth login shell and dashboard sections
+for groomer claim review and admin access review. The intended production path
+is still server-side only: a trusted admin reviews a pending
+`groomer_memberships` row, the backend verifies admin authorization, updates the
+row to `verified` or `rejected`, writes an audit event, and notifies the groomer.
+The browser must not directly update claim status with a public Supabase client.
+Admin approval has the same rule: the first admin must be bootstrapped from a
+trusted server-owned source before the page can approve additional admins.
+
 ## Verbatim Slice
 
 Yes. The right build is **groomer-owned request handling first**, calendar sync second.

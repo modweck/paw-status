@@ -151,6 +151,7 @@ Next move:
 - Rotate the Google Places API key when ready and update local plus Netlify env.
 - Deploy the React/Netlify changes so `/api/groomer-photo` exists outside local Vite dev.
 - Build the verification/admin path for pending `groomer_memberships` claims so a real person can mark a groomer claim `verified` or `rejected`.
+- A skeleton for that path now exists under `apps/api/src/admin/`, `apps/web/src/admin/`, and `apps/web/src/api/adminVerification.js`. `/admin` now has a Supabase-auth login shell and dashboard sections for groomer claim review plus admin access review, but it is not a production implementation yet.
 - Seed or curate `booking_channels` for verified groomers where a real booking URL, phone, or email handoff is known.
 - Keep confirmed `appointments` closed until verified groomer operations or booking integrations exist.
 - Keep `ENABLE_GROOMER_DASHBOARD=false` in production until at least one verified membership/admin review process exists.
@@ -185,6 +186,7 @@ Next move:
 Read these before implementing:
 
 - `README.md`
+- `docs/PRODUCTION_COMPLETION_CHECKLIST.md`
 - `docs/LIVE_SUPABASE_AUDIT.md`
 - `docs/SUPABASE_MAGIC_LINK_NOTES.md`
 - `docs/REBUILD_DECISIONS.md`
@@ -253,7 +255,7 @@ Target outcome:
 - [x] Add post-submit account save/linking so a guest booking can later attach to the verified email's Supabase Auth user.
 - [ ] Clean up Supabase advisor findings for `nearby_groomers`, RLS policy performance, and PostGIS/public-schema exposure.
 - [ ] Add confirmed appointment creation only after groomer ownership or integrations exist.
-- [ ] Add an admin/review path to verify or reject pending groomer membership claims.
+- [ ] Add an admin/review path to verify or reject pending groomer membership claims. The `/admin` login/dashboard shell and API adapters exist, but the real server-side admin authorization, transactional review update, audit log, and notification hooks are still TODO.
 
 ## Supabase State To Preserve
 

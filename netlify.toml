@@ -19,6 +19,26 @@
   status = 200
 
 [[redirects]]
+  from = "/api/admin/groomer-membership-claims"
+  to = "/.netlify/functions/admin-groomer-membership-claims"
+  status = 200
+
+[[redirects]]
+  from = "/api/admin/groomer-membership-claims/*"
+  to = "/.netlify/functions/admin-groomer-membership-claim-review"
+  status = 200
+
+[[redirects]]
+  from = "/api/admin/access-requests"
+  to = "/.netlify/functions/admin-access-requests"
+  status = 200
+
+[[redirects]]
+  from = "/api/admin/access-requests/*"
+  to = "/.netlify/functions/admin-access-request-review"
+  status = 200
+
+[[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200

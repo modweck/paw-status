@@ -161,6 +161,8 @@ function normalizePreferredWindows(windows = []) {
 }
 
 export async function createBookingRequest(supabase, customer, dog, groomer, requestInput = {}) {
+  // TODO(booking): Keep this as request-packet creation until apps/api owns
+  // availability, double-booking prevention, and confirmed appointment creation.
   const customerId = requireCustomerId(customer);
   const dogId = requireOwnedDog(customer, dog);
   const groomerId = requireGroomerId(groomer);

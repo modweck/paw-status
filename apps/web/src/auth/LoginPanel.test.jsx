@@ -60,4 +60,11 @@ describe('LoginPanel', () => {
     });
     expect(sendMagicLink).not.toHaveBeenCalled();
   });
+
+  it('supports custom sign-in copy for admin and staff gates', () => {
+    render(<LoginPanel description="Restricted admin access." title="Admin login" />);
+
+    expect(screen.getByText('Admin login')).toBeInTheDocument();
+    expect(screen.getByText('Restricted admin access.')).toBeInTheDocument();
+  });
 });

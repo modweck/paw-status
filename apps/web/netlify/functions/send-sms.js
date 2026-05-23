@@ -7,6 +7,8 @@
 export async function handler(event) {
   // TODO(backend): Require authenticated backend callers and verify the booking
   // or status transition before sending any customer-facing SMS.
+  // TODO(notifications): Route production sends through apps/api notification
+  // commands so idempotency, preferences, delivery logs, and retries are shared.
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: 'Method Not Allowed' };
   }

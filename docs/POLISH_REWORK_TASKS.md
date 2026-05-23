@@ -2,6 +2,9 @@
 
 This repo is a working prototype for a dog groomer booking app with customer search, booking, SMS/live status updates, and a groomer dashboard. Before visual polish, the main work is to make the app safer, more maintainable, and less demo-dependent.
 
+Current production tracking lives in `docs/PRODUCTION_COMPLETION_CHECKLIST.md`.
+This file remains useful as the broader audit backlog.
+
 ## Priority 0: Lock Down Data and Access
 
 - [x] Remove or quarantine `db/02_relax_rls_prototype.sql` so public read/write policies are not treated as a production path.
@@ -18,7 +21,7 @@ This repo is a working prototype for a dog groomer booking app with customer sea
 - [x] Add groomer authentication before `/groomer` is usable outside a private demo.
 - [x] Add groomer account/membership ownership to the schema so one verified groomer membership can only see and update its own appointment requests.
 - [x] Add RLS policies for groomer dashboard appointment request reads and allowed status updates.
-- [ ] Add an admin/review path for approving or rejecting pending groomer membership claims.
+- [ ] Add an admin/review path for approving or rejecting pending groomer membership claims. `/admin` now has a Supabase-auth login/dashboard shell and review controls, and skeleton files exist under `apps/api/src/admin/`, `apps/web/src/admin/`, and `apps/web/src/api/adminVerification.js`; production still needs server-side admin auth, transactional review updates, audit logging, and notification hooks.
 - [ ] Verify that customer appointment reads only return appointments belonging to the signed-in customer.
 - [ ] Verify that customer appointment writes only allow the signed-in customer to book or modify their own dog's appointments.
 - [ ] Move sensitive status updates behind a server-side function if RLS alone is not enough for the groomer workflow.

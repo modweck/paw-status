@@ -2,6 +2,9 @@
 
 This document describes what needs to happen to turn PawStatus from a strong prototype into a credible production product. The existing `docs/POLISH_REWORK_TASKS.md` is the detailed checklist. This roadmap is the higher-level build plan.
 
+Current implementation tracking lives in `docs/PRODUCTION_COMPLETION_CHECKLIST.md`.
+Use this roadmap for background and sequencing, not as the only active checklist.
+
 ## Product North Star
 
 PawStatus should become a two-sided grooming operations product:
@@ -183,6 +186,7 @@ Goal: make the product configurable instead of hardcoded.
 - [ ] Review appointment history.
 - [ ] Configure SMS templates.
 - [ ] Configure notification settings.
+- [ ] Finish the admin-only groomer membership verification path. `/admin` has a login/dashboard shell and review controls, but the real implementation still needs server-side admin authorization, review actions, audit logs, and notifications.
 
 Deliverable:
 

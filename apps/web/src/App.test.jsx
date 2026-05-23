@@ -16,6 +16,10 @@ vi.mock('./customer/CustomerApp.jsx', () => ({
   CustomerApp: ({ initialSection }) => <div>Customer section: {initialSection}</div>,
 }));
 
+vi.mock('./admin/AdminVerificationPanel.jsx', () => ({
+  AdminVerificationPanel: () => <div>Admin verification workspace</div>,
+}));
+
 vi.mock('./groomer/StaffDashboard.jsx', () => ({
   StaffDashboard: () => <div>Groomer workspace</div>,
 }));
@@ -32,6 +36,11 @@ describe('app route detection', () => {
   it('keeps groomer routes in the groomer workspace', () => {
     expect(currentRoute('/groomer')).toBe('staff');
     expect(currentRoute('/staff/requests')).toBe('staff');
+  });
+
+  it('keeps admin verification routes in the admin workspace', () => {
+    expect(currentRoute('/admin')).toBe('admin');
+    expect(currentRoute('/admin/groomer-verification')).toBe('admin');
   });
 
   it('routes customer bottom nav destinations to customer sections', () => {
@@ -55,5 +64,13 @@ describe('app route detection', () => {
 
     expect(window.location.pathname).toBe('/account');
     expect(screen.getByText('Customer section: account')).toBeInTheDocument();
+  });
+
+  it('renders the admin verification workspace for admin routes', () => {
+    window.history.pushState(null, '', '/admin/groomer-verification');
+
+    render(<App />);
+
+    expect(screen.getByText('Admin verification workspace')).toBeInTheDocument();
   });
 });

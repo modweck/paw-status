@@ -1,10 +1,15 @@
 import { useCallback, useEffect, useState } from 'react';
 
+import { AdminVerificationPanel } from './admin/AdminVerificationPanel.jsx';
 import { CustomerApp } from './customer/CustomerApp.jsx';
 import { StaffDashboard } from './groomer/StaffDashboard.jsx';
 import { AppShell } from './layout/AppShell.jsx';
 
 function currentRoute(pathname = window.location.pathname) {
+  if (pathname.startsWith('/admin')) {
+    return 'admin';
+  }
+
   if (pathname.startsWith('/groomer') || pathname.startsWith('/staff')) {
     return 'staff';
   }
@@ -37,7 +42,13 @@ export function App() {
 
   return (
     <AppShell route={route} onNavigate={navigate}>
-      {route === 'staff' ? <StaffDashboard /> : <CustomerApp initialSection={route} />}
+      {route === 'admin' ? (
+        <AdminVerificationPanel />
+      ) : route === 'staff' ? (
+        <StaffDashboard />
+      ) : (
+        <CustomerApp initialSection={route} />
+      )}
     </AppShell>
   );
 }
