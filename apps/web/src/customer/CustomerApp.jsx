@@ -72,6 +72,14 @@ function isCurrentLocationAddress(address, currentLocation) {
   );
 }
 
+function isResolvedSuggestionAddress(address, selectedSuggestion) {
+  // mapGeocodingRow only surfaces { lat, lng, displayName } from Nominatim,
+  // so displayName is the only field we can match against. Do not add a
+  // selectedSuggestion.address fallback unless the geocoding API starts
+  // returning that field.
+  return Boolean(selectedSuggestion) && selectedSuggestion.displayName === address;
+}
+
 function ratingValue(groomer) {
   const parsed = Number(groomer.rating);
   return Number.isFinite(parsed) ? parsed : 0;
@@ -193,7 +201,11 @@ export function CustomerApp({ initialSection = 'customer' }) {
   }, [user]);
 
   useEffect(() => {
-    if (!address.trim() || isCurrentLocationAddress(address, currentLocationCoords)) {
+    if (
+      !address.trim() ||
+      isCurrentLocationAddress(address, currentLocationCoords) ||
+      isResolvedSuggestionAddress(address, selectedAddressLocation)
+    ) {
       setAddressSuggestions([]);
       return undefined;
     }
@@ -202,9 +214,14 @@ export function CustomerApp({ initialSection = 'customer' }) {
     // public instance rate-limits to ~1 request/sec, so an undebounced loop
     // produces throttled empty responses and looks like the suggestions are
     // broken when in reality they are just being dropped.
+    //
+    // Bias the suggestion ranking toward the user's current/selected location
+    // when known so a search for "515 east 72nd street" from NYC does not
+    // surface a Utah address before the Manhattan one.
+    const biasLocation = currentLocationCoords || selectedAddressLocation || null;
     let cancelled = false;
     const timeoutId = setTimeout(() => {
-      Promise.resolve(suggestAddresses(address))
+      Promise.resolve(suggestAddresses(address, { near: biasLocation }))
         .then((suggestions) => {
           if (!cancelled) {
             setAddressSuggestions(Array.isArray(suggestions) ? suggestions : []);
@@ -221,7 +238,7 @@ export function CustomerApp({ initialSection = 'customer' }) {
       cancelled = true;
       clearTimeout(timeoutId);
     };
-  }, [address, currentLocationCoords]);
+  }, [address, currentLocationCoords, selectedAddressLocation]);
 
   useEffect(() => {
     if (!user || !session?.access_token || typeof window === 'undefined') return;
@@ -343,7 +360,9 @@ export function CustomerApp({ initialSection = 'customer' }) {
         ? currentLocationCoords
         : usingSelectedSuggestion
           ? selectedAddressLocation
-          : await geocodeAddress(address);
+          : await geocodeAddress(address, {
+              near: currentLocationCoords || selectedAddressLocation || null,
+            });
       if (!coords) {
         throw new Error('Enter a valid address or ZIP code.');
       }

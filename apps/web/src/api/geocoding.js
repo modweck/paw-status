@@ -90,11 +90,32 @@ function mapGeocodingRow(row) {
   };
 }
 
-function geocodingSearchUrl(address, limit) {
+// ~50 km box around a lat/lng — used as a viewbox preference for Nominatim
+// ranking, NOT a hard bound. Anything inside still wins ties without
+// excluding equally specific results elsewhere in the country.
+const VIEWBOX_HALF_DEGREES = 0.5;
+
+function buildViewbox(near) {
+  if (!near) return '';
+  const lat = Number(near.lat);
+  const lng = Number(near.lng);
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return '';
+  const lonMin = lng - VIEWBOX_HALF_DEGREES;
+  const latMax = lat + VIEWBOX_HALF_DEGREES;
+  const lonMax = lng + VIEWBOX_HALF_DEGREES;
+  const latMin = lat - VIEWBOX_HALF_DEGREES;
+  return `${lonMin},${latMax},${lonMax},${latMin}`;
+}
+
+function geocodingSearchUrl(address, limit, near) {
   // countrycodes=us: bias to US-only for a US-only product.
   // addressdetails=1: returns structured address fields used by
   //   buildShortDisplayName to render a clean UI label.
   // dedupe=1: collapses near-duplicate Nominatim hits.
+  // viewbox + bounded=0: ranks results inside the box higher without
+  //   excluding the rest of the country (so "515 East 72nd Street"
+  //   surfaces the Manhattan hit before a Utah hit when the user's
+  //   current/selected location is in NYC).
   const params = new URLSearchParams({
     format: 'json',
     addressdetails: '1',
@@ -103,13 +124,18 @@ function geocodingSearchUrl(address, limit) {
     limit: String(limit),
     q: address,
   });
+  const viewbox = buildViewbox(near);
+  if (viewbox) {
+    params.set('viewbox', viewbox);
+    params.set('bounded', '0');
+  }
   return `https://nominatim.openstreetmap.org/search?${params.toString()}`;
 }
 
-export async function geocodeAddress(address) {
+export async function geocodeAddress(address, { near } = {}) {
   if (!address.trim()) return null;
 
-  const response = await fetch(geocodingSearchUrl(address, 1));
+  const response = await fetch(geocodingSearchUrl(address, 1, near));
 
   if (!response.ok) {
     throw new Error('Could not geocode that address.');
@@ -121,11 +147,11 @@ export async function geocodeAddress(address) {
   return mapGeocodingRow(rows[0]);
 }
 
-export async function suggestAddresses(query) {
+export async function suggestAddresses(query, { near } = {}) {
   const cleaned = query.trim();
   if (cleaned.length < 3) return [];
 
-  const response = await fetch(geocodingSearchUrl(cleaned, 5));
+  const response = await fetch(geocodingSearchUrl(cleaned, 5, near));
 
   if (!response.ok) {
     throw new Error('Could not load address suggestions.');

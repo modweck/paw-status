@@ -181,6 +181,62 @@ describe('geocoding api', () => {
     expect(fetchMock.mock.calls[0][0]).toContain('countrycodes=us');
   });
 
+  it('adds a viewbox + bounded=0 when a near={lat,lng} bias is provided', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve([]),
+    });
+
+    await suggestAddresses('515 east 72nd street', { near: { lat: 40.768, lng: -73.958 } });
+
+    const url = fetchMock.mock.calls[0][0];
+    expect(url).toContain('bounded=0');
+    // Nominatim expects viewbox=lonMin,latMax,lonMax,latMin in that order.
+    // For lat=40.768, lng=-73.958 with HALF_DEGREES=0.5:
+    //   lonMin = -74.458, latMax = 41.268, lonMax = -73.458, latMin = 40.268
+    const expectedViewbox = encodeURIComponent('-74.458,41.268,-73.458,40.268');
+    expect(url).toContain(`viewbox=${expectedViewbox}`);
+  });
+
+  it('skips the viewbox parameter when no bias is provided', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve([]),
+    });
+
+    await suggestAddresses('515 east 72nd street');
+
+    const url = fetchMock.mock.calls[0][0];
+    expect(url).not.toContain('viewbox');
+    expect(url).not.toContain('bounded');
+  });
+
+  it('forwards the near bias to single-result geocodeAddress as well', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce({
+      ok: true,
+      json: () =>
+        Promise.resolve([
+          {
+            lat: '40.7667625',
+            lon: '-73.9531214',
+            display_name: '515 East 72nd Street',
+            address: {
+              house_number: '515',
+              road: 'East 72nd Street',
+              city: 'New York',
+              state: 'New York',
+              postcode: '10021',
+            },
+          },
+        ]),
+    });
+
+    await geocodeAddress('515 east 72nd street', { near: { lat: 40.768, lng: -73.958 } });
+
+    expect(fetchMock.mock.calls[0][0]).toContain('viewbox=');
+    expect(fetchMock.mock.calls[0][0]).toContain('bounded=0');
+  });
+
   it('reverse-geocode returns the same shaped row', async () => {
     vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce({
       ok: true,
