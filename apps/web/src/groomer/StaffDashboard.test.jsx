@@ -306,7 +306,7 @@ describe('StaffDashboard', () => {
         'groomer-1',
       );
     });
-    expect(screen.getByText('pending')).toBeInTheDocument();
+    expect(screen.getByText('Pending review')).toBeInTheDocument();
   });
 
   it('can route an owned request to an external booking channel', async () => {

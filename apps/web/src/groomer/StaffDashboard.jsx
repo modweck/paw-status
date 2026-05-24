@@ -19,6 +19,11 @@ import {
 } from '../api/groomerAccounts.js';
 import { isStaffDashboardEnabled } from '../config/featureFlags.js';
 import { requireSupabaseClient } from '../lib/supabaseClient.js';
+import {
+  formatAppointmentRequestStatus,
+  formatCalendarConnectionStatus,
+  formatGroomerMembershipStatus,
+} from './statusLabels.js';
 
 function formatProvider(provider) {
   return String(provider || '')
@@ -277,7 +282,7 @@ function MembershipSummary({ account, memberships, setWorkspace, verifiedMembers
                   : membership.role}
               </p>
             </div>
-            <span>{membership.status}</span>
+            <span>{formatGroomerMembershipStatus(membership.status)}</span>
           </article>
         ))}
       </div>
@@ -296,7 +301,7 @@ function RequestPacket({ bookingChannels, onUpdateStatus, request, updatingReque
           <h3>{request.dog.name || 'Dog'}</h3>
           <p>{request.service}</p>
         </div>
-        <span>{request.status}</span>
+        <span>{formatAppointmentRequestStatus(request.status)}</span>
       </div>
       <div className="request-packet__grid">
         <div>
@@ -454,10 +459,10 @@ function CalendarConnections({ connections }) {
                 <span>
                   {connection.externalAccountLabel
                     ? `${connection.externalAccountLabel} calendar`
-                    : connection.status}
+                    : formatCalendarConnectionStatus(connection.status)}
                 </span>
               </div>
-              <span>{connection.status}</span>
+              <span>{formatCalendarConnectionStatus(connection.status)}</span>
             </div>
           ))}
         </div>

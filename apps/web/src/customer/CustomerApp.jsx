@@ -158,6 +158,7 @@ export function CustomerApp({ initialSection = 'customer' }) {
   const [searching, setSearching] = useState(false);
   const [error, setError] = useState('');
   const [favoriteGroomerId, setFavoriteGroomerId] = useState('');
+  const [guestClaimNotice, setGuestClaimNotice] = useState(null);
   const manualSearchStartedRef = useRef(false);
   const selectedService = useMemo(
     () => GROOMING_SERVICES.find((service) => service.id === serviceId) ?? GROOMING_SERVICES[0],
@@ -223,17 +224,29 @@ export function CustomerApp({ initialSection = 'customer' }) {
     if (!claimToken) return;
 
     let cancelled = false;
+    setGuestClaimNotice({ tone: 'pending', message: 'Linking your guest booking to your account…' });
 
     claimGuestBookingRequest({
       accessToken: session.access_token,
       claimToken,
     })
       .then(() => {
-        if (!cancelled) {
-          window.localStorage.removeItem(PENDING_GUEST_CLAIM_STORAGE_KEY);
-        }
+        if (cancelled) return;
+        window.localStorage.removeItem(PENDING_GUEST_CLAIM_STORAGE_KEY);
+        setGuestClaimNotice({
+          tone: 'success',
+          message: 'Your guest booking is now linked to this account.',
+        });
       })
-      .catch(() => {});
+      .catch((error) => {
+        if (cancelled) return;
+        setGuestClaimNotice({
+          tone: 'error',
+          message:
+            error?.message ||
+            'We could not link your guest booking. Open Bookings to try again or contact support.',
+        });
+      });
 
     return () => {
       cancelled = true;
@@ -411,6 +424,23 @@ export function CustomerApp({ initialSection = 'customer' }) {
           <p>Browse public groomer listings, save your dog profile, and request a booking.</p>
         </div>
       </div>
+
+      {guestClaimNotice ? (
+        <div
+          aria-live={guestClaimNotice.tone === 'error' ? 'assertive' : 'polite'}
+          className={`guest-claim-notice guest-claim-notice--${guestClaimNotice.tone}`}
+          role={guestClaimNotice.tone === 'error' ? 'alert' : 'status'}
+        >
+          <p>{guestClaimNotice.message}</p>
+          <button
+            type="button"
+            aria-label="Dismiss"
+            onClick={() => setGuestClaimNotice(null)}
+          >
+            Dismiss
+          </button>
+        </div>
+      ) : null}
 
       <form className="search-panel" onSubmit={handleSearch}>
         <label>

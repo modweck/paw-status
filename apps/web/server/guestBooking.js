@@ -20,6 +20,17 @@ export const jsonHeaders = {
   'Content-Type': 'application/json',
 };
 
+// User-safe error thrown by validation/state-check code in this module.
+// toPublicError below relies on the `userFacing` flag (not message text) so a
+// raw Supabase error rethrown via `new Error(supabaseError.message)` can never
+// reach the browser, even if the Supabase text coincidentally contains words
+// like "valid" or "required".
+function userFacingError(message) {
+  const error = new Error(message);
+  error.userFacing = true;
+  return error;
+}
+
 function cleanOptionalText(value) {
   const cleaned = String(value || '').trim();
   return cleaned || null;
@@ -28,7 +39,7 @@ function cleanOptionalText(value) {
 function cleanRequiredText(value, message) {
   const cleaned = cleanOptionalText(value);
   if (!cleaned) {
-    throw new Error(message);
+    throw userFacingError(message);
   }
 
   return cleaned;
@@ -37,7 +48,7 @@ function cleanRequiredText(value, message) {
 function cleanEmail(value) {
   const cleaned = cleanRequiredText(value, 'Email is required.').toLowerCase();
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleaned)) {
-    throw new Error('Enter a valid email.');
+    throw userFacingError('Enter a valid email.');
   }
 
   return cleaned;
@@ -46,7 +57,7 @@ function cleanEmail(value) {
 function cleanDogSize(value) {
   const cleaned = cleanRequiredText(value, 'Choose a dog size.').toLowerCase();
   if (!DOG_SIZE_VALUES.has(cleaned)) {
-    throw new Error('Choose a valid dog size.');
+    throw userFacingError('Choose a valid dog size.');
   }
 
   return cleaned;
@@ -55,7 +66,7 @@ function cleanDogSize(value) {
 function cleanDate(value, message) {
   const cleaned = String(value || '').trim();
   if (!/^\d{4}-\d{2}-\d{2}$/.test(cleaned)) {
-    throw new Error(message);
+    throw userFacingError(message);
   }
 
   return cleaned;
@@ -64,7 +75,7 @@ function cleanDate(value, message) {
 function cleanTimeOfDay(value) {
   const cleaned = String(value || '').trim();
   if (!TIME_OF_DAY_VALUES.has(cleaned)) {
-    throw new Error('Choose a valid time of day.');
+    throw userFacingError('Choose a valid time of day.');
   }
 
   return cleaned;
@@ -105,7 +116,7 @@ function cleanPreferredWindows(windows = []) {
   const normalized = windows.map(cleanPreferredWindow).filter(Boolean);
 
   if (!normalized.length) {
-    throw new Error('Choose first available or a preferred date.');
+    throw userFacingError('Choose first available or a preferred date.');
   }
 
   return normalized;
@@ -127,7 +138,7 @@ export function hashGuestClaimToken(token) {
 
 export function buildGuestBookingRows(input = {}, { claimToken, groomer, now = new Date() } = {}) {
   if (!groomer?.id) {
-    throw new Error('Choose a groomer before requesting a booking.');
+    throw userFacingError('Choose a groomer before requesting a booking.');
   }
 
   const service = cleanRequiredText(input.service, 'Choose a service.');
@@ -176,14 +187,24 @@ export function createServerSupabaseClient(env = process.env) {
 }
 
 function toPublicError(error) {
-  // TODO(backend): Replace raw Error-message matching with typed errors and
-  // structured public error codes so Supabase/provider details never leak.
-  const statusCode =
-    /required|valid|choose|expired|match|sign in/i.test(error.message) ? 400 : 500;
+  // Errors flagged with userFacing=true (via userFacingError) carry messages
+  // intentionally crafted in this module to be safe for the browser. Anything
+  // else — including raw Supabase/Postgres rethrows like
+  // `new Error(supabaseError.message)` — is treated as an internal failure
+  // and replaced with a fixed string so internal text never reaches the user
+  // even if the Supabase message happens to contain words like "valid".
+  if (error?.userFacing) {
+    return {
+      statusCode: 400,
+      body: { error: error.message },
+    };
+  }
 
   return {
-    statusCode,
-    body: { error: error.message || 'Guest booking request failed.' },
+    statusCode: 500,
+    body: {
+      error: 'Something went wrong with your booking. Please try again or contact support.',
+    },
   };
 }
 
@@ -271,7 +292,7 @@ export async function createGuestBooking({ supabase, input, now = new Date() }) 
 
 async function getUserForAccessToken(supabase, accessToken) {
   if (!accessToken) {
-    throw new Error('Sign in before saving this guest booking.');
+    throw userFacingError('Sign in before saving this guest booking.');
   }
 
   const { data, error } = await supabase.auth.getUser(accessToken);
@@ -280,7 +301,7 @@ async function getUserForAccessToken(supabase, accessToken) {
   }
 
   if (!data?.user?.id || !data.user.email) {
-    throw new Error('Sign in before saving this guest booking.');
+    throw userFacingError('Sign in before saving this guest booking.');
   }
 
   return data.user;
@@ -312,20 +333,20 @@ export async function claimGuestBooking({ supabase, accessToken, claimToken, now
   }
 
   if (request.guest_claim_expires_at && new Date(request.guest_claim_expires_at) < now) {
-    throw new Error('Guest booking claim link expired.');
+    throw userFacingError('Guest booking claim link expired.');
   }
 
   const guestCustomer = unwrapJoinedRow(request.customers);
   if (!guestCustomer?.id) {
-    throw new Error('Guest customer row not found.');
+    throw userFacingError('We could not find this guest booking. Please try again or contact support.');
   }
 
   if (guestCustomer.email?.toLowerCase() !== user.email.toLowerCase()) {
-    throw new Error('Sign in with the same email used for the guest booking.');
+    throw userFacingError('Sign in with the same email used for the guest booking.');
   }
 
   if (guestCustomer.auth_user_id && guestCustomer.auth_user_id !== user.id) {
-    throw new Error('This guest booking is already linked to another account.');
+    throw userFacingError('This guest booking is already linked to another account.');
   }
 
   const { data: existingCustomer, error: existingCustomerError } = await supabase

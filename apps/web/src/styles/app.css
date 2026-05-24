@@ -775,6 +775,48 @@ button:disabled {
   color: var(--danger);
 }
 
+.guest-claim-notice {
+  align-items: center;
+  border-radius: 12px;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  margin: 0 14px 12px;
+  padding: 12px 14px;
+}
+
+.guest-claim-notice p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.guest-claim-notice button {
+  background: transparent;
+  border: 0;
+  color: inherit;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 8px;
+  text-decoration: underline;
+}
+
+.guest-claim-notice--pending {
+  background: var(--surface-soft, rgba(0, 0, 0, 0.04));
+  color: var(--ink-muted, #555);
+}
+
+.guest-claim-notice--success {
+  background: rgba(34, 139, 34, 0.08);
+  color: #1f6f1f;
+}
+
+.guest-claim-notice--error {
+  background: rgba(196, 50, 50, 0.08);
+  color: var(--danger, #b91c1c);
+}
+
 .staff-locked {
   margin: 20px 14px;
   max-width: calc(100vw - 28px);

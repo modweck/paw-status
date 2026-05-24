@@ -8,6 +8,7 @@ const geocodeAddress = vi.fn();
 const getBrowserLocation = vi.fn();
 const reverseGeocodeLocation = vi.fn();
 const suggestAddresses = vi.fn();
+const claimGuestBookingRequest = vi.fn();
 let authState = { user: null, loading: false };
 
 vi.mock('../api/groomers.js', () => ({
@@ -22,6 +23,11 @@ vi.mock('../api/geocoding.js', () => ({
 
 vi.mock('../api/browserLocation.js', () => ({
   getBrowserLocation: (...args) => getBrowserLocation(...args),
+}));
+
+vi.mock('../api/guestBooking.js', () => ({
+  claimGuestBookingRequest: (...args) => claimGuestBookingRequest(...args),
+  PENDING_GUEST_CLAIM_STORAGE_KEY: 'paw-status:pending-guest-claim',
 }));
 
 vi.mock('../auth/AuthProvider.jsx', () => ({
@@ -58,6 +64,10 @@ describe('CustomerApp default groomer loading', () => {
     getBrowserLocation.mockReset();
     reverseGeocodeLocation.mockReset();
     suggestAddresses.mockReset();
+    claimGuestBookingRequest.mockReset();
+    if (typeof window !== 'undefined' && window.localStorage?.clear) {
+      window.localStorage.clear();
+    }
   });
 
   it('asks for browser location and loads real groomers near the user when permission is granted', async () => {
@@ -346,5 +356,75 @@ describe('CustomerApp default groomer loading', () => {
     expect(
       loginPanel.compareDocumentPosition(nearbyHeading) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
+  });
+});
+
+describe('CustomerApp guest claim feedback', () => {
+  beforeEach(() => {
+    authState = {
+      user: { id: 'auth-user-1', email: 'owner@example.com' },
+      session: { access_token: 'session-token' },
+      loading: false,
+    };
+    if (typeof window !== 'undefined' && window.localStorage) {
+      window.localStorage.setItem('paw-status:pending-guest-claim', 'claim-token-1');
+    }
+    getBrowserLocation.mockResolvedValue(null);
+    fetchNearbyGroomers.mockResolvedValue([]);
+  });
+
+  afterEach(() => {
+    authState = { user: null, loading: false };
+    claimGuestBookingRequest.mockReset();
+    if (typeof window !== 'undefined' && window.localStorage?.clear) {
+      window.localStorage.clear();
+    }
+  });
+
+  it('shows a success notice and clears the pending claim token on success', async () => {
+    claimGuestBookingRequest.mockResolvedValueOnce({ ok: true });
+
+    render(<CustomerApp />);
+
+    expect(await screen.findByText(/now linked to this account/i)).toBeInTheDocument();
+    await waitFor(() => {
+      expect(window.localStorage.getItem('paw-status:pending-guest-claim')).toBeNull();
+    });
+  });
+
+  it('shows an error notice when the claim fails and keeps the token for retry', async () => {
+    claimGuestBookingRequest.mockRejectedValueOnce(new Error('Email did not match.'));
+
+    render(<CustomerApp />);
+
+    expect(await screen.findByText('Email did not match.')).toBeInTheDocument();
+    expect(window.localStorage.getItem('paw-status:pending-guest-claim')).toBe('claim-token-1');
+  });
+
+  it('dismisses the notice when the user clicks Dismiss', async () => {
+    claimGuestBookingRequest.mockResolvedValueOnce({ ok: true });
+
+    render(<CustomerApp />);
+
+    const notice = await screen.findByText(/now linked to this account/i);
+    expect(notice).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /dismiss/i }));
+
+    await waitFor(() => {
+      expect(screen.queryByText(/now linked to this account/i)).not.toBeInTheDocument();
+    });
+  });
+
+  it('does not attempt to claim when there is no pending token', async () => {
+    window.localStorage.clear();
+
+    render(<CustomerApp />);
+
+    // Give effects a tick to run.
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(claimGuestBookingRequest).not.toHaveBeenCalled();
+    expect(screen.queryByText(/linked to this account/i)).not.toBeInTheDocument();
   });
 });
