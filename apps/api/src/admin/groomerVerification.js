@@ -93,6 +93,37 @@ export async function listPendingGroomerMembershipClaims({
   return (data || []).map(shapeClaim);
 }
 
+// recipient shape: { email, name, groomerName, groomerSalon }
+function logReviewNotifyNeeded({
+  membershipId,
+  decision,
+  nextStatus,
+  recipient,
+}) {
+  // Real email delivery (Resend) is a follow-up slice. Until then we emit a
+  // structured warn so an operator can grep `notifyNeeded:true` to find
+  // claims that need manual outreach. The audit table also retains the
+  // membership_id for backfilling later.
+  //
+  // PII note: recipientEmail is logged. On Netlify, function logs (and any
+  // configured log drain such as Datadog/Papertrail) will capture it. That
+  // is acceptable for an admin tool with low volume. When Resend lands this
+  // log line should be REPLACED with the real send call rather than kept
+  // alongside it, so the email is not duplicated into the log stream.
+  // eslint-disable-next-line no-console
+  console.warn('[admin][notify-needed] groomer claim reviewed', {
+    notifyNeeded: true,
+    membershipId,
+    decision,
+    nextStatus,
+    reviewedAt: new Date().toISOString(),
+    recipientEmail: recipient?.email || null,
+    recipientName: recipient?.name || null,
+    groomerName: recipient?.groomerName || null,
+    groomerSalon: recipient?.groomerSalon || null,
+  });
+}
+
 async function recordReviewEvent(
   client,
   { membershipId, decision, previousStatus, nextStatus, reviewer, reviewerNote },
@@ -182,7 +213,11 @@ export async function reviewGroomerMembershipClaim(
     .update({ status: nextStatus, updated_at: new Date().toISOString() })
     .eq('id', cleanedId)
     .eq('status', 'pending')
-    .select('id, role, status, updated_at')
+    .select(
+      `id, role, status, updated_at,
+       groomer:groomers ( name, salon ),
+       groomer_account:groomer_accounts ( name, email )`,
+    )
     .maybeSingle();
 
   if (error) {
@@ -208,6 +243,18 @@ export async function reviewGroomerMembershipClaim(
     nextStatus,
     reviewer: user,
     reviewerNote,
+  });
+
+  logReviewNotifyNeeded({
+    membershipId: cleanedId,
+    decision: cleanedDecision,
+    nextStatus,
+    recipient: {
+      email: data.groomer_account?.email || null,
+      name: data.groomer_account?.name || null,
+      groomerName: data.groomer?.name || null,
+      groomerSalon: data.groomer?.salon || null,
+    },
   });
 
   return {

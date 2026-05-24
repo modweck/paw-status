@@ -1,3 +1,4 @@
+import { toPublicAdminErrorBody } from '../../../api/src/admin/adminErrors.js';
 import { listPendingAdminAccessRequests } from '../../../api/src/admin/adminAccess.js';
 
 function json(statusCode, body) {
@@ -14,8 +15,9 @@ function getBearerToken(event) {
 }
 
 export async function handler(event) {
-  // TODO(admin): Keep this as a thin Netlify adapter only until apps/api has a
-  // chosen runtime. The real route must verify this bearer token server-side.
+  // TODO(admin): Implement the real admin access flow (separate from groomer
+  // membership claim review). Until then this endpoint returns 501 through the
+  // public error allowlist so no raw exception message leaks.
   if (event.httpMethod !== 'GET') {
     return json(405, { error: 'Method Not Allowed' });
   }
@@ -24,13 +26,9 @@ export async function handler(event) {
     const requests = await listPendingAdminAccessRequests({
       accessToken: getBearerToken(event),
       env: process.env,
-      requestId: event.headers?.['x-nf-request-id'] || '',
     });
     return json(200, { requests });
   } catch (error) {
-    return json(error.status || 500, {
-      code: error.code || 'ADMIN_ACCESS_ERROR',
-      error: error.message,
-    });
+    return json(error.status || 500, toPublicAdminErrorBody(error));
   }
 }

@@ -1,6 +1,6 @@
 // @vitest-environment node
 
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import {
   getGroomerVerificationAuditTrail,
@@ -94,6 +94,8 @@ function reviewSuccessResult(overrides = {}) {
       role: 'owner',
       status: 'verified',
       updated_at: '2026-05-23T15:00:00Z',
+      groomer: { name: 'Jill at Happy Tails', salon: 'Happy Tails' },
+      groomer_account: { name: 'Jill', email: 'jill@example.com' },
       ...overrides,
     },
     error: null,
@@ -374,6 +376,85 @@ describe('reviewGroomerMembershipClaim', () => {
         validInput,
       ),
     ).resolves.toMatchObject({ id: VALID_MEMBERSHIP_UUID, status: 'verified' });
+  });
+
+  it('logs a structured notify-needed warning with recipient info after a successful review', async () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const supabase = fakeSupabaseClient({
+      getUser: async () => adminUserPayload,
+      updateResult: reviewSuccessResult(),
+    });
+
+    try {
+      await reviewGroomerMembershipClaim(
+        { accessToken: adminAccessToken, env: adminEnv, supabase },
+        { membershipId: VALID_MEMBERSHIP_UUID, decision: 'verify' },
+      );
+
+      const notifyCall = warnSpy.mock.calls.find((args) =>
+        String(args[0] || '').includes('notify-needed'),
+      );
+      expect(notifyCall).toBeDefined();
+      expect(notifyCall[1]).toMatchObject({
+        notifyNeeded: true,
+        membershipId: VALID_MEMBERSHIP_UUID,
+        decision: 'verify',
+        nextStatus: 'verified',
+        recipientEmail: 'jill@example.com',
+        recipientName: 'Jill',
+        groomerName: 'Jill at Happy Tails',
+        groomerSalon: 'Happy Tails',
+      });
+    } finally {
+      warnSpy.mockRestore();
+    }
+  });
+
+  it('emits notify-needed with nulls when joined groomer/account rows are missing', async () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const supabase = fakeSupabaseClient({
+      getUser: async () => adminUserPayload,
+      updateResult: reviewSuccessResult({ groomer: null, groomer_account: null }),
+    });
+
+    try {
+      await reviewGroomerMembershipClaim(
+        { accessToken: adminAccessToken, env: adminEnv, supabase },
+        { membershipId: VALID_MEMBERSHIP_UUID, decision: 'verify' },
+      );
+
+      const notifyCall = warnSpy.mock.calls.find((args) =>
+        String(args[0] || '').includes('notify-needed'),
+      );
+      expect(notifyCall[1]).toMatchObject({
+        recipientEmail: null,
+        recipientName: null,
+        groomerName: null,
+        groomerSalon: null,
+      });
+    } finally {
+      warnSpy.mockRestore();
+    }
+  });
+
+  it('selects the joined groomer and groomer_account columns needed for notify-needed', async () => {
+    const capturedSelect = {};
+    const supabase = fakeSupabaseClient({
+      getUser: async () => adminUserPayload,
+      updateResult: reviewSuccessResult(),
+      capturedSelect,
+    });
+
+    await reviewGroomerMembershipClaim(
+      { accessToken: adminAccessToken, env: adminEnv, supabase },
+      { membershipId: VALID_MEMBERSHIP_UUID, decision: 'verify' },
+    );
+
+    const selectString = capturedSelect.groomer_memberships || '';
+    expect(selectString).toContain('groomers');
+    expect(selectString).toContain('groomer_accounts');
+    expect(selectString).toContain('email');
+    expect(selectString).toContain('name');
   });
 
   it('lowercases the reviewer email written to the audit event', async () => {
