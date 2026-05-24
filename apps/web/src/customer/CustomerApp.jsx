@@ -198,22 +198,28 @@ export function CustomerApp({ initialSection = 'customer' }) {
       return undefined;
     }
 
+    // Debounce so we are not firing Nominatim on every keystroke. Nominatim's
+    // public instance rate-limits to ~1 request/sec, so an undebounced loop
+    // produces throttled empty responses and looks like the suggestions are
+    // broken when in reality they are just being dropped.
     let cancelled = false;
-
-    Promise.resolve(suggestAddresses(address))
-      .then((suggestions) => {
-        if (!cancelled) {
-          setAddressSuggestions(Array.isArray(suggestions) ? suggestions : []);
-        }
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setAddressSuggestions([]);
-        }
-      });
+    const timeoutId = setTimeout(() => {
+      Promise.resolve(suggestAddresses(address))
+        .then((suggestions) => {
+          if (!cancelled) {
+            setAddressSuggestions(Array.isArray(suggestions) ? suggestions : []);
+          }
+        })
+        .catch(() => {
+          if (!cancelled) {
+            setAddressSuggestions([]);
+          }
+        });
+    }, 300);
 
     return () => {
       cancelled = true;
+      clearTimeout(timeoutId);
     };
   }, [address, currentLocationCoords]);
 
