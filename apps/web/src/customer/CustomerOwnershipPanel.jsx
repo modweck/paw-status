@@ -8,6 +8,7 @@ import {
 } from '../api/customers.js';
 import { requireSupabaseClient } from '../lib/supabaseClient.js';
 import { BookingRequestPanel } from './BookingRequestPanel.jsx';
+import { BookingsListPanel } from './BookingsListPanel.jsx';
 import { CustomerDogsPanel } from './CustomerDogsPanel.jsx';
 
 function ProfileSummary({ customer }) {
@@ -285,6 +286,7 @@ export function CustomerOwnershipPanel({
           selectedGroomer={selectedGroomer}
           selectedService={selectedService}
         />
+        <BookingsListPanel customer={customer} />
       </>
     );
   }

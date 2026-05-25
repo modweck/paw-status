@@ -3,6 +3,8 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   buildPreferredWindows,
   createBookingRequest,
+  loadCustomerBookingRequests,
+  mapBookingRequestListRow,
   mapBookingRequestRow,
   TIME_OF_DAY_OPTIONS,
 } from './bookingRequests.js';
@@ -179,5 +181,156 @@ describe('booking request api', () => {
       }),
     ).rejects.toThrow('Choose a valid preferred date.');
     expect(client.spies.insert).not.toHaveBeenCalled();
+  });
+});
+
+describe('mapBookingRequestListRow', () => {
+  it('attaches the joined groomer and dog from PostgREST as flat objects', () => {
+    expect(
+      mapBookingRequestListRow({
+        id: 'request-2',
+        customer_id: customer.id,
+        dog_id: dog.id,
+        groomer_id: groomer.id,
+        service: 'bath-brush',
+        preferred_windows: [{ type: 'first-available' }],
+        customer_notes: 'No fragrance',
+        status: 'requested',
+        external_booking_url: '',
+        created_at: '2026-05-20T10:00:00.000Z',
+        updated_at: '2026-05-20T10:00:00.000Z',
+        groomer: { id: 'g-1', name: 'Jill', salon: 'Happy Tails' },
+        dog: { id: 'd-1', name: 'Mochi' },
+      }),
+    ).toEqual({
+      id: 'request-2',
+      customerId: customer.id,
+      dogId: dog.id,
+      groomerId: groomer.id,
+      service: 'bath-brush',
+      preferredWindows: [{ type: 'first-available' }],
+      customerNotes: 'No fragrance',
+      status: 'requested',
+      externalBookingUrl: '',
+      createdAt: '2026-05-20T10:00:00.000Z',
+      updatedAt: '2026-05-20T10:00:00.000Z',
+      groomer: { id: 'g-1', name: 'Jill', salon: 'Happy Tails' },
+      dog: { id: 'd-1', name: 'Mochi' },
+    });
+  });
+
+  it('unwraps single-item arrays returned by Supabase for embedded resources', () => {
+    const mapped = mapBookingRequestListRow({
+      id: 'request-3',
+      customer_id: customer.id,
+      dog_id: dog.id,
+      groomer_id: groomer.id,
+      service: 'bath',
+      preferred_windows: [],
+      customer_notes: '',
+      status: 'requested',
+      external_booking_url: '',
+      created_at: '',
+      updated_at: '',
+      groomer: [{ id: 'g-1', name: 'Jill', salon: null }],
+      dog: [{ id: 'd-1', name: 'Mochi' }],
+    });
+    expect(mapped.groomer).toEqual({ id: 'g-1', name: 'Jill', salon: null });
+    expect(mapped.dog).toEqual({ id: 'd-1', name: 'Mochi' });
+  });
+
+  it('returns null groomer/dog when the joined rows are missing', () => {
+    const mapped = mapBookingRequestListRow({
+      id: 'request-4',
+      customer_id: customer.id,
+      dog_id: dog.id,
+      groomer_id: groomer.id,
+      service: '',
+      preferred_windows: [],
+      customer_notes: '',
+      status: 'requested',
+      external_booking_url: '',
+      created_at: '',
+      updated_at: '',
+      groomer: null,
+      dog: null,
+    });
+    expect(mapped.groomer).toBeNull();
+    expect(mapped.dog).toBeNull();
+  });
+
+  it('falls back updatedAt to createdAt when updated_at is missing', () => {
+    const mapped = mapBookingRequestListRow({
+      id: 'request-5',
+      customer_id: customer.id,
+      dog_id: dog.id,
+      groomer_id: groomer.id,
+      service: '',
+      preferred_windows: [],
+      customer_notes: '',
+      status: 'requested',
+      external_booking_url: '',
+      created_at: '2026-05-20T10:00:00.000Z',
+      updated_at: null,
+    });
+    expect(mapped.updatedAt).toBe('2026-05-20T10:00:00.000Z');
+  });
+});
+
+describe('loadCustomerBookingRequests', () => {
+  function makeSelectClient(rows, error = null) {
+    const order = vi.fn().mockResolvedValue({ data: rows, error });
+    const eq = vi.fn(() => ({ order }));
+    const select = vi.fn(() => ({ eq }));
+    const from = vi.fn(() => ({ select }));
+    return {
+      from,
+      spies: { from, select, eq, order },
+    };
+  }
+
+  it('queries appointment_requests for the customer, newest first, and returns mapped rows', async () => {
+    const client = makeSelectClient([
+      {
+        id: 'request-a',
+        customer_id: customer.id,
+        dog_id: dog.id,
+        groomer_id: groomer.id,
+        service: 'bath',
+        preferred_windows: [],
+        customer_notes: '',
+        status: 'requested',
+        external_booking_url: '',
+        created_at: '2026-05-21',
+        updated_at: '2026-05-21',
+        groomer: { id: 'g-1', name: 'Jill', salon: 'Happy Tails' },
+        dog: { id: 'd-1', name: 'Mochi' },
+      },
+    ]);
+
+    const rows = await loadCustomerBookingRequests(client, customer);
+    expect(client.spies.from).toHaveBeenCalledWith('appointment_requests');
+    expect(client.spies.eq).toHaveBeenCalledWith('customer_id', customer.id);
+    expect(client.spies.order).toHaveBeenCalledWith('created_at', { ascending: false });
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({ id: 'request-a', groomer: { name: 'Jill' } });
+  });
+
+  it('returns an empty array when there are no requests', async () => {
+    const client = makeSelectClient([]);
+    await expect(loadCustomerBookingRequests(client, customer)).resolves.toEqual([]);
+  });
+
+  it('throws when Supabase returns an error', async () => {
+    const client = makeSelectClient(null, { message: 'rls denied' });
+    await expect(loadCustomerBookingRequests(client, customer)).rejects.toThrow('rls denied');
+  });
+
+  it('requires a customer with an id before issuing the query', async () => {
+    const client = makeSelectClient([]);
+    await expect(loadCustomerBookingRequests(client, { id: '' })).rejects.toThrow(
+      /Customer profile required/i,
+    );
+    expect(client.spies.from).not.toHaveBeenCalled();
   });
 });

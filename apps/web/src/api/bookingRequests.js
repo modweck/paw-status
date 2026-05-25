@@ -1,6 +1,10 @@
 const BOOKING_REQUEST_FIELDS =
   'id, customer_id, dog_id, groomer_id, service, preferred_windows, customer_notes, status, external_booking_url, created_at';
 
+const BOOKING_REQUEST_LIST_FIELDS = `id, customer_id, dog_id, groomer_id, service, preferred_windows, customer_notes, status, external_booking_url, created_at, updated_at,
+  groomer:groomers ( id, name, salon ),
+  dog:dogs ( id, name )`;
+
 export const PREFERRED_WINDOW_OPTIONS = [
   { value: 'first-available', label: 'First available' },
   { value: 'weekday-morning', label: 'Weekday morning' },
@@ -34,6 +38,38 @@ export function mapBookingRequestRow(row) {
     status: row.status || '',
     externalBookingUrl: row.external_booking_url || '',
     createdAt: row.created_at || '',
+  };
+}
+
+function unwrapNested(value) {
+  // PostgREST returns embedded resources as either a single object or a
+  // single-item array depending on the join cardinality. Normalise so the
+  // caller can rely on a plain object.
+  return Array.isArray(value) ? value[0] || null : value || null;
+}
+
+export function mapBookingRequestListRow(row) {
+  if (!row) return null;
+
+  const groomer = unwrapNested(row.groomer);
+  const dog = unwrapNested(row.dog);
+
+  return {
+    ...mapBookingRequestRow(row),
+    updatedAt: row.updated_at || row.created_at || '',
+    groomer: groomer
+      ? {
+          id: groomer.id || null,
+          name: groomer.name || null,
+          salon: groomer.salon || null,
+        }
+      : null,
+    dog: dog
+      ? {
+          id: dog.id || null,
+          name: dog.name || null,
+        }
+      : null,
   };
 }
 
@@ -190,4 +226,19 @@ export async function createBookingRequest(supabase, customer, dog, groomer, req
   }
 
   return mapBookingRequestRow(data);
+}
+
+export async function loadCustomerBookingRequests(supabase, customer) {
+  const customerId = requireCustomerId(customer);
+  const { data, error } = await supabase
+    .from('appointment_requests')
+    .select(BOOKING_REQUEST_LIST_FIELDS)
+    .eq('customer_id', customerId)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return (data || []).map(mapBookingRequestListRow).filter(Boolean);
 }
