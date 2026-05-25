@@ -219,4 +219,61 @@ describe('BookingRequestPanel', () => {
     });
     expect(within(screen.getByText('Booking request saved').parentElement).queryByRole('link')).toBeNull();
   });
+
+  it('calls onRequestCreated with the created request after a successful submit', async () => {
+    requireSupabaseClient.mockReturnValue(supabase);
+    const createdRequest = {
+      id: 'request-3',
+      customerId: customer.id,
+      dogId: dogs[0].id,
+      groomerId: groomers[0].id,
+      service: 'full-groom',
+      preferredWindows: [{ type: 'first-available' }],
+      status: 'requested',
+      externalBookingUrl: '',
+    };
+    createBookingRequest.mockResolvedValueOnce(createdRequest);
+    const onRequestCreated = vi.fn();
+
+    render(
+      <BookingRequestPanel
+        customer={customer}
+        dogs={dogs}
+        groomers={groomers}
+        onRequestCreated={onRequestCreated}
+        selectedGroomer={groomers[0]}
+        selectedService={selectedService}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Request booking' }));
+
+    await waitFor(() => {
+      expect(onRequestCreated).toHaveBeenCalledWith(createdRequest);
+    });
+  });
+
+  it('does not call onRequestCreated when the submit fails', async () => {
+    requireSupabaseClient.mockReturnValue(supabase);
+    createBookingRequest.mockRejectedValueOnce(new Error('boom'));
+    const onRequestCreated = vi.fn();
+
+    render(
+      <BookingRequestPanel
+        customer={customer}
+        dogs={dogs}
+        groomers={groomers}
+        onRequestCreated={onRequestCreated}
+        selectedGroomer={groomers[0]}
+        selectedService={selectedService}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Request booking' }));
+
+    await waitFor(() => {
+      expect(screen.getByText('boom')).toBeInTheDocument();
+    });
+    expect(onRequestCreated).not.toHaveBeenCalled();
+  });
 });

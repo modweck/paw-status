@@ -111,12 +111,13 @@ function BookingItem({ request }) {
   );
 }
 
-export function BookingsListPanel({ customer }) {
+export function BookingsListPanel({ customer, refreshKey = 0 }) {
   const [status, setStatus] = useState('idle');
   const [requests, setRequests] = useState([]);
   const [error, setError] = useState('');
-  // Refresh button bumps this counter to re-trigger the loader effect
-  // without a useCallback that would duplicate the loader logic.
+  // Internal counter for the in-component Refresh button. The optional
+  // `refreshKey` prop lets sibling components (e.g. BookingRequestPanel
+  // after a successful submit) trigger the same re-fetch.
   const [refreshTick, setRefreshTick] = useState(0);
 
   useEffect(() => {
@@ -150,10 +151,11 @@ export function BookingsListPanel({ customer }) {
     return () => {
       cancelled = true;
     };
-    // customer is intentionally referenced via customer?.id only so we don't
-    // re-fetch when the parent passes a new object with the same id.
+    // The full `customer` object is intentionally OMITTED from the deps so a
+    // new object reference with the same id does not trigger a re-fetch.
+    // customer.id, refreshTick, and refreshKey ARE included on purpose.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [customer?.id, refreshTick]);
+  }, [customer?.id, refreshTick, refreshKey]);
 
   return (
     <section className="signed-in-card bookings-list-panel">

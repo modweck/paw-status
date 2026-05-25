@@ -119,6 +119,57 @@ describe('BookingsListPanel', () => {
     expect(loadCustomerBookingRequests).not.toHaveBeenCalled();
   });
 
+  it('re-fetches when the refreshKey prop changes (auto-refresh after new booking)', async () => {
+    loadCustomerBookingRequests
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([
+        {
+          id: 'request-new',
+          status: 'requested',
+          service: 'bath',
+          createdAt: '2026-05-25T00:00:00.000Z',
+          externalBookingUrl: '',
+          groomer: { id: 'g-1', name: 'Jill', salon: null },
+          dog: { id: 'd-1', name: 'Mochi' },
+        },
+      ]);
+
+    const { rerender } = render(
+      <BookingsListPanel customer={customer} refreshKey={0} />,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText(/no booking requests yet/i)).toBeInTheDocument();
+    });
+    expect(loadCustomerBookingRequests).toHaveBeenCalledTimes(1);
+
+    rerender(<BookingsListPanel customer={customer} refreshKey={1} />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Request sent')).toBeInTheDocument();
+    });
+    expect(loadCustomerBookingRequests).toHaveBeenCalledTimes(2);
+  });
+
+  it('does not re-fetch when refreshKey stays the same across re-renders', async () => {
+    loadCustomerBookingRequests.mockResolvedValueOnce([]);
+
+    const { rerender } = render(
+      <BookingsListPanel customer={customer} refreshKey={0} />,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText(/no booking requests yet/i)).toBeInTheDocument();
+    });
+    expect(loadCustomerBookingRequests).toHaveBeenCalledTimes(1);
+
+    // Parent re-renders without bumping the key.
+    rerender(<BookingsListPanel customer={customer} refreshKey={0} />);
+
+    // Effect should not have fired again.
+    expect(loadCustomerBookingRequests).toHaveBeenCalledTimes(1);
+  });
+
   it('falls back to a prettified label for an unknown status without crashing', async () => {
     loadCustomerBookingRequests.mockResolvedValueOnce([
       {

@@ -180,8 +180,14 @@ export function CustomerOwnershipPanel({
   const [form, setForm] = useState({ name: '', phone: '' });
   const [status, setStatus] = useState('loading');
   const [error, setError] = useState('');
+  // Bump after a new booking request to make BookingsListPanel re-fetch
+  // without it having to subscribe to anything from BookingRequestPanel.
+  const [bookingsRefreshKey, setBookingsRefreshKey] = useState(0);
   const handleDogsChange = useCallback((nextDogs) => {
     setDogs(nextDogs);
+  }, []);
+  const handleBookingRequestCreated = useCallback(() => {
+    setBookingsRefreshKey((tick) => tick + 1);
   }, []);
 
   useEffect(() => {
@@ -283,10 +289,11 @@ export function CustomerOwnershipPanel({
           customer={customer}
           dogs={dogs}
           groomers={groomers}
+          onRequestCreated={handleBookingRequestCreated}
           selectedGroomer={selectedGroomer}
           selectedService={selectedService}
         />
-        <BookingsListPanel customer={customer} />
+        <BookingsListPanel customer={customer} refreshKey={bookingsRefreshKey} />
       </>
     );
   }

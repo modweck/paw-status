@@ -71,6 +71,7 @@ export function BookingRequestPanel({
   customer,
   dogs,
   groomers,
+  onRequestCreated,
   selectedGroomer,
   selectedService,
 }) {
@@ -175,6 +176,11 @@ export function BookingRequestPanel({
       );
       setBookingRequest(request);
       setStatus('saved');
+      // Let parents (e.g. CustomerOwnershipPanel) refresh their own
+      // bookings views without each having to subscribe to Supabase.
+      if (typeof onRequestCreated === 'function') {
+        onRequestCreated(request);
+      }
     } catch (nextError) {
       setError(nextError.message);
       setStatus('idle');
