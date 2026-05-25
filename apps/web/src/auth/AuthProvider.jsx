@@ -61,7 +61,7 @@ export function AuthProvider({ children }) {
       return;
     }
 
-    setAuthMessage('Check your email for a PawStatus sign-in link.');
+    setAuthMessage('Check your email for a ShinyPawz sign-in link.');
   }
 
   async function signInWithPassword(email, password) {
@@ -83,7 +83,7 @@ export function AuthProvider({ children }) {
       return;
     }
 
-    setAuthMessage('Signed in to your PawStatus account.');
+    setAuthMessage('Signed in to your ShinyPawz account.');
   }
 
   async function signOut() {

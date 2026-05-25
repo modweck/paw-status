@@ -254,7 +254,7 @@ export function CustomerOwnershipPanel({
         </div>
         <div>
           <h2>Loading customer profile...</h2>
-          <p>Checking your signed-in account against your PawStatus customer row.</p>
+          <p>Checking your signed-in account against your ShinyPawz customer row.</p>
         </div>
       </section>
     );

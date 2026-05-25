@@ -58,12 +58,12 @@ function AdminSignIn() {
         </div>
         <div>
           <h2>Admin sign in</h2>
-          <p>Use a PawStatus admin account before reviewing groomer claims or admin access.</p>
+          <p>Use a ShinyPawz admin account before reviewing groomer claims or admin access.</p>
         </div>
         <LoginPanel
           compact
           title="Admin login"
-          description="Sign in with a trusted PawStatus admin email. Access still needs server-side admin authorization."
+          description="Sign in with a trusted ShinyPawz admin email. Access still needs server-side admin authorization."
         />
       </section>
     </section>

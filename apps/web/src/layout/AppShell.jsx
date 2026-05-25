@@ -24,7 +24,7 @@ export function AppShell({ route, children, onNavigate }) {
     <div className="app-frame">
       <header className="topbar">
         <a className="brand" href="/">
-          <span>Paw</span>Status
+          <span>Shiny</span>Pawz
         </a>
         <div className="topbar__session">
           {user ? (

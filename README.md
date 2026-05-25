@@ -1,6 +1,10 @@
-# PawStatus
+# ShinyPawz
 
-PawStatus is a prototype dog grooming booking product. The current repo contains:
+> The repo and package names are still `paw-status` because that's the original
+> working title; only the user-facing brand has been renamed to ShinyPawz. A
+> codebase-wide rename can come later once the brand is locked in production.
+
+ShinyPawz is a prototype dog grooming booking product. The current repo contains:
 
 - A small npm workspace monorepo with the deployable web app in `apps/web`
 - A Vite + React customer app in `apps/web/src/`
