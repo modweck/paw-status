@@ -4,9 +4,10 @@ import {
   ClipboardList,
   ExternalLink,
   LockKeyhole,
+  RotateCw,
   UserRound,
 } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { LoginPanel } from '../auth/LoginPanel.jsx';
 import { useAuth } from '../auth/AuthProvider.jsx';
@@ -290,16 +291,33 @@ function MembershipSummary({ account, memberships, setWorkspace, verifiedMembers
   );
 }
 
+function formatRequestedDate(value) {
+  if (!value) return '';
+  try {
+    return new Intl.DateTimeFormat(undefined, {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    }).format(new Date(value));
+  } catch {
+    return '';
+  }
+}
+
 function RequestPacket({ bookingChannels, onUpdateStatus, request, updatingRequestId }) {
   const externalBookingUrl = findExternalBookingUrl(request, bookingChannels);
   const disabled = updatingRequestId === request.id;
+  const requestedDate = formatRequestedDate(request.createdAt);
 
   return (
     <article className="request-packet">
       <div className="request-packet__header">
         <div>
           <h3>{request.dog.name || 'Dog'}</h3>
-          <p>{request.service}</p>
+          <p>
+            {request.service}
+            {requestedDate ? ` · Requested ${requestedDate}` : ''}
+          </p>
         </div>
         <span>{formatAppointmentRequestStatus(request.status)}</span>
       </div>
@@ -359,7 +377,7 @@ function RequestPacket({ bookingChannels, onUpdateStatus, request, updatingReque
   );
 }
 
-function RequestList({ bookingChannels, requests, setWorkspace }) {
+function RequestList({ bookingChannels, onRefresh, refreshing, requests, setWorkspace }) {
   const [updatingRequestId, setUpdatingRequestId] = useState('');
   const [error, setError] = useState('');
 
@@ -389,9 +407,23 @@ function RequestList({ bookingChannels, requests, setWorkspace }) {
       <div className="login-panel__icon">
         <ClipboardList size={18} />
       </div>
-      <div>
-        <h2>Appointment requests</h2>
-        <p>{requests.length} open request packets</p>
+      <div className="bookings-list-panel__heading">
+        <div>
+          <h2>Appointment requests</h2>
+          <p>{requests.length} open request packets</p>
+        </div>
+        {onRefresh ? (
+          <button
+            aria-busy={refreshing}
+            className="admin-refresh-button"
+            disabled={refreshing}
+            onClick={onRefresh}
+            type="button"
+          >
+            <RotateCw size={14} aria-hidden="true" />
+            {refreshing ? 'Loading' : 'Refresh'}
+          </button>
+        ) : null}
       </div>
       {requests.length ? (
         <div className="request-list">
@@ -475,12 +507,21 @@ function GroomerWorkspace({ requestHandlingEnabled = true }) {
   const [workspace, setWorkspace] = useState(null);
   const [status, setStatus] = useState('loading');
   const [error, setError] = useState('');
+  const [refreshing, setRefreshing] = useState(false);
+  // Bumped by the Refresh button so the loader effect re-runs without
+  // having to duplicate the load logic in a separate handler.
+  const [refreshTick, setRefreshTick] = useState(0);
 
   useEffect(() => {
     let mounted = true;
+    const isInitialLoad = refreshTick === 0;
 
     async function loadWorkspace() {
-      setStatus('loading');
+      if (isInitialLoad) {
+        setStatus('loading');
+      } else {
+        setRefreshing(true);
+      }
       setError('');
 
       try {
@@ -494,6 +535,8 @@ function GroomerWorkspace({ requestHandlingEnabled = true }) {
         if (!mounted) return;
         setError(nextError.message);
         setStatus('error');
+      } finally {
+        if (mounted) setRefreshing(false);
       }
     }
 
@@ -502,7 +545,11 @@ function GroomerWorkspace({ requestHandlingEnabled = true }) {
     return () => {
       mounted = false;
     };
-  }, [requestHandlingEnabled]);
+  }, [requestHandlingEnabled, refreshTick]);
+
+  const refreshWorkspace = useCallback(() => {
+    setRefreshTick((tick) => tick + 1);
+  }, []);
 
   const accountCreatedWorkspace = useMemo(
     () => ({
@@ -568,6 +615,8 @@ function GroomerWorkspace({ requestHandlingEnabled = true }) {
         <>
           <RequestList
             bookingChannels={workspace.bookingChannels}
+            onRefresh={refreshWorkspace}
+            refreshing={refreshing}
             requests={workspace.requests}
             setWorkspace={setWorkspace}
           />

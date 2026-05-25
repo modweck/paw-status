@@ -218,6 +218,60 @@ describe('StaffDashboard', () => {
     });
   });
 
+  it('renders the request created-at date in the packet when present', async () => {
+    isStaffDashboardEnabled.mockReturnValue(true);
+    useAuth.mockReturnValue({ loading: false, user });
+    requireSupabaseClient.mockReturnValue(supabase);
+    loadGroomerWorkspaceForVerifiedUser.mockResolvedValueOnce({
+      ...workspace,
+      requests: [
+        {
+          ...workspace.requests[0],
+          createdAt: '2026-05-20T12:00:00.000Z',
+        },
+      ],
+    });
+
+    render(<StaffDashboard />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Mochi')).toBeInTheDocument();
+    });
+    expect(screen.getByText(/Requested May 20, 2026/)).toBeInTheDocument();
+  });
+
+  it('refreshes the workspace when the groomer clicks Refresh on the request list', async () => {
+    isStaffDashboardEnabled.mockReturnValue(true);
+    useAuth.mockReturnValue({ loading: false, user });
+    requireSupabaseClient.mockReturnValue(supabase);
+    loadGroomerWorkspaceForVerifiedUser
+      .mockResolvedValueOnce(workspace)
+      .mockResolvedValueOnce({
+        ...workspace,
+        requests: [
+          {
+            ...workspace.requests[0],
+            id: 'request-2',
+            dog: { ...workspace.requests[0].dog, name: 'Bella' },
+          },
+        ],
+      });
+
+    render(<StaffDashboard />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Mochi')).toBeInTheDocument();
+    });
+    expect(loadGroomerWorkspaceForVerifiedUser).toHaveBeenCalledTimes(1);
+
+    fireEvent.click(screen.getByRole('button', { name: /refresh/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText('Bella')).toBeInTheDocument();
+    });
+    expect(loadGroomerWorkspaceForVerifiedUser).toHaveBeenCalledTimes(2);
+  });
+
   it('shows owned appointment requests for verified groomer memberships', async () => {
     isStaffDashboardEnabled.mockReturnValue(true);
     useAuth.mockReturnValue({ loading: false, user });
