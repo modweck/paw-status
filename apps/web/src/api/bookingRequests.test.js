@@ -259,6 +259,28 @@ describe('mapBookingRequestListRow', () => {
     expect(mapped.dog).toBeNull();
   });
 
+  it('coerces null external_booking_url, customer_notes, and service to empty strings', () => {
+    const mapped = mapBookingRequestListRow({
+      id: 'request-null',
+      customer_id: customer.id,
+      dog_id: dog.id,
+      groomer_id: groomer.id,
+      service: null,
+      preferred_windows: null,
+      customer_notes: null,
+      status: 'requested',
+      external_booking_url: null,
+      created_at: '2026-05-20T10:00:00.000Z',
+      updated_at: '2026-05-20T10:00:00.000Z',
+      groomer: null,
+      dog: null,
+    });
+    expect(mapped.externalBookingUrl).toBe('');
+    expect(mapped.customerNotes).toBe('');
+    expect(mapped.service).toBe('');
+    expect(mapped.preferredWindows).toEqual([]);
+  });
+
   it('falls back updatedAt to createdAt when updated_at is missing', () => {
     const mapped = mapBookingRequestListRow({
       id: 'request-5',

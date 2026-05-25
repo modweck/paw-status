@@ -78,9 +78,10 @@ function groomerLabel(request) {
 function BookingItem({ request }) {
   const status = formatCustomerStatus(request.status);
   const date = formatBookingDate(request.createdAt);
+  const accessibleLabel = `${groomerLabel(request)} — ${status.label}`;
 
   return (
-    <article className="bookings-list__item">
+    <article className="bookings-list__item" aria-label={accessibleLabel}>
       <header className="bookings-list__item-header">
         <div>
           <h3>{groomerLabel(request)}</h3>
@@ -163,11 +164,13 @@ export function BookingsListPanel({ customer }) {
         <div>
           <h2>Your bookings</h2>
           <p>
-            {status === 'loading'
+            {status === 'idle' || status === 'loading'
               ? 'Loading your requests...'
-              : requests.length
-                ? `${requests.length} request${requests.length === 1 ? '' : 's'}`
-                : 'No booking requests yet.'}
+              : status === 'error'
+                ? 'Could not load your bookings.'
+                : requests.length
+                  ? `${requests.length} request${requests.length === 1 ? '' : 's'}`
+                  : 'No booking requests yet.'}
           </p>
         </div>
         <button
