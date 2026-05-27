@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Heart, Star } from 'lucide-react';
+import { Heart, LocateFixed, Star } from 'lucide-react';
 
 import { LoginPanel } from '../auth/LoginPanel.jsx';
 import { getBrowserLocation } from '../api/browserLocation.js';
@@ -167,6 +167,7 @@ export function CustomerApp({ initialSection = 'customer' }) {
   const [error, setError] = useState('');
   const [favoriteGroomerId, setFavoriteGroomerId] = useState('');
   const [guestClaimNotice, setGuestClaimNotice] = useState(null);
+  const [locatingMe, setLocatingMe] = useState(false);
   const manualSearchStartedRef = useRef(false);
   const selectedService = useMemo(
     () => GROOMING_SERVICES.find((service) => service.id === serviceId) ?? GROOMING_SERVICES[0],
@@ -404,6 +405,41 @@ export function CustomerApp({ initialSection = 'customer' }) {
     setAddressSuggestions([]);
   }
 
+  async function handleUseMyLocation() {
+    if (locatingMe) return;
+    setLocatingMe(true);
+    setError('');
+    manualSearchStartedRef.current = true;
+    try {
+      const browserLocation = await getBrowserLocation();
+      if (!browserLocation) {
+        setError('Browser location is unavailable. Type your address or ZIP.');
+        return;
+      }
+      const refreshedLocation = await reverseGeocodeLocation(browserLocation).catch(
+        () => null,
+      );
+      const searchLocation = {
+        ...browserLocation,
+        address: formatResolvedAddress(refreshedLocation),
+        displayName: refreshedLocation?.displayName || '',
+      };
+      const nextRadiusOptions = radiusOptionsForLocation(searchLocation);
+
+      setAddress(formatResolvedAddress(searchLocation));
+      setCurrentLocationCoords(searchLocation);
+      setSelectedAddressLocation(null);
+      setAddressSuggestions([]);
+      setHasSearchLocation(true);
+      setRadiusOptions(nextRadiusOptions);
+      setRadiusMeters(DEFAULT_RADIUS_METERS);
+    } catch (nextError) {
+      setError(nextError.message || 'Could not read your location.');
+    } finally {
+      setLocatingMe(false);
+    }
+  }
+
   function handleFavoriteGroomer(groomer) {
     setFavoriteGroomerId(groomer.id);
     saveFavoriteGroomerId(user, groomer.id);
@@ -475,16 +511,30 @@ export function CustomerApp({ initialSection = 'customer' }) {
       <form className="search-panel" onSubmit={handleSearch}>
         <label>
           <span>Location</span>
-          <input
-            aria-label="Location"
-            autoComplete="street-address"
-            value={address}
-            onChange={(event) => {
-              setAddress(event.target.value);
-              setCurrentLocationCoords(null);
-              setSelectedAddressLocation(null);
-            }}
-          />
+          <div className="location-input">
+            <input
+              aria-label="Location"
+              autoComplete="street-address"
+              value={address}
+              onChange={(event) => {
+                setAddress(event.target.value);
+                setCurrentLocationCoords(null);
+                setSelectedAddressLocation(null);
+              }}
+            />
+            <button
+              type="button"
+              className="location-input__use-current"
+              aria-label="Use my location"
+              aria-busy={locatingMe}
+              disabled={locatingMe}
+              onClick={handleUseMyLocation}
+              title="Use my location"
+            >
+              <LocateFixed size={16} aria-hidden="true" />
+              <span>{locatingMe ? 'Locating…' : 'Use my location'}</span>
+            </button>
+          </div>
           {addressSuggestions.length ? (
             <div className="address-suggestions" role="listbox" aria-label="Address suggestions">
               {addressSuggestions.map((suggestion) => (

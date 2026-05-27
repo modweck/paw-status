@@ -156,6 +156,51 @@ a {
   gap: 14px;
 }
 
+.location-input {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+}
+
+.location-input input {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.location-input__use-current {
+  align-items: center;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  color: var(--accent-strong);
+  cursor: pointer;
+  display: inline-flex;
+  flex: 0 0 auto;
+  font-size: 12px;
+  font-weight: 700;
+  gap: 6px;
+  padding: 11px 12px;
+  white-space: nowrap;
+}
+
+.location-input__use-current:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+
+.location-input__use-current:disabled {
+  cursor: progress;
+  opacity: 0.7;
+}
+
+@media (max-width: 480px) {
+  .location-input__use-current span {
+    display: none;
+  }
+  .location-input__use-current {
+    padding: 11px;
+  }
+}
+
 .address-suggestions {
   display: grid;
   gap: 6px;

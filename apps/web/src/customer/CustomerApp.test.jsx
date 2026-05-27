@@ -100,6 +100,57 @@ describe('CustomerApp default groomer loading', () => {
     expect(screen.getByLabelText('Location')).toHaveValue('Lower East Side, New York, NY');
   });
 
+  it('lets the customer grant location later by clicking Use my location', async () => {
+    // Initial mount: permission denied -> no location.
+    getBrowserLocation.mockResolvedValueOnce(null);
+    fetchNearbyGroomers.mockResolvedValue([]);
+
+    render(<CustomerApp />);
+
+    await waitFor(() => {
+      expect(
+        screen.getByText('Enter a ZIP code or allow location to find groomers.'),
+      ).toBeInTheDocument();
+    });
+    expect(screen.getByLabelText('Location')).toHaveValue('');
+
+    // Click "Use my location" -> permission granted this time.
+    getBrowserLocation.mockResolvedValueOnce({ lat: 40.768, lng: -73.958 });
+    reverseGeocodeLocation.mockResolvedValueOnce({
+      displayName: 'Upper East Side, New York, NY',
+      lat: 40.768,
+      lng: -73.958,
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /use my location/i }));
+
+    await waitFor(() => {
+      expect(screen.getByLabelText('Location')).toHaveValue(
+        'Upper East Side, New York, NY',
+      );
+    });
+  });
+
+  it('surfaces a helpful error when Use my location returns nothing', async () => {
+    getBrowserLocation.mockResolvedValueOnce(null);
+    fetchNearbyGroomers.mockResolvedValue([]);
+
+    render(<CustomerApp />);
+
+    await waitFor(() => {
+      expect(screen.getByLabelText('Location')).toHaveValue('');
+    });
+
+    getBrowserLocation.mockResolvedValueOnce(null);
+    fireEvent.click(screen.getByRole('button', { name: /use my location/i }));
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(/browser location is unavailable/i),
+      ).toBeInTheDocument();
+    });
+  });
+
   it('organizes the service picker into labeled sections', async () => {
     getBrowserLocation.mockResolvedValueOnce(null);
     fetchNearbyGroomers.mockResolvedValueOnce([]);
