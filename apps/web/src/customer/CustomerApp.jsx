@@ -218,7 +218,12 @@ export function CustomerApp({ initialSection = 'customer' }) {
     // Bias the suggestion ranking toward the user's current/selected location
     // when known so a search for "515 east 72nd street" from NYC does not
     // surface a Utah address before the Manhattan one.
-    const biasLocation = currentLocationCoords || selectedAddressLocation || null;
+    // Fall back to STARTER_LOCATION (NYC) when we have no real bias yet.
+    // Without this, Nominatim ranks "main street" globally and returns
+    // California/Illinois hits before any NYC street. Acceptable for a
+    // NYC-only product; revisit when the service area expands.
+    const biasLocation =
+      currentLocationCoords || selectedAddressLocation || STARTER_LOCATION;
     let cancelled = false;
     const timeoutId = setTimeout(() => {
       Promise.resolve(suggestAddresses(address, { near: biasLocation }))
@@ -361,7 +366,7 @@ export function CustomerApp({ initialSection = 'customer' }) {
         : usingSelectedSuggestion
           ? selectedAddressLocation
           : await geocodeAddress(address, {
-              near: currentLocationCoords || selectedAddressLocation || null,
+              near: currentLocationCoords || selectedAddressLocation || STARTER_LOCATION,
             });
       if (!coords) {
         throw new Error('Enter a valid address or ZIP code.');
