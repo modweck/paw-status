@@ -223,11 +223,17 @@ export function CustomerApp({ initialSection = 'customer' }) {
     // Without this, Nominatim ranks "main street" globally and returns
     // California/Illinois hits before any NYC street. Acceptable for a
     // NYC-only product; revisit when the service area expands.
+    const hasRealUserLocation = Boolean(currentLocationCoords || selectedAddressLocation);
     const biasLocation =
       currentLocationCoords || selectedAddressLocation || STARTER_LOCATION;
+    // When the bias is the default fallback, append "New York, NY" as a
+    // soft hint to the Nominatim query. The viewbox alone only weights
+    // ties; for partial inputs like "515 east 72" Nominatim will match a
+    // literal Utah street first unless the query itself names the city.
+    const cityHint = hasRealUserLocation ? '' : 'New York, NY';
     let cancelled = false;
     const timeoutId = setTimeout(() => {
-      Promise.resolve(suggestAddresses(address, { near: biasLocation }))
+      Promise.resolve(suggestAddresses(address, { near: biasLocation, cityHint }))
         .then((suggestions) => {
           if (!cancelled) {
             setAddressSuggestions(Array.isArray(suggestions) ? suggestions : []);
