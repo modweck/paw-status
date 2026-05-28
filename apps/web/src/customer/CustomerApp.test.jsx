@@ -100,7 +100,10 @@ describe('CustomerApp default groomer loading', () => {
         serviceId: 'full-groom',
       });
     });
-    expect(screen.getByLabelText('Location')).toHaveValue('Lower East Side, New York, NY');
+    // The location input intentionally stays blank on first paint, even when
+    // browser location is granted silently. The customer asked for the field
+    // to populate only via an explicit type or "Use my location" click.
+    expect(screen.getByLabelText('Location')).toHaveValue('');
   });
 
   it('lets the customer grant location later by clicking Use my location', async () => {

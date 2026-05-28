@@ -317,7 +317,12 @@ export function CustomerApp({ initialSection = 'customer' }) {
         const nextRadiusOptions = radiusOptionsForLocation(searchLocation);
 
         if (!cancelled) {
-          setAddress(formatResolvedAddress(searchLocation));
+          // Keep the location input intentionally blank on first paint, even
+          // when the browser already remembered a previous permission grant.
+          // The customer asked for the field to start empty and only populate
+          // when they type or click "Use my location". We still capture the
+          // coords behind the scenes so nearby groomers can load without
+          // requiring a re-click.
           setCurrentLocationCoords(searchLocation);
           setHasSearchLocation(true);
           setRadiusOptions(nextRadiusOptions);
@@ -364,7 +369,12 @@ export function CustomerApp({ initialSection = 'customer' }) {
         throw new Error('Enter a location or allow browser location.');
       }
 
-      const usingCurrentLocation = isCurrentLocationAddress(address, currentLocationCoords);
+      // If the input is blank but we already captured the customer's current
+      // location silently on mount, just use that — no need to make them
+      // click "Use my location" first.
+      const usingCurrentLocation =
+        isCurrentLocationAddress(address, currentLocationCoords) ||
+        (!address.trim() && Boolean(currentLocationCoords));
       const usingSelectedSuggestion =
         selectedAddressLocation?.displayName && address === selectedAddressLocation.displayName;
       const coords = usingCurrentLocation
