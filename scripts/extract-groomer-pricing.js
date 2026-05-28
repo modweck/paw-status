@@ -8,26 +8,41 @@
  * `groomer_pricing` table.
  *
  * Usage:
- *   node scripts/extract-groomer-pricing.js                  # full run
- *   node scripts/extract-groomer-pricing.js --limit 5        # quick test
- *   node scripts/extract-groomer-pricing.js --since 7d       # only re-do
- *                                                            #  groomers whose
- *                                                            #  most-recent
- *                                                            #  extracted_at is
- *                                                            #  older than 7
- *                                                            #  days
- *   node scripts/extract-groomer-pricing.js --groomer <uuid> # just one
- *   node scripts/extract-groomer-pricing.js --dry-run        # no DB writes
+ *   # Default: extract -> save JSON to scripts/output/pricing-extract-*.json
+ *   #                    NO database write.
+ *   node scripts/extract-groomer-pricing.js
  *
- * Required env (in apps/web/.env or process env):
+ *   # Just a few for testing the prompt:
+ *   node scripts/extract-groomer-pricing.js --limit 5
+ *
+ *   # Only re-do groomers whose latest extracted_at is older than 7 days:
+ *   node scripts/extract-groomer-pricing.js --since 7d
+ *
+ *   # Just one groomer:
+ *   node scripts/extract-groomer-pricing.js --groomer <uuid>
+ *
+ *   # Also push the result rows to the live groomer_pricing table.
+ *   # Without --push, nothing reaches the database.
+ *   node scripts/extract-groomer-pricing.js --push
+ *
+ *   # Push an existing extract back into the database without re-running
+ *   # the LLM. Useful after you've reviewed scripts/output/...json.
+ *   node scripts/extract-groomer-pricing.js --from-file <path> --push
+ *
+ *   # Print to console only, no file or DB writes.
+ *   node scripts/extract-groomer-pricing.js --dry-run
+ *
+ * Required env (.env at repo root or apps/web/.env):
  *   SUPABASE_URL            project URL
  *   SUPABASE_SECRET_KEY     service-role key (NOT the publishable key)
  *   ANTHROPIC_API_KEY       https://console.anthropic.com — Haiku is cheap
+ *                           (not required when using --from-file)
  *
  * Cost: ~$0.01 per groomer at current Haiku pricing. ~$3.50 for 349 rows.
  */
 
 import { config as loadDotenv } from 'dotenv';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -35,8 +50,11 @@ import Anthropic from '@anthropic-ai/sdk';
 import { createClient } from '@supabase/supabase-js';
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+// Load .env from the project root first (where SUPABASE / Google keys live
+// on this machine), then apps/web/.env as a fallback, then shell env.
+loadDotenv({ path: resolve(repoRoot, '.env') });
 loadDotenv({ path: resolve(repoRoot, 'apps/web/.env') });
-loadDotenv(); // also pick up shell env
+loadDotenv();
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -46,10 +64,8 @@ if (!SUPABASE_URL || !SUPABASE_KEY) {
   console.error('Missing SUPABASE_URL or SUPABASE_SECRET_KEY in env.');
   process.exit(1);
 }
-if (!ANTHROPIC_API_KEY) {
-  console.error('Missing ANTHROPIC_API_KEY. Get one at https://console.anthropic.com');
-  process.exit(1);
-}
+// ANTHROPIC_API_KEY is only required when actually extracting. --from-file
+// pushes a previously-saved JSON without calling the LLM, so we let it run.
 
 const PRICING_PATHS = [
   '',
@@ -74,18 +90,34 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
   auth: { autoRefreshToken: false, persistSession: false },
 });
 
-const anthropic = new Anthropic({ apiKey: ANTHROPIC_API_KEY });
+const anthropic = ANTHROPIC_API_KEY ? new Anthropic({ apiKey: ANTHROPIC_API_KEY }) : null;
 
 function parseArgs(argv) {
-  const args = { limit: null, since: null, groomer: null, dryRun: false };
+  const args = {
+    limit: null,
+    since: null,
+    groomer: null,
+    dryRun: false,
+    push: false,
+    fromFile: null,
+  };
   for (let i = 2; i < argv.length; i += 1) {
     const arg = argv[i];
     if (arg === '--limit') args.limit = Number(argv[++i]);
     else if (arg === '--since') args.since = argv[++i];
     else if (arg === '--groomer') args.groomer = argv[++i];
     else if (arg === '--dry-run') args.dryRun = true;
+    else if (arg === '--push') args.push = true;
+    else if (arg === '--from-file') args.fromFile = argv[++i];
   }
   return args;
+}
+
+function outputFilePath() {
+  const dir = resolve(repoRoot, 'scripts/output');
+  mkdirSync(dir, { recursive: true });
+  const stamp = new Date().toISOString().replace(/[:.]/g, '-');
+  return resolve(dir, `pricing-extract-${stamp}.json`);
 }
 
 function sinceToISO(value) {
@@ -318,9 +350,7 @@ function normalizeRows(groomerId, prices, sourceUrl) {
   return rows;
 }
 
-async function replaceGroomerPricing(groomerId, rows, dryRun) {
-  if (dryRun) return;
-
+async function replaceGroomerPricing(groomerId, rows) {
   const { error: deleteError } = await supabase
     .from('groomer_pricing')
     .delete()
@@ -339,14 +369,50 @@ async function replaceGroomerPricing(groomerId, rows, dryRun) {
   }
 }
 
+async function pushExtractsToDatabase(extracts) {
+  let pushed = 0;
+  for (const extract of extracts) {
+    await replaceGroomerPricing(extract.groomer_id, extract.rows || []);
+    if ((extract.rows || []).length) pushed += 1;
+  }
+  return pushed;
+}
+
+async function runFromFile(args) {
+  const raw = readFileSync(args.fromFile, 'utf8');
+  const payload = JSON.parse(raw);
+  const extracts = Array.isArray(payload?.extracts) ? payload.extracts : [];
+  console.log(`Loaded ${extracts.length} extracts from ${args.fromFile}`);
+  if (!args.push) {
+    console.log('No --push flag, nothing to do. Pass --push to write to the live DB.');
+    return;
+  }
+  const pushed = await pushExtractsToDatabase(extracts);
+  console.log(`Pushed ${pushed} groomers with pricing to groomer_pricing.`);
+}
+
 async function main() {
   const args = parseArgs(process.argv);
+
+  if (args.fromFile) {
+    await runFromFile(args);
+    return;
+  }
+
+  if (!anthropic) {
+    console.error('Missing ANTHROPIC_API_KEY. Get one at https://console.anthropic.com');
+    process.exit(1);
+  }
+
   console.log(`shinypawz: extracting groomer pricing (model=${MODEL})`);
-  if (args.dryRun) console.log('DRY RUN — no DB writes');
+  if (args.dryRun) console.log('DRY RUN — no file or DB writes');
+  else if (args.push) console.log('Will write JSON to scripts/output/ AND push to live DB.');
+  else console.log('Will write JSON to scripts/output/ only. Pass --push to also write to live DB.');
 
   const groomers = await loadGroomers(args);
   console.log(`Found ${groomers.length} groomers to process.`);
 
+  const extracts = [];
   let processed = 0;
   let withPrices = 0;
   let totalRows = 0;
@@ -363,6 +429,14 @@ async function main() {
       if (pages.length === 0) {
         console.log(`  skipped (${reason})`);
         blocked += 1;
+        extracts.push({
+          groomer_id: groomer.id,
+          groomer_name: groomer.name,
+          website: groomer.website,
+          status: 'blocked',
+          reason,
+          rows: [],
+        });
         continue;
       }
 
@@ -375,7 +449,13 @@ async function main() {
       if (empty) {
         console.log('  no prices found on public pages');
         noPrices += 1;
-        await replaceGroomerPricing(groomer.id, [], args.dryRun);
+        extracts.push({
+          groomer_id: groomer.id,
+          groomer_name: groomer.name,
+          website: groomer.website,
+          status: 'no_prices',
+          rows: [],
+        });
         continue;
       }
 
@@ -383,16 +463,37 @@ async function main() {
       if (rows.length === 0) {
         console.log('  no valid rows after normalisation');
         noPrices += 1;
+        extracts.push({
+          groomer_id: groomer.id,
+          groomer_name: groomer.name,
+          website: groomer.website,
+          status: 'no_valid_rows',
+          rows: [],
+        });
         continue;
       }
 
-      await replaceGroomerPricing(groomer.id, rows, args.dryRun);
       withPrices += 1;
       totalRows += rows.length;
-      console.log(`  wrote ${rows.length} pricing rows`);
+      console.log(`  extracted ${rows.length} pricing rows`);
+      extracts.push({
+        groomer_id: groomer.id,
+        groomer_name: groomer.name,
+        website: groomer.website,
+        status: 'ok',
+        rows,
+      });
     } catch (error) {
       errors += 1;
       console.warn(`  error: ${error?.message || error}`);
+      extracts.push({
+        groomer_id: groomer.id,
+        groomer_name: groomer.name,
+        website: groomer.website,
+        status: 'error',
+        error: error?.message || String(error),
+        rows: [],
+      });
     }
   }
 
@@ -403,6 +504,33 @@ async function main() {
   console.log(`blocked / fetch: ${blocked}`);
   console.log(`errors:          ${errors}`);
   console.log(`total rows:      ${totalRows}`);
+
+  if (args.dryRun) {
+    console.log('\nDRY RUN — skipped both local JSON write and DB push.');
+    return;
+  }
+
+  const outFile = outputFilePath();
+  const payload = {
+    extracted_at: new Date().toISOString(),
+    model: MODEL,
+    groomers_processed: processed,
+    with_prices: withPrices,
+    no_prices: noPrices,
+    blocked,
+    errors,
+    extracts,
+  };
+  writeFileSync(outFile, JSON.stringify(payload, null, 2), 'utf8');
+  console.log(`\nWrote local extract: ${outFile}`);
+
+  if (!args.push) {
+    console.log('Review the file above. Re-run with --from-file <path> --push to write to the live DB.');
+    return;
+  }
+
+  const pushed = await pushExtractsToDatabase(extracts);
+  console.log(`Pushed ${pushed} groomers with pricing to groomer_pricing.`);
 }
 
 main().catch((error) => {

@@ -4,3 +4,6 @@ node_modules
 dist
 .DS_Store
 *.log
+
+# Local pricing extracts produced by scripts/extract-groomer-pricing.js
+scripts/output/
