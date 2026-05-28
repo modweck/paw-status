@@ -510,7 +510,11 @@ export function CustomerApp({ initialSection = 'customer' }) {
           selectedGroomer={selectedGroomer}
           selectedService={selectedService}
         />
-      ) : (
+      ) : selectedGroomer ? (
+        // Only render the guest booking form after the customer has actually
+        // picked a groomer from the list. Showing it on first paint makes the
+        // page feel like a long wall of fields with no context for what they
+        // are booking.
         <>
           <GuestBookingPanel
             groomers={groomers}
@@ -520,6 +524,10 @@ export function CustomerApp({ initialSection = 'customer' }) {
           />
           <LoginPanel compact />
         </>
+      ) : (
+        <p className="booking-gate__hint empty-state">
+          Pick a groomer from the list below to start a booking request.
+        </p>
       )}
     </section>
   );

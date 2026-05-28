@@ -422,11 +422,14 @@ describe('CustomerApp default groomer loading', () => {
 
     render(<CustomerApp initialSection="bookings" />);
 
-    const loginPanel = await screen.findByText('Login panel');
+    // Signed out + no groomer selected yet -> the gate shows a hint instead
+    // of the guest form. The layout assertion is still about the gate
+    // sitting above the Nearby groomers heading.
+    const gateHint = await screen.findByText(/Pick a groomer from the list below/i);
     const nearbyHeading = screen.getByText('Nearby groomers');
 
     expect(
-      loginPanel.compareDocumentPosition(nearbyHeading) & Node.DOCUMENT_POSITION_FOLLOWING,
+      gateHint.compareDocumentPosition(nearbyHeading) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
   });
 });
