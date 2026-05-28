@@ -6,6 +6,11 @@ import { fileURLToPath } from 'node:url';
 
 import { fetchGooglePlacePhoto, toPublicPhotoError } from './server/googlePlacesPhoto.js';
 import {
+  autocompletePlaces,
+  placeDetails,
+  toPublicGooglePlacesError,
+} from './server/googlePlaces.js';
+import {
   handleGuestBookingClaimEvent,
   handleGuestBookingEvent,
 } from './server/guestBooking.js';
@@ -86,6 +91,82 @@ function readRequestBody(request) {
     request.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')));
     request.on('error', reject);
   });
+}
+
+function googlePlacesDevPlugin(env) {
+  return {
+    name: 'paw-status-google-places-dev',
+    configureServer(server) {
+      server.middlewares.use(async (request, response, next) => {
+        const url = request.url || '';
+        const pathname = url.split('?')[0];
+        const isAutocomplete = pathname === '/api/places/autocomplete';
+        const isDetails = pathname === '/api/places/details';
+
+        if (!isAutocomplete && !isDetails) {
+          next();
+          return;
+        }
+
+        response.setHeader('Cache-Control', 'no-store');
+        response.setHeader('Content-Type', 'application/json');
+
+        if (isAutocomplete) {
+          if (request.method !== 'POST') {
+            response.statusCode = 405;
+            response.end(JSON.stringify({ error: 'Method Not Allowed' }));
+            return;
+          }
+
+          let body = {};
+          try {
+            const raw = await readRequestBody(request);
+            body = raw ? JSON.parse(raw) : {};
+          } catch {
+            response.statusCode = 400;
+            response.end(JSON.stringify({ error: 'Invalid JSON' }));
+            return;
+          }
+
+          try {
+            const suggestions = await autocompletePlaces({
+              input: body.input,
+              near: body.near,
+              env,
+            });
+            response.statusCode = 200;
+            response.end(JSON.stringify({ suggestions }));
+          } catch (error) {
+            const publicError = toPublicGooglePlacesError(error);
+            response.statusCode = publicError.statusCode;
+            response.end(JSON.stringify(publicError.body));
+          }
+          return;
+        }
+
+        // details
+        if (request.method !== 'GET') {
+          response.statusCode = 405;
+          response.end(JSON.stringify({ error: 'Method Not Allowed' }));
+          return;
+        }
+
+        const requestUrl = new URL(url, 'http://localhost');
+        try {
+          const details = await placeDetails({
+            placeId: requestUrl.searchParams.get('placeId') || '',
+            env,
+          });
+          response.statusCode = 200;
+          response.end(JSON.stringify({ place: details }));
+        } catch (error) {
+          const publicError = toPublicGooglePlacesError(error);
+          response.statusCode = publicError.statusCode;
+          response.end(JSON.stringify(publicError.body));
+        }
+      });
+    },
+  };
 }
 
 function guestBookingDevPlugin(env) {
@@ -237,6 +318,7 @@ export default defineConfig(({ mode }) => {
       groomerPhotoDevPlugin(env),
       guestBookingDevPlugin(env),
       adminGroomerClaimsDevPlugin(env),
+      googlePlacesDevPlugin(env),
     ],
     define: {
       __APP_CONFIG__: JSON.stringify(publicAppConfig(mode)),

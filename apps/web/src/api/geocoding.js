@@ -1,8 +1,13 @@
-// US-state abbreviation map used when shortening Nominatim address responses
-// into UI-friendly labels. Keeping this local keeps geocoding self-contained.
-// TODO: add US territories (PR, GU, VI, AS, MP) if the product expands beyond
-// the 50 states + DC. Until then, unrecognised state names fall through to
-// their full Nominatim form (see abbreviateState).
+// Geocoding client. Customer-facing address autocomplete goes through a
+// server-side Google Places proxy (/api/places/*) so the GOOGLE_PLACES_API_KEY
+// stays out of the browser bundle. Reverse-geocoding (current location ->
+// pretty address label) is still on OSM/Nominatim because it's a low-volume
+// call where free is plenty and the existing label format is preserved.
+
+const PLACES_AUTOCOMPLETE_ENDPOINT = '/api/places/autocomplete';
+const PLACES_DETAILS_ENDPOINT = '/api/places/details';
+const NOMINATIM_REVERSE_URL = 'https://nominatim.openstreetmap.org/reverse';
+
 const US_STATE_ABBREVIATIONS = Object.freeze({
   alabama: 'AL',
   alaska: 'AK',
@@ -62,123 +67,88 @@ function abbreviateState(stateName = '') {
   return US_STATE_ABBREVIATIONS[cleaned] || stateName || '';
 }
 
-function buildShortDisplayName(row) {
-  // Nominatim's `display_name` is a long comma-delimited path
-  // ("515, East 72nd Street, Lenox Hill, Manhattan Community Board 8, ...,
-  // United States"). Compose a tighter US-friendly string from the
-  // structured fields when `addressdetails=1` is in the request.
-  const a = row?.address || {};
-  const street = [a.house_number, a.road].filter(Boolean).join(' ');
-  const locality = a.city || a.town || a.village || a.hamlet || a.borough || a.suburb || '';
-  const state = abbreviateState(a.state);
-  const stateZip = [state, a.postcode].filter(Boolean).join(' ').trim();
-
-  const composed = [street, locality, stateZip].filter(Boolean).join(', ');
-  if (composed) return composed;
-
-  // Fall back to the full display_name if address details are missing.
-  return row?.display_name || '';
-}
-
-function mapGeocodingRow(row) {
-  if (!row) return null;
-
+function mapGooglePlaceDetails(place) {
+  if (!place) return null;
+  const lat = Number(place.lat);
+  const lng = Number(place.lng);
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
   return {
-    lat: Number(row.lat),
-    lng: Number(row.lon),
-    displayName: buildShortDisplayName(row),
+    lat,
+    lng,
+    displayName: place.displayName || '',
   };
 }
 
-// ~50 km box around a lat/lng — used as a viewbox preference for Nominatim
-// ranking, NOT a hard bound. Anything inside still wins ties without
-// excluding equally specific results elsewhere in the country.
-const VIEWBOX_HALF_DEGREES = 0.5;
-
-function buildViewbox(near) {
-  if (!near) return '';
-  const lat = Number(near.lat);
-  const lng = Number(near.lng);
-  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return '';
-  const lonMin = lng - VIEWBOX_HALF_DEGREES;
-  const latMax = lat + VIEWBOX_HALF_DEGREES;
-  const lonMax = lng + VIEWBOX_HALF_DEGREES;
-  const latMin = lat - VIEWBOX_HALF_DEGREES;
-  return `${lonMin},${latMax},${lonMax},${latMin}`;
+function mapGoogleSuggestion(suggestion) {
+  if (!suggestion?.placeId) return null;
+  const main = suggestion.mainText || '';
+  const secondary = suggestion.secondaryText || '';
+  return {
+    placeId: suggestion.placeId,
+    displayName: suggestion.displayName || [main, secondary].filter(Boolean).join(', '),
+    mainText: main,
+    secondaryText: secondary,
+  };
 }
 
-function addressAlreadyMentions(address, hint) {
-  if (!hint) return false;
-  const haystack = String(address || '').toLowerCase();
-  return hint
-    .toLowerCase()
-    .split(/[,\s]+/)
-    .filter(Boolean)
-    .every((token) => haystack.includes(token));
-}
-
-function geocodingSearchUrl(address, limit, near, cityHint) {
-  // countrycodes=us: bias to US-only for a US-only product.
-  // addressdetails=1: returns structured address fields used by
-  //   buildShortDisplayName to render a clean UI label.
-  // dedupe=1: collapses near-duplicate Nominatim hits.
-  // viewbox + bounded=0: ranks results inside the box higher without
-  //   excluding the rest of the country.
-  //
-  // cityHint: appended to the user's query as a soft locality hint when the
-  //   caller knows the bias is a default (e.g., the customer hasn't granted
-  //   browser location yet). Necessary because Nominatim's viewbox only
-  //   weights ties — partial queries like "515 east 72" can still surface a
-  //   literal "515 East" street in Utah before the Manhattan match. Skipped
-  //   when the user has already typed the city themselves.
-  let query = String(address || '');
-  if (cityHint && !addressAlreadyMentions(query, cityHint)) {
-    query = `${query.trim()}, ${cityHint}`;
+async function readErrorBody(response) {
+  try {
+    const payload = await response.json();
+    return payload?.error || '';
+  } catch {
+    return '';
   }
-
-  const params = new URLSearchParams({
-    format: 'json',
-    addressdetails: '1',
-    countrycodes: 'us',
-    dedupe: '1',
-    limit: String(limit),
-    q: query,
-  });
-  const viewbox = buildViewbox(near);
-  if (viewbox) {
-    params.set('viewbox', viewbox);
-    params.set('bounded', '0');
-  }
-  return `https://nominatim.openstreetmap.org/search?${params.toString()}`;
 }
 
-export async function geocodeAddress(address, { near, cityHint } = {}) {
-  if (!address.trim()) return null;
-
-  const response = await fetch(geocodingSearchUrl(address, 1, near, cityHint));
-
-  if (!response.ok) {
-    throw new Error('Could not geocode that address.');
-  }
-
-  const rows = await response.json();
-  if (!rows?.[0]) return null;
-
-  return mapGeocodingRow(rows[0]);
-}
-
-export async function suggestAddresses(query, { near, cityHint } = {}) {
-  const cleaned = query.trim();
+export async function suggestAddresses(query, { near, fetcher = fetch } = {}) {
+  const cleaned = String(query || '').trim();
   if (cleaned.length < 3) return [];
 
-  const response = await fetch(geocodingSearchUrl(cleaned, 5, near, cityHint));
+  const response = await fetcher(PLACES_AUTOCOMPLETE_ENDPOINT, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      input: cleaned,
+      near: near ? { lat: near.lat, lng: near.lng } : null,
+    }),
+  });
 
   if (!response.ok) {
-    throw new Error('Could not load address suggestions.');
+    throw new Error((await readErrorBody(response)) || 'Could not load address suggestions.');
   }
 
-  const rows = await response.json();
-  return (rows || []).map(mapGeocodingRow).filter(Boolean);
+  const payload = await response.json().catch(() => ({}));
+  const suggestions = Array.isArray(payload?.suggestions) ? payload.suggestions : [];
+  return suggestions.map(mapGoogleSuggestion).filter(Boolean);
+}
+
+export async function resolvePlace(placeId, { fetcher = fetch } = {}) {
+  const cleaned = String(placeId || '').trim();
+  if (!cleaned) return null;
+
+  const response = await fetcher(
+    `${PLACES_DETAILS_ENDPOINT}?placeId=${encodeURIComponent(cleaned)}`,
+  );
+
+  if (!response.ok) {
+    throw new Error((await readErrorBody(response)) || 'Could not look up that address.');
+  }
+
+  const payload = await response.json().catch(() => ({}));
+  return mapGooglePlaceDetails(payload?.place);
+}
+
+// Used by the form submit path when the customer typed an address but never
+// clicked a suggestion. Resolves to lat/lng by taking the top autocomplete
+// match and looking up its details.
+export async function geocodeAddress(address, { near, fetcher = fetch } = {}) {
+  const cleaned = String(address || '').trim();
+  if (!cleaned) return null;
+
+  const suggestions = await suggestAddresses(cleaned, { near, fetcher });
+  if (!suggestions.length) return null;
+
+  return resolvePlace(suggestions[0].placeId, { fetcher });
 }
 
 export async function reverseGeocodeLocation({ lat, lng }) {
@@ -190,13 +160,31 @@ export async function reverseGeocodeLocation({ lat, lng }) {
     lat: String(lat),
     lon: String(lng),
   });
-  const response = await fetch(
-    `https://nominatim.openstreetmap.org/reverse?${params.toString()}`,
-  );
-
+  const response = await fetch(`${NOMINATIM_REVERSE_URL}?${params.toString()}`);
   if (!response.ok) {
     throw new Error('Could not refresh your location label.');
   }
 
-  return mapGeocodingRow(await response.json());
+  const row = await response.json();
+  const address = row?.address || {};
+  const street = [address.house_number, address.road].filter(Boolean).join(' ');
+  const locality =
+    address.city ||
+    address.town ||
+    address.village ||
+    address.hamlet ||
+    address.borough ||
+    address.suburb ||
+    '';
+  const stateZip = [abbreviateState(address.state), address.postcode]
+    .filter(Boolean)
+    .join(' ')
+    .trim();
+  const composed = [street, locality, stateZip].filter(Boolean).join(', ');
+
+  return {
+    lat: Number(row.lat),
+    lng: Number(row.lon),
+    displayName: composed || row?.display_name || '',
+  };
 }

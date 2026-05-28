@@ -9,7 +9,12 @@ import {
   PENDING_GUEST_CLAIM_STORAGE_KEY,
 } from '../api/guestBooking.js';
 import { fetchNearbyGroomers } from '../api/groomers.js';
-import { geocodeAddress, reverseGeocodeLocation, suggestAddresses } from '../api/geocoding.js';
+import {
+  geocodeAddress,
+  resolvePlace,
+  reverseGeocodeLocation,
+  suggestAddresses,
+} from '../api/geocoding.js';
 import { GROOMING_SERVICES, groupGroomingServices } from '../data/services.js';
 import { useAuth } from '../auth/AuthProvider.jsx';
 import { CustomerOwnershipPanel } from './CustomerOwnershipPanel.jsx';
@@ -169,6 +174,7 @@ export function CustomerApp({ initialSection = 'customer' }) {
   const [guestClaimNotice, setGuestClaimNotice] = useState(null);
   const [locatingMe, setLocatingMe] = useState(false);
   const manualSearchStartedRef = useRef(false);
+  const pendingPlaceIdRef = useRef('');
   const selectedService = useMemo(
     () => GROOMING_SERVICES.find((service) => service.id === serviceId) ?? GROOMING_SERVICES[0],
     [serviceId],
@@ -219,21 +225,14 @@ export function CustomerApp({ initialSection = 'customer' }) {
     // Bias the suggestion ranking toward the user's current/selected location
     // when known so a search for "515 east 72nd street" from NYC does not
     // surface a Utah address before the Manhattan one.
-    // Fall back to STARTER_LOCATION (NYC) when we have no real bias yet.
-    // Without this, Nominatim ranks "main street" globally and returns
-    // California/Illinois hits before any NYC street. Acceptable for a
-    // NYC-only product; revisit when the service area expands.
-    const hasRealUserLocation = Boolean(currentLocationCoords || selectedAddressLocation);
+    // Bias toward the customer's current or selected location, falling back
+    // to STARTER_LOCATION (NYC) when neither exists yet. Google Places uses
+    // this as a soft locationBias so out-of-area searches still work.
     const biasLocation =
       currentLocationCoords || selectedAddressLocation || STARTER_LOCATION;
-    // When the bias is the default fallback, append "New York, NY" as a
-    // soft hint to the Nominatim query. The viewbox alone only weights
-    // ties; for partial inputs like "515 east 72" Nominatim will match a
-    // literal Utah street first unless the query itself names the city.
-    const cityHint = hasRealUserLocation ? '' : 'New York, NY';
     let cancelled = false;
     const timeoutId = setTimeout(() => {
-      Promise.resolve(suggestAddresses(address, { near: biasLocation, cityHint }))
+      Promise.resolve(suggestAddresses(address, { near: biasLocation }))
         .then((suggestions) => {
           if (!cancelled) {
             setAddressSuggestions(Array.isArray(suggestions) ? suggestions : []);
@@ -404,11 +403,39 @@ export function CustomerApp({ initialSection = 'customer' }) {
     }
   }
 
-  function handleSelectAddressSuggestion(suggestion) {
+  async function handleSelectAddressSuggestion(suggestion) {
+    if (!suggestion?.placeId) return;
+    // Fill the input immediately so the click feels responsive, then resolve
+    // the place details (lat/lng) in the background. After details arrive we
+    // overwrite the address with Google's canonical formattedAddress so the
+    // input shows the verified version and the autocomplete gate has a
+    // stable string to compare against.
+    //
+    // pendingPlaceIdRef tracks the most-recently-clicked suggestion so that
+    // if the user clicks B before A's lookup returns, A's late .then() is
+    // dropped and only B wins. Without it, A could silently stomp B's
+    // selectedAddressLocation and produce a coords/text mismatch.
+    pendingPlaceIdRef.current = suggestion.placeId;
     setAddress(formatResolvedAddress(suggestion));
-    setSelectedAddressLocation(suggestion);
-    setCurrentLocationCoords(null);
     setAddressSuggestions([]);
+    setCurrentLocationCoords(null);
+    try {
+      const details = await resolvePlace(suggestion.placeId);
+      if (pendingPlaceIdRef.current !== suggestion.placeId) return;
+      if (!details) {
+        setError('Could not look up that address. Try another suggestion.');
+        setSelectedAddressLocation(null);
+        return;
+      }
+      const resolved = { ...details, address: details.displayName };
+      setSelectedAddressLocation(resolved);
+      setAddress(formatResolvedAddress(resolved));
+      setError('');
+    } catch (nextError) {
+      if (pendingPlaceIdRef.current !== suggestion.placeId) return;
+      setError(nextError.message || 'Could not look up that address.');
+      setSelectedAddressLocation(null);
+    }
   }
 
   async function handleUseMyLocation() {

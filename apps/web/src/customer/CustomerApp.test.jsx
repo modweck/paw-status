@@ -7,6 +7,7 @@ const fetchNearbyGroomers = vi.fn();
 const geocodeAddress = vi.fn();
 const getBrowserLocation = vi.fn();
 const reverseGeocodeLocation = vi.fn();
+const resolvePlace = vi.fn();
 const suggestAddresses = vi.fn();
 const claimGuestBookingRequest = vi.fn();
 let authState = { user: null, loading: false };
@@ -17,6 +18,7 @@ vi.mock('../api/groomers.js', () => ({
 
 vi.mock('../api/geocoding.js', () => ({
   geocodeAddress: (...args) => geocodeAddress(...args),
+  resolvePlace: (...args) => resolvePlace(...args),
   reverseGeocodeLocation: (...args) => reverseGeocodeLocation(...args),
   suggestAddresses: (...args) => suggestAddresses(...args),
 }));
@@ -64,6 +66,7 @@ describe('CustomerApp default groomer loading', () => {
     getBrowserLocation.mockReset();
     reverseGeocodeLocation.mockReset();
     suggestAddresses.mockReset();
+    resolvePlace.mockReset();
     claimGuestBookingRequest.mockReset();
     if (typeof window !== 'undefined' && window.localStorage?.clear) {
       window.localStorage.clear();
@@ -177,20 +180,23 @@ describe('CustomerApp default groomer loading', () => {
     expect(screen.getByLabelText('Dog size')).toHaveValue('');
   });
 
-  it('suggests real addresses while the customer types and searches from the selected suggestion', async () => {
+  it('suggests addresses while the customer types and resolves the placeId on click', async () => {
     getBrowserLocation.mockResolvedValueOnce(null);
     suggestAddresses.mockResolvedValueOnce([
       {
-        lat: 40.775,
-        lng: -73.965,
+        placeId: 'place-1',
         displayName: '1000 5th Ave, New York, NY 10028',
+        mainText: '1000 5th Ave',
+        secondaryText: 'New York, NY 10028',
       },
     ]);
+    resolvePlace.mockResolvedValueOnce({
+      lat: 40.775,
+      lng: -73.965,
+      displayName: '1000 5th Ave, New York, NY 10028, USA',
+    });
     fetchNearbyGroomers.mockResolvedValueOnce([
-      {
-        id: 'groomer-1',
-        name: 'Museum Mile Grooming',
-      },
+      { id: 'groomer-1', name: 'Museum Mile Grooming' },
     ]);
 
     render(<CustomerApp />);
@@ -205,6 +211,16 @@ describe('CustomerApp default groomer loading', () => {
       name: '1000 5th Ave, New York, NY 10028',
     });
     fireEvent.click(suggestion);
+
+    // Wait until the Google details lookup settles and the address input
+    // shows the canonical formattedAddress.
+    await waitFor(() => {
+      expect(screen.getByLabelText('Location')).toHaveValue(
+        '1000 5th Ave, New York, NY 10028, USA',
+      );
+    });
+    expect(resolvePlace).toHaveBeenCalledWith('place-1');
+
     fireEvent.change(screen.getByLabelText('Dog size'), {
       target: { value: 'small' },
     });
@@ -219,7 +235,9 @@ describe('CustomerApp default groomer loading', () => {
       });
     });
     expect(geocodeAddress).not.toHaveBeenCalled();
-    expect(screen.getByText('Guest booking panel for Museum Mile Grooming and small')).toBeInTheDocument();
+    expect(
+      screen.getByText('Guest booking panel for Museum Mile Grooming and small'),
+    ).toBeInTheDocument();
   });
 
   it('leaves location empty and waits for a customer-entered location when browser location is unavailable', async () => {
