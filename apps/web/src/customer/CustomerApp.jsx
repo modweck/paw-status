@@ -531,7 +531,6 @@ export function CustomerApp({ initialSection = 'customer' }) {
       )}
     </section>
   );
-  const showFocusedBookingGate = ['dogs', 'bookings', 'account'].includes(initialSection);
 
   return (
     <section className="customer-screen">
@@ -659,8 +658,6 @@ export function CustomerApp({ initialSection = 'customer' }) {
         {error ? <p className="form-message form-message--error">{error}</p> : null}
       </form>
 
-      {showFocusedBookingGate ? bookingGate : null}
-
       <section className="results-section">
         <div className="section-heading">
           <div>
@@ -691,7 +688,7 @@ export function CustomerApp({ initialSection = 'customer' }) {
         </div>
       </section>
 
-      {showFocusedBookingGate ? null : bookingGate}
+      {bookingGate}
 
       <PopularNearYou
         groomers={groomers}

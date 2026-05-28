@@ -417,19 +417,18 @@ describe('CustomerApp default groomer loading', () => {
     expect(screen.getByText('Booking panel for Puppy Tale Lodge')).toBeInTheDocument();
   });
 
-  it('places the booking gate before search results on the bookings route', async () => {
+  it('renders the Nearby groomers list before the booking gate on the bookings route', async () => {
     getBrowserLocation.mockResolvedValueOnce(null);
 
     render(<CustomerApp initialSection="bookings" />);
 
-    // Signed out + no groomer selected yet -> the gate shows a hint instead
-    // of the guest form. The layout assertion is still about the gate
-    // sitting above the Nearby groomers heading.
-    const gateHint = await screen.findByText(/Pick a groomer from the list below/i);
-    const nearbyHeading = screen.getByText('Nearby groomers');
+    // Customer preference: groomer list is always the first thing they see,
+    // booking gate sits below it regardless of route.
+    const nearbyHeading = await screen.findByText('Nearby groomers');
+    const gateHint = screen.getByText(/Pick a groomer from the list below/i);
 
     expect(
-      gateHint.compareDocumentPosition(nearbyHeading) & Node.DOCUMENT_POSITION_FOLLOWING,
+      nearbyHeading.compareDocumentPosition(gateHint) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
   });
 });
