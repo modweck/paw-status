@@ -1272,11 +1272,13 @@ button:disabled {
     margin-bottom: 24px;
     min-height: calc(100vh - 48px);
     border-radius: 28px;
-    overflow: hidden;
-  }
-
-  .bottom-nav {
-    position: sticky;
+    /*
+     * Was `overflow: hidden` so the rounded corners clipped scrolling content.
+     * That also broke the bottom nav's previous `position: sticky` override
+     * because sticky needs a scrolling ancestor. Customer wants the nav glued
+     * to the viewport bottom everywhere, so we keep the base
+     * `.bottom-nav { position: fixed }` rule and stop clipping here.
+     */
   }
 
   .topbar__session {
