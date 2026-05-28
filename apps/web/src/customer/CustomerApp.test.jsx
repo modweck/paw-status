@@ -406,7 +406,7 @@ describe('CustomerApp default groomer loading', () => {
 
     const { rerender } = render(<CustomerApp />);
 
-    const startRequest = await screen.findByRole('button', { name: 'Book as guest' });
+    const startRequest = await screen.findByRole('button', { name: 'Book' });
     expect(startRequest).not.toBeDisabled();
     fireEvent.click(startRequest);
     expect(screen.getByText('Login panel')).toBeInTheDocument();

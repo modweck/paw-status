@@ -31,7 +31,7 @@ export function GroomerCard({ groomer, onStartBooking, signedIn }) {
             Website <ExternalLink size={14} />
           </a>
           <button type="button" onClick={() => onStartBooking?.(groomer)}>
-            {signedIn ? 'Start request' : 'Book as guest'}
+            Book
           </button>
         </div>
       </div>

@@ -515,14 +515,22 @@ export function CustomerApp({ initialSection = 'customer' }) {
         // picked a groomer from the list. Showing it on first paint makes the
         // page feel like a long wall of fields with no context for what they
         // are booking.
+        //
+        // LoginPanel sits ABOVE the guest form so the friction-free path
+        // (sign in and have your details remembered) is the first thing the
+        // customer sees. The guest form is the fallback.
         <>
+          <LoginPanel
+            compact
+            title="Sign in and save your info"
+            description="Add your email to save your booking details to an account. Skip this and book as a guest below if you'd rather not."
+          />
           <GuestBookingPanel
             groomers={groomers}
             selectedDogSize={dogSize}
             selectedGroomer={selectedGroomer}
             selectedService={selectedService}
           />
-          <LoginPanel compact />
         </>
       ) : (
         <p className="booking-gate__hint empty-state">
