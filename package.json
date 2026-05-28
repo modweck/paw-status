@@ -12,6 +12,12 @@
     "build": "npm --workspace @paw-status/web run build",
     "preview": "npm --workspace @paw-status/web run preview --",
     "test": "npm --workspace @paw-status/web run test",
-    "test:watch": "npm --workspace @paw-status/web run test:watch"
+    "test:watch": "npm --workspace @paw-status/web run test:watch",
+    "extract:pricing": "node scripts/extract-groomer-pricing.js"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.32.1",
+    "@supabase/supabase-js": "^2.76.1",
+    "dotenv": "^16.4.5"
   }
 }
