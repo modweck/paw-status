@@ -324,7 +324,7 @@ export function generateSlots({
 **Algorithm**
 1. `earliest = now + leadTimeHours`. Clamp the window to `[max(from, earliest), min(to, now + HORIZON_DAYS)]`.
 2. For each calendar date in range **in `timezone`**: for each `availability` block on that weekday, step from `startTime` by `durationMinutes` while `start + duration ≤ endTime`.
-3. Combine `date + localTime` **in `timezone`** → a `timestamptz` instant (this is where DST is handled — use a tz-aware date lib, e.g. `Intl`/`Temporal`-style or `date-fns-tz`; pick one util and keep it in `lib/`).
+3. Combine `date + localTime` **in `timezone`** → a `timestamptz` instant (this is where DST is handled — via a **dependency-free `Intl.DateTimeFormat` helper** in `apps/api/src/booking/timezone.js`; no new runtime dependency. See `docs/superpowers/plans/2026-05-29-shinypawz-phase1-foundation.md` Task 2).
 4. Drop a candidate if it overlaps any `timeOff` range or any `busy` appointment range (`[a,a+dur) ∩ [b,b+dur) ≠ ∅`), or starts before `earliest`.
 5. Return the survivors, ascending.
 
