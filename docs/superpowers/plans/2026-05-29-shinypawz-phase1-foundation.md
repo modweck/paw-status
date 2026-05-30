@@ -599,6 +599,20 @@ alter table public.appointments
   add column if not exists duration_minutes integer not null default 60,
   add column if not exists price_cents integer;
 
+-- Superseded legacy columns: service_id/price_cents are now canonical. Drop NOT NULL
+-- so RPC inserts that omit the legacy columns (e.g. Phase 4 claim_waitlist_offer) succeed.
+do $$
+begin
+  if exists (select 1 from information_schema.columns
+             where table_name = 'appointments' and column_name = 'service') then
+    execute 'alter table public.appointments alter column service drop not null';
+  end if;
+  if exists (select 1 from information_schema.columns
+             where table_name = 'appointments' and column_name = 'price') then
+    execute 'alter table public.appointments alter column price drop not null';
+  end if;
+end $$;
+
 -- Double-booking safety: no two ACTIVE appointments for one groomer may overlap in time.
 alter table public.appointments
   drop constraint if exists appointments_no_overlap;
