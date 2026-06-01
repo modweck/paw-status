@@ -15,6 +15,10 @@ import {
   handleGuestBookingEvent,
 } from './server/guestBooking.js';
 import {
+  handleAvailabilityRequest,
+  toPublicAvailabilityError,
+} from './server/availability.js';
+import {
   getGroomerVerificationAuditTrail,
   listPendingGroomerMembershipClaims,
   reviewGroomerMembershipClaim,
@@ -200,6 +204,50 @@ function guestBookingDevPlugin(env) {
   };
 }
 
+function availabilityDevPlugin(env) {
+  return {
+    name: 'paw-status-availability-dev',
+    configureServer(server) {
+      server.middlewares.use(async (request, response, next) => {
+        if (!request.url?.startsWith('/api/availability')) {
+          next();
+          return;
+        }
+
+        response.setHeader('Cache-Control', 'no-store');
+        response.setHeader('Content-Type', 'application/json');
+
+        if (request.method !== 'GET') {
+          response.statusCode = 405;
+          response.end(JSON.stringify({ error: 'Method Not Allowed' }));
+          return;
+        }
+
+        const requestUrl = new URL(request.url, 'http://localhost');
+        const groomerId = requestUrl.searchParams.get('groomerId') || '';
+        const serviceId = requestUrl.searchParams.get('serviceId') || '';
+        const timezone = requestUrl.searchParams.get('timezone') || '';
+
+        if (!groomerId) {
+          response.statusCode = 400;
+          response.end(JSON.stringify({ error: 'groomerId is required' }));
+          return;
+        }
+
+        try {
+          const result = await handleAvailabilityRequest({ groomerId, serviceId, timezone }, env);
+          response.statusCode = 200;
+          response.end(JSON.stringify(result));
+        } catch (error) {
+          const publicError = toPublicAvailabilityError(error);
+          response.statusCode = publicError.statusCode;
+          response.end(JSON.stringify(publicError.body));
+        }
+      });
+    },
+  };
+}
+
 const REVIEW_PATH_PATTERN = /^\/api\/admin\/groomer-membership-claims\/([^/]+)\/review$/;
 const AUDIT_EVENTS_PATH = '/api/admin/groomer-membership-claims/audit-events';
 
@@ -317,6 +365,7 @@ export default defineConfig(({ mode }) => {
       react(),
       groomerPhotoDevPlugin(env),
       guestBookingDevPlugin(env),
+      availabilityDevPlugin(env),
       adminGroomerClaimsDevPlugin(env),
       googlePlacesDevPlugin(env),
     ],
