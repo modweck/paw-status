@@ -7,3 +7,4 @@ dist
 
 # Local pricing extracts produced by scripts/extract-groomer-pricing.js
 scripts/output/
+.agent/
