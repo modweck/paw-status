@@ -22,28 +22,11 @@ describe('LoginPanel', () => {
     signInWithPassword.mockReset();
   });
 
-  it('keeps magic link sign-in as the default', async () => {
-    sendMagicLink.mockResolvedValueOnce(undefined);
-
-    render(<LoginPanel />);
-
-    fireEvent.change(screen.getByLabelText('Email'), {
-      target: { value: 'owner@example.com' },
-    });
-    fireEvent.click(screen.getByRole('button', { name: 'Send sign-in link' }));
-
-    await waitFor(() => {
-      expect(sendMagicLink).toHaveBeenCalledWith('owner@example.com');
-    });
-    expect(signInWithPassword).not.toHaveBeenCalled();
-  });
-
-  it('can switch to password sign-in for users who added a password', async () => {
+  it('keeps password sign-in as the default', async () => {
     signInWithPassword.mockResolvedValueOnce(undefined);
 
     render(<LoginPanel />);
 
-    fireEvent.click(screen.getByRole('button', { name: 'Use password instead' }));
     fireEvent.change(screen.getByLabelText('Email'), {
       target: { value: 'owner@example.com' },
     });
@@ -59,6 +42,23 @@ describe('LoginPanel', () => {
       );
     });
     expect(sendMagicLink).not.toHaveBeenCalled();
+  });
+
+  it('can switch to a magic link for users who prefer one', async () => {
+    sendMagicLink.mockResolvedValueOnce(undefined);
+
+    render(<LoginPanel />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Use magic link instead' }));
+    fireEvent.change(screen.getByLabelText('Email'), {
+      target: { value: 'owner@example.com' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Send sign-in link' }));
+
+    await waitFor(() => {
+      expect(sendMagicLink).toHaveBeenCalledWith('owner@example.com');
+    });
+    expect(signInWithPassword).not.toHaveBeenCalled();
   });
 
   it('supports custom sign-in copy for admin and staff gates', () => {

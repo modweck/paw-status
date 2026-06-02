@@ -3,10 +3,14 @@ import { useState } from 'react';
 
 import { useAuth } from './AuthProvider.jsx';
 
-export function LoginPanel({ compact = false, description = '', title = 'Sign in to book' }) {
+export function LoginPanel({
+  compact = false,
+  description = '',
+  title = 'Sign in to request an appointment',
+}) {
   const { authError, authMessage, isConfigured, sendMagicLink, signInWithPassword } = useAuth();
   const [email, setEmail] = useState('');
-  const [mode, setMode] = useState('magic-link');
+  const [mode, setMode] = useState('password');
   const [password, setPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
@@ -39,8 +43,8 @@ export function LoginPanel({ compact = false, description = '', title = 'Sign in
         <p>
           {description ||
             (isPasswordMode
-              ? 'Use your email and password if you added one.'
-              : 'Use an email magic link, or sign in with a password if you added one.')}
+              ? 'Enter your email and password, or switch to an email magic link.'
+              : 'We’ll email you a one-time sign-in link — no password needed.')}
         </p>
       </div>
       <button

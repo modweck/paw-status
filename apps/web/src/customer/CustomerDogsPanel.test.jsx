@@ -85,7 +85,7 @@ describe('CustomerDogsPanel', () => {
     expect(dogProfile.getByText('Full groom')).toBeInTheDocument();
     expect(dogProfile.getByText('Paw House')).toBeInTheDocument();
     expect(screen.getByText('Last visit: Mar 1, 2026')).toBeInTheDocument();
-    expect(screen.getByText('Usual cadence: every 6 weeks')).toBeInTheDocument();
+    expect(screen.getByText('How often: every 6 weeks')).toBeInTheDocument();
   });
 
   it('creates a dog profile tied to the verified customer row', async () => {
@@ -160,7 +160,7 @@ describe('CustomerDogsPanel', () => {
     fireEvent.change(screen.getByLabelText('Last groomed'), {
       target: { value: '2026-04-01' },
     });
-    fireEvent.change(screen.getByLabelText('Grooming cadence'), {
+    fireEvent.change(screen.getByLabelText('How often (weeks between grooms)'), {
       target: { value: '6' },
     });
     fireEvent.change(screen.getByLabelText('Notes'), {

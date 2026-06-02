@@ -1,9 +1,17 @@
 import { useCallback, useEffect, useState } from 'react';
 
 import { AdminVerificationPanel } from './admin/AdminVerificationPanel.jsx';
+import { isAuthCallbackPath } from './auth/authRedirect.js';
 import { CustomerApp } from './customer/CustomerApp.jsx';
 import { StaffDashboard } from './groomer/StaffDashboard.jsx';
 import { AppShell } from './layout/AppShell.jsx';
+
+// Same-origin absolute path only: rejects empty, external, and
+// protocol-relative ("//host") values that could redirect off-site or make
+// history.replaceState throw a cross-origin SecurityError.
+function isSafeNextPath(value) {
+  return Boolean(value) && value.startsWith('/') && !value.startsWith('//');
+}
 
 function currentRoute(pathname = window.location.pathname) {
   if (pathname.startsWith('/admin')) {
@@ -33,6 +41,18 @@ export function App() {
     return () => {
       window.removeEventListener('popstate', handleRouteChange);
     };
+  }, []);
+
+  // After a magic-link redirect we land on /auth/callback?next=/groomer.
+  // Restore the originating path so groomers return to their workspace
+  // instead of falling through to the customer view.
+  useEffect(() => {
+    if (!isAuthCallbackPath(window.location.pathname)) return;
+    const nextPath = new URLSearchParams(window.location.search).get('next');
+    if (isSafeNextPath(nextPath)) {
+      window.history.replaceState(null, '', nextPath);
+      setRoute(currentRoute(nextPath));
+    }
   }, []);
 
   const navigate = useCallback((href) => {

@@ -49,10 +49,11 @@ export function AuthProvider({ children }) {
       return;
     }
 
+    const nextPath = `${window.location.pathname}${window.location.search}`;
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        emailRedirectTo: buildAuthRedirectUrl(window.location.origin),
+        emailRedirectTo: buildAuthRedirectUrl(window.location.origin, nextPath),
       },
     });
 

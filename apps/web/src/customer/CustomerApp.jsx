@@ -108,7 +108,7 @@ function saveFavoriteGroomerId(user, groomerId) {
   window.localStorage.setItem(key, groomerId);
 }
 
-function PopularNearYou({ groomers, onSelectFavorite, signedIn }) {
+function PopularNearYou({ groomers, onSelectFavorite, onStartBooking, signedIn }) {
   const popularGroomers = [...groomers]
     .sort((left, right) => {
       const ratingDiff = ratingValue(right) - ratingValue(left);
@@ -129,7 +129,20 @@ function PopularNearYou({ groomers, onSelectFavorite, signedIn }) {
       </div>
       <div className="popular-strip">
         {popularGroomers.map((groomer) => (
-          <article className="popular-card" key={groomer.id}>
+          <article
+            className="popular-card popular-card--clickable"
+            key={groomer.id}
+            role="button"
+            tabIndex={0}
+            aria-label={`Book ${groomer.name}`}
+            onClick={() => onStartBooking?.(groomer)}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                onStartBooking?.(groomer);
+              }
+            }}
+          >
             <div>
               <h3>{groomer.name}</h3>
               <p>{groomer.neighborhood || groomer.distanceLabel || 'Nearby'}</p>
@@ -142,7 +155,10 @@ function PopularNearYou({ groomers, onSelectFavorite, signedIn }) {
               aria-label={`Save ${groomer.name} as favorite`}
               type="button"
               disabled={!signedIn}
-              onClick={() => onSelectFavorite?.(groomer)}
+              onClick={(event) => {
+                event.stopPropagation();
+                onSelectFavorite?.(groomer);
+              }}
             >
               <Heart size={14} />
               Save
@@ -701,6 +717,7 @@ export function CustomerApp({ initialSection = 'customer' }) {
       <PopularNearYou
         groomers={groomers}
         onSelectFavorite={handleFavoriteGroomer}
+        onStartBooking={startBookingForGroomer}
         signedIn={Boolean(user)}
       />
     </section>

@@ -70,7 +70,7 @@ function getGroomingStatus(dog) {
     return {
       title: `${dog.name || 'Your dog'} grooming tracker`,
       dueDate: '',
-      detail: 'Add the last visit and usual cadence to track the next groom.',
+      detail: 'Add the last visit and how often to track the next groom.',
       tone: 'neutral',
     };
   }
@@ -107,7 +107,7 @@ function DogTrackerCard({ dog }) {
         <h3>{status.title}</h3>
         <p>Last visit: {formatDogDate(dog.lastGroomedAt)}</p>
         <p>
-          Usual cadence:{' '}
+          How often:{' '}
           {dog.groomingIntervalWeeks
             ? `every ${dog.groomingIntervalWeeks} weeks`
             : 'not set'}
@@ -398,9 +398,9 @@ export function CustomerDogsPanel({
             />
           </label>
           <label>
-            <span>Cadence</span>
+            <span>How often (weeks)</span>
             <input
-              aria-label="Grooming cadence"
+              aria-label="How often (weeks between grooms)"
               inputMode="numeric"
               min="1"
               type="number"

@@ -73,4 +73,23 @@ describe('app route detection', () => {
 
     expect(screen.getByText('Admin verification workspace')).toBeInTheDocument();
   });
+
+  it('restores the originating path after a magic-link callback', () => {
+    window.history.pushState(null, '', '/auth/callback?next=%2Fgroomer');
+
+    render(<App />);
+
+    expect(window.location.pathname).toBe('/groomer');
+    expect(screen.getByText('Groomer workspace')).toBeInTheDocument();
+  });
+
+  it('ignores unsafe protocol-relative next paths on the callback', () => {
+    window.history.pushState(null, '', '/auth/callback?next=%2F%2Fevil.com');
+
+    render(<App />);
+
+    // Stays on the callback path (no off-site redirect), falls back to customer.
+    expect(window.location.pathname).toBe('/auth/callback');
+    expect(screen.getByText('Customer section: customer')).toBeInTheDocument();
+  });
 });

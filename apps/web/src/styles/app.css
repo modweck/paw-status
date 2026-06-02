@@ -364,6 +364,18 @@ button:disabled {
   padding: 12px;
 }
 
+.popular-card--clickable {
+  cursor: pointer;
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+
+.popular-card--clickable:hover,
+.popular-card--clickable:focus-visible {
+  border-color: var(--accent, #2563eb);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+  outline: none;
+}
+
 .popular-card h3 {
   margin: 0;
   font-size: 15px;
