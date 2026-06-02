@@ -81,6 +81,18 @@ function cleanTimeOfDay(value) {
   return cleaned;
 }
 
+const TIME_PATTERN = /^([01]\d|2[0-3]):[0-5]\d$/;
+
+function cleanOptionalTime(value) {
+  const cleaned = String(value || '').trim();
+  if (!cleaned) return null;
+  if (!TIME_PATTERN.test(cleaned)) {
+    throw userFacingError('Choose a valid time.');
+  }
+
+  return cleaned;
+}
+
 function cleanPreferredWindow(window) {
   if (typeof window === 'string') {
     const legacyValue = window.trim();
@@ -100,7 +112,7 @@ function cleanPreferredWindow(window) {
     return { type: 'first-available' };
   }
 
-  return {
+  const normalized = {
     type: window.type,
     date: cleanDate(
       window.date,
@@ -110,6 +122,13 @@ function cleanPreferredWindow(window) {
     ),
     timeOfDay: cleanTimeOfDay(window.timeOfDay),
   };
+
+  const time = cleanOptionalTime(window.time);
+  if (time) {
+    normalized.time = time;
+  }
+
+  return normalized;
 }
 
 function cleanPreferredWindows(windows = []) {

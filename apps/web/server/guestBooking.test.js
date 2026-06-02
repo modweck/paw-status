@@ -59,6 +59,44 @@ describe('guest booking server helpers', () => {
     });
   });
 
+  it('keeps a valid optional exact time on a preferred window', () => {
+    const rows = buildGuestBookingRows(
+      {
+        ...input,
+        preferredWindows: [
+          { type: 'preferred-date', date: '2026-06-05', timeOfDay: 'morning', time: '09:30' },
+        ],
+      },
+      {
+        claimToken: 'claim-token-1',
+        groomer: { id: 'groomer-1', website: '' },
+        now: new Date('2026-05-19T20:00:00.000Z'),
+      },
+    );
+
+    expect(rows.request.preferred_windows).toEqual([
+      { type: 'preferred-date', date: '2026-06-05', timeOfDay: 'morning', time: '09:30' },
+    ]);
+  });
+
+  it('rejects a malformed exact time before writing rows', () => {
+    expect(() =>
+      buildGuestBookingRows(
+        {
+          ...input,
+          preferredWindows: [
+            { type: 'preferred-date', date: '2026-06-05', timeOfDay: 'morning', time: '24:00' },
+          ],
+        },
+        {
+          claimToken: 'claim-token-1',
+          groomer: { id: 'groomer-1', website: '' },
+          now: new Date('2026-05-19T20:00:00.000Z'),
+        },
+      ),
+    ).toThrow('Choose a valid time.');
+  });
+
   it('rejects invalid dog size categories before writing rows', () => {
     expect(() =>
       buildGuestBookingRows(

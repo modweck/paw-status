@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   buildPreferredWindows,
   createBookingRequest,
+  isValidTime,
   loadCustomerBookingRequests,
   mapBookingRequestListRow,
   mapBookingRequestRow,
@@ -167,6 +168,64 @@ describe('booking request api', () => {
       'afternoon',
       'evening',
     ]);
+  });
+
+  it('includes an optional exact time on preferred and backup windows when provided', () => {
+    expect(
+      buildPreferredWindows({
+        firstAvailable: false,
+        preferredDate: '2026-06-05',
+        preferredTimeOfDay: 'morning',
+        preferredTime: '09:30',
+        backupDate: '2026-06-07',
+        backupTimeOfDay: 'afternoon',
+        backupTime: '',
+      }),
+    ).toEqual([
+      { type: 'preferred-date', date: '2026-06-05', timeOfDay: 'morning', time: '09:30' },
+      { type: 'backup-date', date: '2026-06-07', timeOfDay: 'afternoon' },
+    ]);
+  });
+
+  it('validates exact time format', () => {
+    expect(isValidTime('00:00')).toBe(true);
+    expect(isValidTime('09:30')).toBe(true);
+    expect(isValidTime('23:59')).toBe(true);
+    expect(isValidTime('24:00')).toBe(false);
+    expect(isValidTime('09:60')).toBe(false);
+    expect(isValidTime('9:5')).toBe(false);
+    expect(isValidTime('0930')).toBe(false);
+    expect(isValidTime('')).toBe(false);
+  });
+
+  it('preserves a valid exact time through normalization', async () => {
+    const client = makeInsertClient({ id: 'req-time', preferred_windows: [] });
+
+    await createBookingRequest(client, customer, dog, groomer, {
+      service: 'full-groom',
+      preferredWindows: [
+        { type: 'preferred-date', date: '2026-06-05', timeOfDay: 'morning', time: '09:30' },
+      ],
+    });
+
+    const inserted = client.spies.insert.mock.calls[0][0];
+    expect(inserted.preferred_windows).toEqual([
+      { type: 'preferred-date', date: '2026-06-05', timeOfDay: 'morning', time: '09:30' },
+    ]);
+  });
+
+  it('rejects a malformed exact time before writing', async () => {
+    const client = makeInsertClient({});
+
+    await expect(
+      createBookingRequest(client, customer, dog, groomer, {
+        service: 'full-groom',
+        preferredWindows: [
+          { type: 'preferred-date', date: '2026-06-05', timeOfDay: 'morning', time: '24:00' },
+        ],
+      }),
+    ).rejects.toThrow('Choose a valid time.');
+    expect(client.spies.insert).not.toHaveBeenCalled();
   });
 
   it('rejects invalid request timing before writing', async () => {

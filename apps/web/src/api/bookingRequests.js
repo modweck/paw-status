@@ -129,6 +129,22 @@ function cleanTimeOfDay(value) {
   return cleaned;
 }
 
+const TIME_PATTERN = /^([01]\d|2[0-3]):[0-5]\d$/;
+
+export function isValidTime(value) {
+  return TIME_PATTERN.test(String(value || '').trim());
+}
+
+function cleanOptionalTime(value) {
+  const cleaned = String(value || '').trim();
+  if (!cleaned) return null;
+  if (!isValidTime(cleaned)) {
+    throw new Error('Choose a valid time.');
+  }
+
+  return cleaned;
+}
+
 function normalizePreferredWindow(window) {
   if (typeof window === 'string') {
     const legacyValue = window.trim();
@@ -148,7 +164,7 @@ function normalizePreferredWindow(window) {
     return { type: 'first-available' };
   }
 
-  return {
+  const normalized = {
     type: window.type,
     date: cleanDate(
       window.date,
@@ -158,14 +174,23 @@ function normalizePreferredWindow(window) {
     ),
     timeOfDay: cleanTimeOfDay(window.timeOfDay),
   };
+
+  const time = cleanOptionalTime(window.time);
+  if (time) {
+    normalized.time = time;
+  }
+
+  return normalized;
 }
 
 export function buildPreferredWindows({
   backupDate = '',
   backupTimeOfDay = 'afternoon',
+  backupTime = '',
   firstAvailable = true,
   preferredDate = '',
   preferredTimeOfDay = 'morning',
+  preferredTime = '',
 } = {}) {
   return [
     firstAvailable ? { type: 'first-available' } : null,
@@ -174,6 +199,7 @@ export function buildPreferredWindows({
           type: 'preferred-date',
           date: preferredDate,
           timeOfDay: preferredTimeOfDay,
+          ...(preferredTime ? { time: preferredTime } : {}),
         }
       : null,
     backupDate
@@ -181,6 +207,7 @@ export function buildPreferredWindows({
           type: 'backup-date',
           date: backupDate,
           timeOfDay: backupTimeOfDay,
+          ...(backupTime ? { time: backupTime } : {}),
         }
       : null,
   ].filter(Boolean);
