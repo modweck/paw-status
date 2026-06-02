@@ -30,7 +30,7 @@ it directly feeds the booking flow shipped earlier.
 | Scope | Business details + offerings + weekly hours + time-off | Full "manage your business" |
 | Business details fields | name, salon, phone, website, timezone, lead-time | Slot-critical + contact |
 | Address / lat-lng | **Excluded** (deferred to C) | Editing address without re-geocoding would desync coords/search |
-| `groomers` self-update | New UPDATE policy (verified-membership gated) **+ column-guard trigger** allowlist | Mirrors the offerings policy; trigger prevents tampering with id/place_id/coords/rating |
+| `groomers` self-update | New UPDATE policy (verified-membership gated) **+ column-level GRANT** allowlist | Mirrors the offerings policy + the appointment_requests column grant; prevents tampering with id/place_id/coords/rating |
 | Data access | Direct table reads/writes under RLS (no RPCs) | RLS already enforces ownership for offerings/hours/time-off |
 | Placement | Always-on section for verified groomers | Not gated by the request-handling feature flag |
 | Multiple verified profiles | Profile selector | A groomer account can own more than one salon |
@@ -44,12 +44,12 @@ it directly feeds the booking flow shipped earlier.
 - `grant update on table groomers to authenticated;`
 - UPDATE policy `"verified groomers update own groomer"` — `using` / `with check`
   the same verified-membership EXISTS clause used by the offerings policies.
-- **Column-guard trigger** `groomers_restrict_self_update` (BEFORE UPDATE),
-  modeled on `restrict_appointment_request_update_columns`: when the updater is
-  not the service role, reject the update if any column outside the allowlist
-  (`name, salon, phone, website, timezone, lead_time_hours`) changed — i.e.
-  `id, google_place_id, lat, lng, location, rating, review_count, created_at`,
-  etc. must be unchanged.
+- **Column-level GRANT** (the pattern used by `restrict_appointment_request_update_columns`):
+  `grant update (name, salon, phone, website, timezone, lead_time_hours) on
+  groomers to authenticated;`. Postgres then rejects any attempt to change
+  columns outside that list (`id, google_place_id, lat, lng, location, rating,
+  review_count, created_at`), so no trigger is needed. The service role keeps
+  full update rights.
 
 ### 3.2 API modules (thin; validate at the boundary)
 
@@ -132,7 +132,7 @@ one verified membership, independent of `isStaffDashboardEnabled()`.
 
 | Risk | Mitigation |
 |---|---|
-| Groomer tampering with rating/place_id/coords via the new UPDATE policy | Column-guard trigger allowlist; service role bypasses |
+| Groomer tampering with rating/place_id/coords via the new UPDATE policy | Column-level GRANT allowlist; service role keeps full rights |
 | Overlapping weekly windows corrupt slot math | App-layer overlap validation on create/update |
 | Editing applies to the wrong salon (multi-profile) | Explicit profile selector; all writes carry the selected `groomerId` |
 | Invalid timezone breaks slot times | Validate IANA timezone before save |

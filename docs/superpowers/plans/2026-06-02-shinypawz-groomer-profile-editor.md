@@ -33,7 +33,7 @@
 
 ## Task 1: Migration — verified groomers can update their `groomers` row
 
-- [ ] **Step 1:** Write `<ts>_allow_verified_groomers_update_groomers.sql`: `grant update on groomers to authenticated`; UPDATE policy gated on a verified membership (mirror the `groomer_offerings` policy); `BEFORE UPDATE` trigger `groomers_restrict_self_update` that — when `auth.role()` is not service role — raises unless only the allowlist (`name, salon, phone, website, timezone, lead_time_hours`) changed.
+- [ ] **Step 1:** Write `<ts>_allow_verified_groomers_update_groomers.sql`: column-level `grant update (name, salon, phone, website, timezone, lead_time_hours) on groomers to authenticated`; UPDATE policy gated on a verified membership (mirror the `groomer_offerings` policy). The column grant (not a trigger) is what blocks edits to id/place_id/coords/rating — matching `restrict_appointment_request_update_columns`.
 - [ ] **Step 2:** Self-review the SQL against the offerings policy + `restrict_appointment_request_update_columns` patterns.
 - [ ] **Step 3:** Commit (`feat(groomer): allow verified groomers to update their business row (RLS + column guard)`). (Apply/verify against a DB is a manual step.)
 
