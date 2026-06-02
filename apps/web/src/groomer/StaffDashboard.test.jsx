@@ -345,9 +345,10 @@ describe('StaffDashboard', () => {
     render(<StaffDashboard />);
 
     await waitFor(() => {
-      expect(screen.getByText('Claim a groomer profile')).toBeInTheDocument();
+      expect(screen.getByText('Set up your groomer profile')).toBeInTheDocument();
     });
 
+    // Default sub-tab is "Find on our list" (the existing claim search).
     fireEvent.change(screen.getByLabelText('Groomer name'), {
       target: { value: 'Paw' },
     });

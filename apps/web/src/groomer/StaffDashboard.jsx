@@ -26,6 +26,7 @@ import {
   formatGroomerMembershipStatus,
 } from './statusLabels.js';
 import { GroomerProfileManager } from './GroomerProfileManager.jsx';
+import { AddYourBusiness } from './AddYourBusiness.jsx';
 
 function formatProvider(provider) {
   return String(provider || '')
@@ -248,6 +249,38 @@ function ClaimGroomerProfile({ account, setWorkspace }) {
   );
 }
 
+function SetUpGroomerProfile({ account, setWorkspace }) {
+  const [mode, setMode] = useState('search');
+
+  return (
+    <>
+      <div className="role-toggle" role="group" aria-label="Choose how to set up your profile">
+        <button
+          type="button"
+          className={mode === 'search' ? 'role-toggle__option is-active' : 'role-toggle__option'}
+          aria-pressed={mode === 'search'}
+          onClick={() => setMode('search')}
+        >
+          Find on our list
+        </button>
+        <button
+          type="button"
+          className={mode === 'google' ? 'role-toggle__option is-active' : 'role-toggle__option'}
+          aria-pressed={mode === 'google'}
+          onClick={() => setMode('google')}
+        >
+          Add from Google
+        </button>
+      </div>
+      {mode === 'search' ? (
+        <ClaimGroomerProfile account={account} setWorkspace={setWorkspace} />
+      ) : (
+        <AddYourBusiness account={account} setWorkspace={setWorkspace} />
+      )}
+    </>
+  );
+}
+
 function MembershipSummary({ account, memberships, setWorkspace, verifiedMemberships }) {
   if (!memberships.length) {
     return (
@@ -256,10 +289,10 @@ function MembershipSummary({ account, memberships, setWorkspace, verifiedMembers
           <CheckCircle2 size={18} />
         </div>
         <div>
-          <h2>Claim a groomer profile</h2>
-          <p>No salon profile has been linked to this account yet.</p>
+          <h2>Set up your groomer profile</h2>
+          <p>Find your salon in our list, or add it from Google if it isn&apos;t there yet.</p>
         </div>
-        <ClaimGroomerProfile account={account} setWorkspace={setWorkspace} />
+        <SetUpGroomerProfile account={account} setWorkspace={setWorkspace} />
       </section>
     );
   }
