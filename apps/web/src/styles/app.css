@@ -364,6 +364,30 @@ button:disabled {
   padding: 12px;
 }
 
+.role-toggle {
+  display: inline-flex;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+}
+
+.role-toggle__option {
+  border: none;
+  background: none;
+  cursor: pointer;
+  font: inherit;
+  padding: 4px 12px;
+  border-radius: 999px;
+  color: var(--muted, #555);
+}
+
+.role-toggle__option.is-active {
+  background: var(--accent, #2563eb);
+  color: #fff;
+}
+
 .step-back {
   align-self: flex-start;
   background: none;
