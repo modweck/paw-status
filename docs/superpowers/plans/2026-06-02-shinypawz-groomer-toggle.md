@@ -21,7 +21,7 @@
 | `apps/web/src/layout/RoleToggle.jsx` (new) | Presentational Dog owner | Groomer segmented control. |
 | `apps/web/src/layout/RoleToggle.test.jsx` (new) | Render + active state + onSwitch. |
 | `apps/web/src/layout/AppShell.jsx` (modify) | Remove staff nav item; render `RoleToggle` when signed in. |
-| `apps/web/src/layout/AppShell.test.jsx` (new or modify) | Toggle visibility + switch navigation + no staff tab. |
+| `apps/web/src/layout/AppShell.test.jsx` (modify — exists; currently asserts the Groomer nav link) | Toggle visibility + switch navigation + no staff tab. |
 | `apps/web/src/App.jsx` (modify) | Persist mode on route change; restore on bare-root load. |
 | `apps/web/src/App.test.jsx` (modify) | Redirect/persist rules. |
 | `apps/web/src/styles/app.css` (modify) | Toggle styling. |
@@ -56,7 +56,7 @@
 
 - [ ] **Step 1:** Failing tests (`App.test.jsx`, extend existing): with a signed-in user and `loadPreferredMode → 'groomer'`, mounting at `/` redirects to `/groomer`; `'customer'` does not redirect; `/auth/callback?next=/dogs` and `/?step=results` do NOT trigger the mode redirect; navigating staff↔customer calls `savePreferredMode` with the right mode. (Mock `modePreference`.)
 - [ ] **Step 2:** Run, confirm fail.
-- [ ] **Step 3:** Implement the two effects (persist-on-route-change; restore-on-bare-root). Reuse the existing `isSafeNextPath`/callback guards so `?next` still wins.
+- [ ] **Step 3:** Implement the two effects (persist-on-route-change; restore-on-bare-root). Reuse the existing `isSafeNextPath`/callback guards so `?next` still wins. **Ordering guard:** the persist effect MUST skip its first run (a `didMount` ref) so it doesn't overwrite the stored mode before the restore effect reads it; the restore effect waits for auth `loading` to resolve and runs once (a `didRestore` ref). App must add `const { user, loading } = useAuth();`.
 - [ ] **Step 4:** Run, confirm pass.
 - [ ] **Step 5:** Full suite + build; manual smoke (toggle switches, reload lands in last mode, magic-link still returns correctly); commit (`feat(groomer): remember and restore last-used mode`).
 
