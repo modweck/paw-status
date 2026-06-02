@@ -1,17 +1,19 @@
-import { CalendarDays, PawPrint, Scissors, ShieldCheck, UserRound } from 'lucide-react';
+import { CalendarDays, PawPrint, Scissors, UserRound } from 'lucide-react';
 
 import { useAuth } from '../auth/AuthProvider.jsx';
+import { RoleToggle } from './RoleToggle.jsx';
+import { MODE_CUSTOMER, MODE_GROOMER } from './modePreference.js';
 
 const navItems = [
   { id: 'customer', label: 'Explore', icon: Scissors, href: '/' },
   { id: 'dogs', label: 'My Dog', icon: PawPrint, href: '/dogs' },
   { id: 'bookings', label: 'Bookings', icon: CalendarDays, href: '/bookings' },
   { id: 'account', label: 'Account', icon: UserRound, href: '/account' },
-  { id: 'staff', label: 'Groomer', icon: ShieldCheck, href: '/groomer' },
 ];
 
 export function AppShell({ route, children, onNavigate }) {
   const { user, signOut } = useAuth();
+  const mode = route === 'staff' ? MODE_GROOMER : MODE_CUSTOMER;
 
   function handleNavClick(event, href) {
     if (!href.startsWith('/')) return;
@@ -20,12 +22,17 @@ export function AppShell({ route, children, onNavigate }) {
     onNavigate?.(href);
   }
 
+  function handleSwitchMode(nextMode) {
+    onNavigate?.(nextMode === MODE_GROOMER ? '/groomer' : '/');
+  }
+
   return (
     <div className="app-frame">
       <header className="topbar">
         <a className="brand" href="/">
           <span>Shiny</span>Pawz
         </a>
+        {user ? <RoleToggle mode={mode} onSwitch={handleSwitchMode} /> : null}
         <div className="topbar__session">
           {user ? (
             <>
