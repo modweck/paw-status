@@ -364,6 +364,20 @@ button:disabled {
   padding: 12px;
 }
 
+.step-back {
+  align-self: flex-start;
+  background: none;
+  border: none;
+  color: var(--accent, #2563eb);
+  cursor: pointer;
+  font: inherit;
+  padding: 4px 0;
+}
+
+.step-back:hover {
+  text-decoration: underline;
+}
+
 .popular-card--clickable {
   cursor: pointer;
   transition: border-color 120ms ease, box-shadow 120ms ease;

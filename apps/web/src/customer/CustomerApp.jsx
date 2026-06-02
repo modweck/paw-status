@@ -17,9 +17,18 @@ import {
 } from '../api/geocoding.js';
 import { GROOMING_SERVICES, groupGroomingServices } from '../data/services.js';
 import { useAuth } from '../auth/AuthProvider.jsx';
+import { BookingForm } from './BookingForm.jsx';
 import { CustomerOwnershipPanel } from './CustomerOwnershipPanel.jsx';
-import { GuestBookingPanel } from './GuestBookingPanel.jsx';
 import { GroomerCard } from './GroomerCard.jsx';
+
+const FLOW_STEPS = new Set(['search', 'results', 'booking']);
+const MANAGEMENT_SECTIONS = ['dogs', 'bookings', 'account'];
+
+function readStepFromUrl() {
+  if (typeof window === 'undefined') return 'search';
+  const param = new URLSearchParams(window.location.search).get('step');
+  return FLOW_STEPS.has(param) ? param : 'search';
+}
 
 const NYC_RADIUS_OPTIONS = [
   { label: '0.5 mi', meters: 805 },
@@ -189,8 +198,26 @@ export function CustomerApp({ initialSection = 'customer' }) {
   const [favoriteGroomerId, setFavoriteGroomerId] = useState('');
   const [guestClaimNotice, setGuestClaimNotice] = useState(null);
   const [locatingMe, setLocatingMe] = useState(false);
+  const isManagementSection = MANAGEMENT_SECTIONS.includes(initialSection);
+  // Bottom-nav routes (/dogs, /bookings, /account) live on the booking screen,
+  // which hosts the customer's profile/management panels. On a fresh load no
+  // groomer is chosen yet, so a direct ?step=booking link falls back to search
+  // (in-session Back/Forward still restores booking via the popstate handler).
+  const [step, setStep] = useState(() => {
+    if (isManagementSection) return 'booking';
+    const fromUrl = readStepFromUrl();
+    return fromUrl === 'booking' ? 'search' : fromUrl;
+  });
   const manualSearchStartedRef = useRef(false);
   const pendingPlaceIdRef = useRef('');
+
+  function goToStep(nextStep) {
+    setStep(nextStep);
+    if (typeof window !== 'undefined') {
+      const url = nextStep === 'search' ? '/' : `/?step=${nextStep}`;
+      window.history.pushState({ step: nextStep }, '', url);
+    }
+  }
   const selectedService = useMemo(
     () => GROOMING_SERVICES.find((service) => service.id === serviceId) ?? GROOMING_SERVICES[0],
     [serviceId],
@@ -222,6 +249,17 @@ export function CustomerApp({ initialSection = 'customer' }) {
   useEffect(() => {
     setFavoriteGroomerId(loadFavoriteGroomerId(user));
   }, [user]);
+
+  // Keep the screen in sync with the Back/Forward buttons. App.jsx keeps the
+  // route ('customer') because the pathname stays '/'; we only read ?step=.
+  useEffect(() => {
+    if (isManagementSection) return undefined;
+    function handlePopState() {
+      setStep(readStepFromUrl());
+    }
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [isManagementSection]);
 
   useEffect(() => {
     if (
@@ -422,6 +460,7 @@ export function CustomerApp({ initialSection = 'customer' }) {
       setRadiusMeters(nextRadiusMeters);
       setGroomers(nextGroomers);
       setSelectedGroomer(nextGroomers[0] || null);
+      goToStep('results');
     } catch (nextError) {
       setError(nextError.message);
     } finally {
@@ -506,12 +545,7 @@ export function CustomerApp({ initialSection = 'customer' }) {
 
   function startBookingForGroomer(nextGroomer) {
     setSelectedGroomer(nextGroomer);
-    window.history.replaceState(null, '', '/bookings');
-    window.dispatchEvent(new Event('popstate'));
-    document.getElementById('bookings')?.scrollIntoView?.({
-      behavior: 'smooth',
-      block: 'start',
-    });
+    goToStep('booking');
   }
 
   const bookingGate = (
@@ -541,7 +575,7 @@ export function CustomerApp({ initialSection = 'customer' }) {
             title="Sign in and save your info"
             description="Add your email to save your booking details to an account. Skip this and book as a guest below if you'd rather not."
           />
-          <GuestBookingPanel
+          <BookingForm
             groomers={groomers}
             selectedDogSize={dogSize}
             selectedGroomer={selectedGroomer}
@@ -556,31 +590,14 @@ export function CustomerApp({ initialSection = 'customer' }) {
     </section>
   );
 
-  return (
-    <section className="customer-screen">
+  const searchScreen = (
+    <>
       <div className="hero-panel">
         <div>
           <h1>Request a groomer in seconds</h1>
           <p>Browse public groomer listings, save your dog profile, and request a booking.</p>
         </div>
       </div>
-
-      {guestClaimNotice ? (
-        <div
-          aria-live={guestClaimNotice.tone === 'error' ? 'assertive' : 'polite'}
-          className={`guest-claim-notice guest-claim-notice--${guestClaimNotice.tone}`}
-          role={guestClaimNotice.tone === 'error' ? 'alert' : 'status'}
-        >
-          <p>{guestClaimNotice.message}</p>
-          <button
-            type="button"
-            aria-label="Dismiss"
-            onClick={() => setGuestClaimNotice(null)}
-          >
-            Dismiss
-          </button>
-        </div>
-      ) : null}
 
       <form className="search-panel" onSubmit={handleSearch}>
         <label>
@@ -681,6 +698,14 @@ export function CustomerApp({ initialSection = 'customer' }) {
         </button>
         {error ? <p className="form-message form-message--error">{error}</p> : null}
       </form>
+    </>
+  );
+
+  const resultsScreen = (
+    <>
+      <button type="button" className="step-back" onClick={() => goToStep('search')}>
+        ← Edit search
+      </button>
 
       <section className="results-section">
         <div className="section-heading">
@@ -712,14 +737,44 @@ export function CustomerApp({ initialSection = 'customer' }) {
         </div>
       </section>
 
-      {bookingGate}
-
       <PopularNearYou
         groomers={groomers}
         onSelectFavorite={handleFavoriteGroomer}
         onStartBooking={startBookingForGroomer}
         signedIn={Boolean(user)}
       />
+    </>
+  );
+
+  const bookingScreen = (
+    <>
+      {!isManagementSection ? (
+        <button type="button" className="step-back" onClick={() => goToStep('results')}>
+          ← Back to results
+        </button>
+      ) : null}
+      {bookingGate}
+    </>
+  );
+
+  return (
+    <section className="customer-screen">
+      {guestClaimNotice ? (
+        <div
+          aria-live={guestClaimNotice.tone === 'error' ? 'assertive' : 'polite'}
+          className={`guest-claim-notice guest-claim-notice--${guestClaimNotice.tone}`}
+          role={guestClaimNotice.tone === 'error' ? 'alert' : 'status'}
+        >
+          <p>{guestClaimNotice.message}</p>
+          <button type="button" aria-label="Dismiss" onClick={() => setGuestClaimNotice(null)}>
+            Dismiss
+          </button>
+        </div>
+      ) : null}
+
+      {step === 'search' ? searchScreen : null}
+      {step === 'results' ? resultsScreen : null}
+      {step === 'booking' ? bookingScreen : null}
     </section>
   );
 }
