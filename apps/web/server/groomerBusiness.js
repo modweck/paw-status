@@ -145,6 +145,53 @@ export async function linkGroomerBusinessFromPlace({
   return mapGroomerRow(data);
 }
 
+function jsonResponse(statusCode, body) {
+  return {
+    statusCode,
+    headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' },
+    body: JSON.stringify(body),
+  };
+}
+
+function bearerToken(event) {
+  return String(event.headers?.authorization || event.headers?.Authorization || '')
+    .replace(/^Bearer\s+/i, '')
+    .trim();
+}
+
+export async function handleGroomerBusinessSearchEvent(event, env = process.env) {
+  if (event.httpMethod !== 'POST') return jsonResponse(405, { error: 'Method Not Allowed' });
+  try {
+    const { query, near } = JSON.parse(event.body || '{}');
+    const results = await searchGroomerBusinesses({
+      accessToken: bearerToken(event),
+      query,
+      near,
+      env,
+    });
+    return jsonResponse(200, { results });
+  } catch (error) {
+    const publicError = toPublicGroomerBusinessError(error);
+    return jsonResponse(publicError.statusCode, publicError.body);
+  }
+}
+
+export async function handleGroomerBusinessLinkEvent(event, env = process.env) {
+  if (event.httpMethod !== 'POST') return jsonResponse(405, { error: 'Method Not Allowed' });
+  try {
+    const { placeId } = JSON.parse(event.body || '{}');
+    const groomer = await linkGroomerBusinessFromPlace({
+      accessToken: bearerToken(event),
+      placeId,
+      env,
+    });
+    return jsonResponse(200, { groomer });
+  } catch (error) {
+    const publicError = toPublicGroomerBusinessError(error);
+    return jsonResponse(publicError.statusCode, publicError.body);
+  }
+}
+
 export function toPublicGroomerBusinessError(error) {
   if (error instanceof GroomerBusinessError) {
     return { statusCode: error.statusCode, body: { code: error.code, error: error.publicMessage } };

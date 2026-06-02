@@ -15,6 +15,10 @@ import {
   handleGuestBookingEvent,
 } from './server/guestBooking.js';
 import {
+  handleGroomerBusinessLinkEvent,
+  handleGroomerBusinessSearchEvent,
+} from './server/groomerBusiness.js';
+import {
   handleAvailabilityRequest,
   toPublicAvailabilityError,
 } from './server/availability.js';
@@ -204,6 +208,37 @@ function guestBookingDevPlugin(env) {
   };
 }
 
+function groomerBusinessDevPlugin(env) {
+  return {
+    name: 'paw-status-groomer-business-dev',
+    configureServer(server) {
+      server.middlewares.use(async (request, response, next) => {
+        const isSearch = request.url === '/api/groomer-business-search';
+        const isLink = request.url === '/api/groomer-business-link';
+        if (!isSearch && !isLink) {
+          next();
+          return;
+        }
+
+        const event = {
+          body: await readRequestBody(request),
+          headers: request.headers,
+          httpMethod: request.method,
+        };
+        const result = isSearch
+          ? await handleGroomerBusinessSearchEvent(event, env)
+          : await handleGroomerBusinessLinkEvent(event, env);
+
+        response.statusCode = result.statusCode;
+        Object.entries(result.headers || {}).forEach(([key, value]) => {
+          response.setHeader(key, value);
+        });
+        response.end(result.body);
+      });
+    },
+  };
+}
+
 function availabilityDevPlugin(env) {
   return {
     name: 'paw-status-availability-dev',
@@ -365,6 +400,7 @@ export default defineConfig(({ mode }) => {
       react(),
       groomerPhotoDevPlugin(env),
       guestBookingDevPlugin(env),
+      groomerBusinessDevPlugin(env),
       availabilityDevPlugin(env),
       adminGroomerClaimsDevPlugin(env),
       googlePlacesDevPlugin(env),
