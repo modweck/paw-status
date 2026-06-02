@@ -2,6 +2,7 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { App, currentRoute } from './App.jsx';
+import { loadPreferredMode, savePreferredMode } from './layout/modePreference.js';
 
 let authState = {
   user: { id: 'auth-user-1', email: 'owner@example.com' },
@@ -23,6 +24,15 @@ vi.mock('./admin/AdminVerificationPanel.jsx', () => ({
 vi.mock('./groomer/StaffDashboard.jsx', () => ({
   StaffDashboard: () => <div>Groomer workspace</div>,
 }));
+
+vi.mock('./layout/modePreference.js', async (importActual) => {
+  const actual = await importActual();
+  return {
+    ...actual,
+    loadPreferredMode: vi.fn(() => 'customer'),
+    savePreferredMode: vi.fn(),
+  };
+});
 
 describe('app route detection', () => {
   beforeEach(() => {
@@ -91,5 +101,63 @@ describe('app route detection', () => {
     // Stays on the callback path (no off-site redirect), falls back to customer.
     expect(window.location.pathname).toBe('/auth/callback');
     expect(screen.getByText('Customer section: customer')).toBeInTheDocument();
+  });
+});
+
+describe('app mode persistence', () => {
+  beforeEach(() => {
+    authState = {
+      user: { id: 'auth-user-1', email: 'owner@example.com' },
+      signOut: vi.fn(),
+    };
+    loadPreferredMode.mockReturnValue('customer');
+    savePreferredMode.mockClear();
+    window.history.pushState(null, '', '/');
+  });
+
+  it('restores the groomer view on a bare-root load when that was the last mode', () => {
+    loadPreferredMode.mockReturnValue('groomer');
+
+    render(<App />);
+
+    expect(window.location.pathname).toBe('/groomer');
+    expect(screen.getByText('Groomer workspace')).toBeInTheDocument();
+  });
+
+  it('does not redirect when the remembered mode is customer', () => {
+    loadPreferredMode.mockReturnValue('customer');
+
+    render(<App />);
+
+    expect(window.location.pathname).toBe('/');
+    expect(screen.getByText('Customer section: customer')).toBeInTheDocument();
+  });
+
+  it('does not let the remembered mode override a magic-link next path', () => {
+    loadPreferredMode.mockReturnValue('groomer');
+    window.history.pushState(null, '', '/auth/callback?next=%2Fdogs');
+
+    render(<App />);
+
+    expect(window.location.pathname).toBe('/dogs');
+  });
+
+  it('does not redirect away from a customer deep link with a step param', () => {
+    loadPreferredMode.mockReturnValue('groomer');
+    window.history.pushState(null, '', '/?step=results');
+
+    render(<App />);
+
+    expect(window.location.pathname).toBe('/');
+    expect(screen.getByText('Customer section: customer')).toBeInTheDocument();
+  });
+
+  it('persists the mode when the user switches into the groomer view', () => {
+    render(<App />);
+
+    fireEvent.click(screen.getByRole('button', { name: /Groomer/i }));
+
+    expect(window.location.pathname).toBe('/groomer');
+    expect(savePreferredMode).toHaveBeenCalledWith(expect.anything(), 'groomer');
   });
 });

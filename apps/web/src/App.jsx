@@ -1,10 +1,17 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { AdminVerificationPanel } from './admin/AdminVerificationPanel.jsx';
 import { isAuthCallbackPath } from './auth/authRedirect.js';
+import { useAuth } from './auth/AuthProvider.jsx';
 import { CustomerApp } from './customer/CustomerApp.jsx';
 import { StaffDashboard } from './groomer/StaffDashboard.jsx';
 import { AppShell } from './layout/AppShell.jsx';
+import {
+  loadPreferredMode,
+  MODE_CUSTOMER,
+  MODE_GROOMER,
+  savePreferredMode,
+} from './layout/modePreference.js';
 
 // Same-origin absolute path only: rejects empty, external, and
 // protocol-relative ("//host") values that could redirect off-site or make
@@ -30,7 +37,12 @@ function currentRoute(pathname = window.location.pathname) {
 }
 
 export function App() {
+  const { user, loading } = useAuth();
   const [route, setRoute] = useState(() => currentRoute());
+  // Skip the persist effect's first run so it doesn't overwrite the stored
+  // mode before the restore effect below has a chance to read it.
+  const didMountRef = useRef(false);
+  const didRestoreRef = useRef(false);
 
   useEffect(() => {
     function handleRouteChange() {
@@ -59,6 +71,32 @@ export function App() {
     window.history.pushState(null, '', href);
     setRoute(currentRoute(href));
   }, []);
+
+  // Remember the mode the user is in so we can restore it next time. Entering
+  // the groomer view any way (toggle or deep link) persists it; admin is left
+  // untouched. Skips the first run so it can't clobber the stored mode before
+  // the restore effect reads it.
+  useEffect(() => {
+    if (!didMountRef.current) {
+      didMountRef.current = true;
+      return;
+    }
+    if (!user || route === 'admin') return;
+    savePreferredMode(user, route === 'staff' ? MODE_GROOMER : MODE_CUSTOMER);
+  }, [route, user]);
+
+  // On a fresh bare-root load, send a returning groomer back to their last
+  // mode. Deep links, ?step, and the magic-link ?next always win.
+  useEffect(() => {
+    if (loading || didRestoreRef.current) return;
+    didRestoreRef.current = true;
+    if (!user || window.location.pathname !== '/') return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('next') || params.get('step')) return;
+    if (loadPreferredMode(user) === MODE_GROOMER) {
+      navigate('/groomer');
+    }
+  }, [user, loading, navigate]);
 
   return (
     <AppShell route={route} onNavigate={navigate}>
