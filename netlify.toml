@@ -54,6 +54,16 @@
   status = 200
 
 [[redirects]]
+  from = "/api/places/autocomplete"
+  to = "/.netlify/functions/places-autocomplete"
+  status = 200
+
+[[redirects]]
+  from = "/api/places/details"
+  to = "/.netlify/functions/places-details"
+  status = 200
+
+[[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
