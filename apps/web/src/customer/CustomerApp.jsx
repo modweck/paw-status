@@ -557,6 +557,7 @@ export function CustomerApp({ initialSection = 'customer' }) {
           favoriteGroomer={favoriteGroomer}
           groomers={groomers}
           onRebookGroomer={startBookingForGroomer}
+          section={initialSection}
           selectedGroomer={selectedGroomer}
           selectedService={selectedService}
         />

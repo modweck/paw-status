@@ -116,7 +116,7 @@ export function BookingsListPanel({ customer, refreshKey = 0 }) {
   const [requests, setRequests] = useState([]);
   const [error, setError] = useState('');
   // Internal counter for the in-component Refresh button. The optional
-  // `refreshKey` prop lets sibling components (e.g. BookingRequestPanel
+  // `refreshKey` prop lets sibling components (e.g. BookingForm
   // after a successful submit) trigger the same re-fetch.
   const [refreshTick, setRefreshTick] = useState(0);
 

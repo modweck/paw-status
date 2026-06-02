@@ -22,15 +22,19 @@ vi.mock('./CustomerDogsPanel.jsx', () => ({
   CustomerDogsPanel: ({ customer }) => <div>Dog panel for {customer.id}</div>,
 }));
 
-vi.mock('./BookingRequestPanel.jsx', () => ({
-  BookingRequestPanel: ({ customer, selectedGroomer, selectedService }) => (
+vi.mock('./BookingForm.jsx', () => ({
+  BookingForm: ({ customer, selectedGroomer, selectedService }) => (
     <div>
-      Booking request panel for {customer.id}
+      Booking form for {customer.id}
       {selectedGroomer && selectedService
         ? ` and ${selectedGroomer.name} with ${selectedService.name}`
         : ''}
     </div>
   ),
+}));
+
+vi.mock('./BookingsListPanel.jsx', () => ({
+  BookingsListPanel: ({ customer }) => <div>Bookings list for {customer.id}</div>,
 }));
 
 const supabase = { id: 'supabase-client' };
@@ -72,8 +76,10 @@ describe('CustomerOwnershipPanel', () => {
     expect(screen.getByText('Alex')).toBeInTheDocument();
     expect(screen.getByText('Dog panel for customer-1')).toBeInTheDocument();
     expect(
-      screen.getByText('Booking request panel for customer-1 and Paw House with Full groom'),
+      screen.getByText('Booking form for customer-1 and Paw House with Full groom'),
     ).toBeInTheDocument();
+    // The bookings list is not shown next to the form — only on /bookings.
+    expect(screen.queryByText('Bookings list for customer-1')).not.toBeInTheDocument();
     expect(screen.getByText('Your Groomer')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Rebook Paw House' })).toBeInTheDocument();
     expect(screen.getByText('Get Earlier Appointments')).toBeInTheDocument();
@@ -81,6 +87,27 @@ describe('CustomerOwnershipPanel', () => {
     expect(screen.getByText('Optional password sign-in')).toBeInTheDocument();
     expect(screen.getByLabelText('Username')).toHaveValue('');
     expect(screen.getByLabelText('New password')).toBeInTheDocument();
+  });
+
+  it('shows the bookings list only on the bookings section', async () => {
+    requireSupabaseClient.mockReturnValue(supabase);
+    loadCustomerForVerifiedUser.mockResolvedValueOnce({
+      user: { id: 'auth-user-1', email: 'owner@example.com' },
+      customer: { id: 'customer-1', authUserId: 'auth-user-1', name: 'Alex', email: 'owner@example.com' },
+    });
+
+    render(
+      <CustomerOwnershipPanel
+        section="bookings"
+        groomers={[{ id: 'groomer-1', name: 'Paw House' }]}
+        selectedGroomer={{ id: 'groomer-1', name: 'Paw House' }}
+        selectedService={{ id: 'full-groom', name: 'Full groom' }}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('Bookings list for customer-1')).toBeInTheDocument();
+    });
   });
 
   it('creates a customer row for the verified signed-in user', async () => {

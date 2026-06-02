@@ -7,7 +7,7 @@ import {
   updateCustomerForVerifiedUser,
 } from '../api/customers.js';
 import { requireSupabaseClient } from '../lib/supabaseClient.js';
-import { BookingRequestPanel } from './BookingRequestPanel.jsx';
+import { BookingForm } from './BookingForm.jsx';
 import { BookingsListPanel } from './BookingsListPanel.jsx';
 import { CustomerDogsPanel } from './CustomerDogsPanel.jsx';
 
@@ -172,6 +172,7 @@ export function CustomerOwnershipPanel({
   favoriteGroomer = null,
   groomers = [],
   onRebookGroomer,
+  section = 'customer',
   selectedGroomer = null,
   selectedService = null,
 }) {
@@ -181,7 +182,7 @@ export function CustomerOwnershipPanel({
   const [status, setStatus] = useState('loading');
   const [error, setError] = useState('');
   // Bump after a new booking request to make BookingsListPanel re-fetch
-  // without it having to subscribe to anything from BookingRequestPanel.
+  // without it having to subscribe to anything from BookingForm.
   const [bookingsRefreshKey, setBookingsRefreshKey] = useState(0);
   const handleDogsChange = useCallback((nextDogs) => {
     setDogs(nextDogs);
@@ -285,7 +286,7 @@ export function CustomerOwnershipPanel({
           onRebook={onRebookGroomer}
         />
         <WaitlistCard />
-        <BookingRequestPanel
+        <BookingForm
           customer={customer}
           dogs={dogs}
           groomers={groomers}
@@ -293,7 +294,9 @@ export function CustomerOwnershipPanel({
           selectedGroomer={selectedGroomer}
           selectedService={selectedService}
         />
-        <BookingsListPanel customer={customer} refreshKey={bookingsRefreshKey} />
+        {section === 'bookings' ? (
+          <BookingsListPanel customer={customer} refreshKey={bookingsRefreshKey} />
+        ) : null}
       </>
     );
   }
