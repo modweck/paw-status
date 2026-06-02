@@ -44,6 +44,16 @@
   status = 200
 
 [[redirects]]
+  from = "/api/groomer-business-search"
+  to = "/.netlify/functions/groomer-business-search"
+  status = 200
+
+[[redirects]]
+  from = "/api/groomer-business-link"
+  to = "/.netlify/functions/groomer-business-link"
+  status = 200
+
+[[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
