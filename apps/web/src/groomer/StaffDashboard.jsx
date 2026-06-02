@@ -25,6 +25,7 @@ import {
   formatCalendarConnectionStatus,
   formatGroomerMembershipStatus,
 } from './statusLabels.js';
+import { GroomerProfileManager } from './GroomerProfileManager.jsx';
 
 function formatProvider(provider) {
   return String(provider || '')
@@ -610,6 +611,9 @@ function GroomerWorkspace({ requestHandlingEnabled = true }) {
         setWorkspace={setWorkspace}
         verifiedMemberships={workspace.verifiedMemberships}
       />
+      {workspace.verifiedMemberships.length ? (
+        <GroomerProfileManager verifiedMemberships={workspace.verifiedMemberships} />
+      ) : null}
       {workspace.verifiedMemberships.length && !requestHandlingEnabled ? <StaffGate /> : null}
       {workspace.verifiedMemberships.length && requestHandlingEnabled ? (
         <>

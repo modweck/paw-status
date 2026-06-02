@@ -36,6 +36,12 @@ vi.mock('../api/groomerAccounts.js', () => ({
   updateOwnedAppointmentRequestStatus: (...args) => updateOwnedAppointmentRequestStatus(...args),
 }));
 
+vi.mock('./GroomerProfileManager.jsx', () => ({
+  GroomerProfileManager: ({ verifiedMemberships }) => (
+    <div>Profile manager for {verifiedMemberships.length} profile(s)</div>
+  ),
+}));
+
 const supabase = { id: 'supabase-client' };
 const user = { id: 'auth-groomer-1', email: 'owner@pawhouse.example' };
 
