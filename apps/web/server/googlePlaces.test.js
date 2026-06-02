@@ -6,6 +6,7 @@ import {
   autocompletePlaces,
   GooglePlacesError,
   placeDetails,
+  searchBusinesses,
   toPublicGooglePlacesError,
 } from './googlePlaces.js';
 
@@ -139,6 +140,61 @@ describe('autocompletePlaces', () => {
     await expect(
       autocompletePlaces({ input: 'anything', env, fetchImpl }),
     ).rejects.toMatchObject({ code: 'GOOGLE_PLACES_NETWORK_ERROR', statusCode: 502 });
+  });
+});
+
+describe('searchBusinesses', () => {
+  it('returns [] for a query shorter than the minimum without hitting Google', async () => {
+    const fetchImpl = vi.fn();
+    await expect(searchBusinesses({ query: 'ab', env, fetchImpl })).resolves.toEqual([]);
+    expect(fetchImpl).not.toHaveBeenCalled();
+  });
+
+  it('maps Places Text Search results to business candidates', async () => {
+    const fetchImpl = vi.fn().mockResolvedValueOnce(
+      okJson({
+        places: [
+          {
+            id: 'place-1',
+            displayName: { text: 'Paw House Grooming' },
+            formattedAddress: '123 Main St, Brooklyn, NY',
+            rating: 4.8,
+            userRatingCount: 120,
+          },
+          { displayName: { text: 'No id, dropped' } },
+        ],
+      }),
+    );
+
+    const results = await searchBusinesses({ query: 'paw house', env, fetchImpl });
+
+    expect(fetchImpl).toHaveBeenCalledWith(
+      'https://places.googleapis.com/v1/places:searchText',
+      expect.objectContaining({ method: 'POST' }),
+    );
+    expect(results).toEqual([
+      {
+        placeId: 'place-1',
+        name: 'Paw House Grooming',
+        address: '123 Main St, Brooklyn, NY',
+        rating: 4.8,
+        reviewCount: 120,
+      },
+    ]);
+  });
+
+  it('throws GOOGLE_PLACES_UPSTREAM_ERROR on a non-2xx response', async () => {
+    const fetchImpl = vi.fn().mockResolvedValueOnce({ ok: false, status: 503, json: () => Promise.resolve({}) });
+    await expect(searchBusinesses({ query: 'paw house', env, fetchImpl })).rejects.toMatchObject({
+      code: 'GOOGLE_PLACES_UPSTREAM_ERROR',
+      statusCode: 502,
+    });
+  });
+
+  it('throws GOOGLE_PLACES_CONFIG_MISSING with no API key', async () => {
+    await expect(searchBusinesses({ query: 'paw house', env: {}, fetchImpl: vi.fn() })).rejects.toMatchObject({
+      code: 'GOOGLE_PLACES_CONFIG_MISSING',
+    });
   });
 });
 

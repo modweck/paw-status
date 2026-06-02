@@ -131,6 +131,82 @@ export async function autocompletePlaces({
     .filter(Boolean);
 }
 
+const BUSINESS_SEARCH_FIELD_MASK = [
+  'places.id',
+  'places.displayName',
+  'places.formattedAddress',
+  'places.rating',
+  'places.userRatingCount',
+].join(',');
+
+function shapeBusiness(place) {
+  if (!place) return null;
+  const placeId = place.id || '';
+  if (!placeId) return null;
+  return {
+    placeId,
+    name: place.displayName?.text || '',
+    address: place.formattedAddress || '',
+    rating: typeof place.rating === 'number' ? place.rating : null,
+    reviewCount: typeof place.userRatingCount === 'number' ? place.userRatingCount : null,
+  };
+}
+
+// Find businesses by name/text (Places Text Search), used by groomers to locate
+// their own salon when adding it. Returns lightweight candidates; the full
+// detail (coords, phone, website) is fetched via placeDetails at link time.
+export async function searchBusinesses({ query, near, env = process.env, fetchImpl = fetch } = {}) {
+  const cleaned = String(query || '').trim();
+  if (cleaned.length < MIN_INPUT_LENGTH) {
+    return [];
+  }
+
+  const apiKey = resolveApiKey(env);
+  const body = { textQuery: cleaned, maxResultCount: 10 };
+  if (near) {
+    const center = normalizeNear(near);
+    body.locationBias = {
+      circle: {
+        center: { latitude: center.lat, longitude: center.lng },
+        radius: AUTOCOMPLETE_RADIUS_METERS,
+      },
+    };
+  }
+
+  let response;
+  try {
+    response = await fetchImpl(`${GOOGLE_PLACES_BASE_URL}/places:searchText`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Goog-Api-Key': apiKey,
+        'X-Goog-FieldMask': BUSINESS_SEARCH_FIELD_MASK,
+      },
+      body: JSON.stringify(body),
+    });
+  } catch {
+    throw new GooglePlacesError(
+      'Business search is temporarily unavailable.',
+      502,
+      'GOOGLE_PLACES_NETWORK_ERROR',
+    );
+  }
+
+  if (!response.ok) {
+    // eslint-disable-next-line no-console
+    console.warn('[google-places] searchText upstream non-2xx', { status: response.status });
+    throw new GooglePlacesError(
+      'Business search is temporarily unavailable.',
+      502,
+      'GOOGLE_PLACES_UPSTREAM_ERROR',
+    );
+  }
+
+  const payload = await response.json().catch(() => ({}));
+  const places = Array.isArray(payload?.places) ? payload.places : [];
+  return places.map(shapeBusiness).filter(Boolean);
+}
+
 function shapeDetails(place) {
   if (!place) return null;
   const lat = Number(place.location?.latitude);
@@ -209,6 +285,85 @@ export async function placeDetails({
     );
   }
   return shaped;
+}
+
+const BUSINESS_DETAILS_FIELD_MASK = [
+  'id',
+  'displayName',
+  'formattedAddress',
+  'location',
+  'nationalPhoneNumber',
+  'internationalPhoneNumber',
+  'websiteUri',
+  'rating',
+  'userRatingCount',
+].join(',');
+
+// Full business detail for linking a groomer profile from a chosen place.
+export async function placeBusinessDetails({ placeId, env = process.env, fetchImpl = fetch } = {}) {
+  const cleaned = String(placeId || '').trim();
+  if (!cleaned) {
+    throw new GooglePlacesError(
+      'Choose a business from the results.',
+      400,
+      'GOOGLE_PLACES_PLACE_ID_REQUIRED',
+    );
+  }
+
+  const apiKey = resolveApiKey(env);
+
+  let response;
+  try {
+    response = await fetchImpl(`${GOOGLE_PLACES_BASE_URL}/places/${encodeURIComponent(cleaned)}`, {
+      method: 'GET',
+      headers: {
+        'X-Goog-Api-Key': apiKey,
+        'X-Goog-FieldMask': BUSINESS_DETAILS_FIELD_MASK,
+      },
+    });
+  } catch {
+    throw new GooglePlacesError(
+      'Business details are temporarily unavailable.',
+      502,
+      'GOOGLE_PLACES_NETWORK_ERROR',
+    );
+  }
+
+  if (response.status === 404) {
+    throw new GooglePlacesError('That business could not be found.', 404, 'GOOGLE_PLACES_NOT_FOUND');
+  }
+  if (!response.ok) {
+    // eslint-disable-next-line no-console
+    console.warn('[google-places] business details upstream non-2xx', { status: response.status });
+    throw new GooglePlacesError(
+      'Business details are temporarily unavailable.',
+      502,
+      'GOOGLE_PLACES_UPSTREAM_ERROR',
+    );
+  }
+
+  const payload = await response.json().catch(() => ({}));
+  const lat = Number(payload.location?.latitude);
+  const lng = Number(payload.location?.longitude);
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+    throw new GooglePlacesError(
+      'That business is missing a location.',
+      404,
+      'GOOGLE_PLACES_LOCATION_MISSING',
+    );
+  }
+
+  return {
+    placeId: payload.id || cleaned,
+    name: payload.displayName?.text || '',
+    address: payload.formattedAddress || '',
+    lat,
+    lng,
+    phone: payload.nationalPhoneNumber || payload.internationalPhoneNumber || null,
+    website: payload.websiteUri || null,
+    rating: typeof payload.rating === 'number' ? payload.rating : null,
+    reviewCount: typeof payload.userRatingCount === 'number' ? payload.userRatingCount : null,
+  };
 }
 
 export function toPublicGooglePlacesError(error) {
