@@ -152,6 +152,21 @@ describe('app mode persistence', () => {
     expect(screen.getByText('Customer section: customer')).toBeInTheDocument();
   });
 
+  it('restores groomer mode even when auth resolves asynchronously', () => {
+    loadPreferredMode.mockReturnValue('groomer');
+    authState = { user: null, loading: true, signOut: vi.fn() };
+
+    const { rerender } = render(<App />);
+    // Still loading — no redirect yet, and nothing persisted to clobber it.
+    expect(window.location.pathname).toBe('/');
+
+    authState = { user: { id: 'auth-user-1', email: 'owner@example.com' }, loading: false, signOut: vi.fn() };
+    rerender(<App />);
+
+    expect(window.location.pathname).toBe('/groomer');
+    expect(screen.getByText('Groomer workspace')).toBeInTheDocument();
+  });
+
   it('persists the mode when the user switches into the groomer view', () => {
     render(<App />);
 

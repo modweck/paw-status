@@ -39,9 +39,9 @@ function currentRoute(pathname = window.location.pathname) {
 export function App() {
   const { user, loading } = useAuth();
   const [route, setRoute] = useState(() => currentRoute());
-  // Skip the persist effect's first run so it doesn't overwrite the stored
-  // mode before the restore effect below has a chance to read it.
-  const didMountRef = useRef(false);
+  // The persist effect stays dormant until the one-time restore has run, so it
+  // can never overwrite the stored mode before restore reads it — including
+  // when auth resolves asynchronously and re-triggers the effects.
   const didRestoreRef = useRef(false);
 
   useEffect(() => {
@@ -74,13 +74,10 @@ export function App() {
 
   // Remember the mode the user is in so we can restore it next time. Entering
   // the groomer view any way (toggle or deep link) persists it; admin is left
-  // untouched. Skips the first run so it can't clobber the stored mode before
-  // the restore effect reads it.
+  // untouched. Dormant until restore has run so it can't clobber the stored
+  // mode first.
   useEffect(() => {
-    if (!didMountRef.current) {
-      didMountRef.current = true;
-      return;
-    }
+    if (!didRestoreRef.current) return;
     if (!user || route === 'admin') return;
     savePreferredMode(user, route === 'staff' ? MODE_GROOMER : MODE_CUSTOMER);
   }, [route, user]);
