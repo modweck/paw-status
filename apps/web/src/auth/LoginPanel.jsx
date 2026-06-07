@@ -91,6 +91,9 @@ export function LoginPanel({ compact = false, description = '', title = 'Sign in
       ) : null}
       {authError ? <p className="form-message form-message--error">{authError}</p> : null}
       {authMessage ? <p className="form-message">{authMessage}</p> : null}
+      <a href="/groomer" className="login-panel__secondary">
+        I'm a groomer — set up my account
+      </a>
     </form>
   );
 }

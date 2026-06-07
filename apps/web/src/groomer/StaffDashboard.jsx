@@ -11,6 +11,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { LoginPanel } from '../auth/LoginPanel.jsx';
 import { useAuth } from '../auth/AuthProvider.jsx';
+import { OnboardingWizard } from './onboarding/OnboardingWizard.jsx';
 import {
   createGroomerAccountForVerifiedUser,
   loadGroomerWorkspaceForVerifiedUser,
@@ -572,6 +573,10 @@ function GroomerWorkspace({ requestHandlingEnabled = true }) {
     setStatus('ready');
   }
 
+  function handleWizardComplete() {
+    refreshWorkspace();
+  }
+
   if (status === 'loading') {
     return (
       <section className="staff-screen">
@@ -604,6 +609,12 @@ function GroomerWorkspace({ requestHandlingEnabled = true }) {
           <p>{workspace.account.email}</p>
         </div>
       </div>
+      {workspace.verifiedMemberships.length === 0 ? (
+        <OnboardingWizard
+          supabase={requireSupabaseClient()}
+          onComplete={handleWizardComplete}
+        />
+      ) : null}
       <MembershipSummary
         account={workspace.account}
         memberships={workspace.memberships}
