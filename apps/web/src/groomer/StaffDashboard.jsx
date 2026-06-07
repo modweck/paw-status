@@ -12,6 +12,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { LoginPanel } from '../auth/LoginPanel.jsx';
 import { useAuth } from '../auth/AuthProvider.jsx';
 import { RequestActions } from './RequestActions.jsx';
+import { WaitlistInbox } from './WaitlistInbox.jsx';
 import { OnboardingWizard } from './onboarding/OnboardingWizard.jsx';
 import {
   createGroomerAccountForVerifiedUser,
@@ -681,6 +682,13 @@ function GroomerWorkspace({ requestHandlingEnabled = true }) {
       {workspace.verifiedMemberships.length && requestHandlingEnabled ? (
         <>
           <RequestsTab requests={workspace.requests} setWorkspace={setWorkspace} />
+          {workspace.verifiedMemberships.map((membership) => (
+            <WaitlistInbox
+              key={`waitlist-${membership.groomerId}`}
+              groomerId={membership.groomerId}
+              supabase={requireSupabaseClient()}
+            />
+          ))}
           <BookingChannels channels={workspace.bookingChannels} />
           <CalendarConnections connections={workspace.calendarConnections} />
         </>

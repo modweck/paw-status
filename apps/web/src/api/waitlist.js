@@ -23,6 +23,27 @@ const ENTRY_FIELDS = [
   'created_at',
 ].join(', ');
 
+const ENTRY_FIELDS_WITH_DETAILS = `
+  id,
+  customer_id,
+  groomer_id,
+  service_id,
+  status,
+  location,
+  radius_m,
+  created_at,
+  customers:customer_id (
+    id,
+    name,
+    email,
+    phone
+  ),
+  groomer_service_offerings:service_id (
+    id,
+    service_name
+  )
+`;
+
 const OFFER_FIELDS = [
   'id',
   'entry_id',
@@ -47,6 +68,26 @@ function mapWaitlistEntryRow(row) {
     location: row.location,
     radiusM: row.radius_m,
     createdAt: row.created_at,
+  };
+}
+
+function mapWaitlistEntryWithDetailsRow(row) {
+  if (!row) return null;
+
+  const customer = row.customers ? { name: row.customers.name || '' } : null;
+  const service = row.groomer_service_offerings ? { name: row.groomer_service_offerings.service_name || '' } : null;
+
+  return {
+    id: row.id,
+    customerId: row.customer_id,
+    groomerId: row.groomer_id,
+    serviceId: row.service_id,
+    status: row.status,
+    location: row.location,
+    radiusM: row.radius_m,
+    createdAt: row.created_at,
+    customer,
+    service,
   };
 }
 
@@ -185,15 +226,16 @@ export async function claimOffer(supabase, offerId) {
 /**
  * Load all waitlist entries targeting a specific groomer (for groomer view).
  * This shows the groomer which customers are waiting for them.
+ * Includes customer and service details for display purposes.
  *
  * @param {object} supabase - Supabase client
  * @param {string} groomerId - The groomer ID
- * @returns {Promise<Array<object>>} Array of mapped waitlist entries
+ * @returns {Promise<Array<object>>} Array of mapped waitlist entries with details
  */
 export async function loadGroomerWaitlist(supabase, groomerId) {
   const { data, error } = await supabase
     .from('waitlist_entries')
-    .select(ENTRY_FIELDS)
+    .select(ENTRY_FIELDS_WITH_DETAILS)
     .eq('groomer_id', groomerId)
     .eq('status', 'active')
     .order('created_at', { ascending: true });
@@ -202,7 +244,7 @@ export async function loadGroomerWaitlist(supabase, groomerId) {
     throw new Error(error.message);
   }
 
-  return (data || []).map(mapWaitlistEntryRow);
+  return (data || []).map(mapWaitlistEntryWithDetailsRow);
 }
 
 /**

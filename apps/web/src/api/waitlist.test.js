@@ -373,7 +373,7 @@ describe('waitlist api', () => {
   });
 
   describe('loadGroomerWaitlist', () => {
-    it('loads active waitlist entries targeting a groomer', async () => {
+    it('loads active waitlist entries targeting a groomer with customer and service details', async () => {
       const rows = [
         {
           id: entryId,
@@ -384,6 +384,16 @@ describe('waitlist api', () => {
           location: null,
           radius_m: null,
           created_at: '2026-06-07T10:00:00Z',
+          customers: {
+            id: customerId,
+            name: 'John Doe',
+            email: 'john@example.com',
+            phone: '+12125551111',
+          },
+          groomer_service_offerings: {
+            id: serviceId,
+            service_name: 'Full Grooming',
+          },
         },
         {
           id: 'entry-2',
@@ -394,6 +404,16 @@ describe('waitlist api', () => {
           location: null,
           radius_m: null,
           created_at: '2026-06-07T12:00:00Z',
+          customers: {
+            id: 'customer-2',
+            name: 'Jane Smith',
+            email: 'jane@example.com',
+            phone: '+12125552222',
+          },
+          groomer_service_offerings: {
+            id: serviceId,
+            service_name: 'Full Grooming',
+          },
         },
       ];
       const order = vi.fn().mockResolvedValue({ data: rows, error: null });
@@ -411,6 +431,8 @@ describe('waitlist api', () => {
       expect(order).toHaveBeenCalledWith('created_at', { ascending: true });
       expect(entries).toHaveLength(2);
       expect(entries[0]).toMatchObject({ id: entryId });
+      expect(entries[0].customer).toEqual({ name: 'John Doe' });
+      expect(entries[0].service).toEqual({ name: 'Full Grooming' });
     });
 
     it('returns empty array when no entries for groomer', async () => {
