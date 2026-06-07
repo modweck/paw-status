@@ -11,6 +11,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { LoginPanel } from '../auth/LoginPanel.jsx';
 import { useAuth } from '../auth/AuthProvider.jsx';
+import { RequestActions } from './RequestActions.jsx';
 import { OnboardingWizard } from './onboarding/OnboardingWizard.jsx';
 import {
   createGroomerAccountForVerifiedUser,
@@ -446,6 +447,61 @@ function RequestList({ bookingChannels, onRefresh, refreshing, requests, setWork
   );
 }
 
+function RequestsTab({ requests, setWorkspace }) {
+  const pendingRequests = requests.filter((r) => r.status === 'requested');
+
+  return (
+    <section className="signed-in-card groomer-panel">
+      <div className="login-panel__icon">
+        <ClipboardList size={18} />
+      </div>
+      <div>
+        <h2>Appointment requests</h2>
+        <p>{pendingRequests.length} pending requests</p>
+      </div>
+      {pendingRequests.length ? (
+        <div className="request-list">
+          {pendingRequests.map((request) => (
+            <article className="request-packet" key={request.id}>
+              <div className="request-packet__header">
+                <div>
+                  <h3>{request.dog.name || 'Dog'}</h3>
+                  <p>{request.service}</p>
+                </div>
+                <span>{formatAppointmentRequestStatus(request.status)}</span>
+              </div>
+              <div className="request-packet__grid">
+                <div>
+                  <span>Customer</span>
+                  <strong>{request.customer.name || 'Customer'}</strong>
+                  <p>{request.customer.phone || request.customer.email || 'No contact saved'}</p>
+                </div>
+                <div>
+                  <span>Dog</span>
+                  <strong>{[request.dog.breed, request.dog.size].filter(Boolean).join(' / ') || 'Profile saved'}</strong>
+                  <p>{request.dog.notes || 'No dog notes'}</p>
+                </div>
+              </div>
+              <RequestActions
+                request={request}
+                supabase={requireSupabaseClient()}
+                onAction={() => {
+                  setWorkspace((current) => ({
+                    ...current,
+                    requests: current.requests.filter((r) => r.id !== request.id),
+                  }));
+                }}
+              />
+            </article>
+          ))}
+        </div>
+      ) : (
+        <p className="empty-state">No pending appointment requests.</p>
+      )}
+    </section>
+  );
+}
+
 function BookingChannels({ channels }) {
   if (!channels.length) return null;
 
@@ -624,13 +680,7 @@ function GroomerWorkspace({ requestHandlingEnabled = true }) {
       {workspace.verifiedMemberships.length && !requestHandlingEnabled ? <StaffGate /> : null}
       {workspace.verifiedMemberships.length && requestHandlingEnabled ? (
         <>
-          <RequestList
-            bookingChannels={workspace.bookingChannels}
-            onRefresh={refreshWorkspace}
-            refreshing={refreshing}
-            requests={workspace.requests}
-            setWorkspace={setWorkspace}
-          />
+          <RequestsTab requests={workspace.requests} setWorkspace={setWorkspace} />
           <BookingChannels channels={workspace.bookingChannels} />
           <CalendarConnections connections={workspace.calendarConnections} />
         </>

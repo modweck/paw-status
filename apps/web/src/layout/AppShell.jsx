@@ -1,6 +1,8 @@
 import { CalendarDays, PawPrint, Scissors, ShieldCheck, UserRound } from 'lucide-react';
 
 import { useAuth } from '../auth/AuthProvider.jsx';
+import { NotificationBell } from './NotificationBell.jsx';
+import { requireSupabaseClient } from '../lib/supabaseClient.js';
 
 const navItems = [
   { id: 'customer', label: 'Explore', icon: Scissors, href: '/' },
@@ -29,6 +31,7 @@ export function AppShell({ route, children, onNavigate }) {
         <div className="topbar__session">
           {user ? (
             <>
+              <NotificationBell supabase={requireSupabaseClient()} />
               <span>{user.email}</span>
               <button type="button" onClick={signOut}>
                 Sign out

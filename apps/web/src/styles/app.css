@@ -192,6 +192,120 @@ a {
   opacity: 0.7;
 }
 
+.notification-bell {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.notification-bell__button {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  transition: border-color 0.2s, background-color 0.2s;
+}
+
+.notification-bell__button:hover {
+  border-color: var(--accent);
+  background-color: rgba(0, 0, 0, 0.02);
+}
+
+.notification-bell__badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  border-radius: 10px;
+  background: var(--accent);
+  color: white;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 0 4px;
+}
+
+.notification-bell__dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 8px;
+  width: 340px;
+  max-height: 400px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  overflow-y: auto;
+  z-index: 100;
+}
+
+.notification-bell__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.notification-bell__item {
+  display: block;
+  width: 100%;
+  padding: 12px;
+  border-bottom: 1px solid var(--line);
+  background: transparent;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.notification-bell__item:hover {
+  background-color: rgba(0, 0, 0, 0.02);
+}
+
+.notification-bell__item:last-child {
+  border-bottom: none;
+}
+
+.notification-bell__item.is-unread {
+  background-color: rgba(0, 0, 0, 0.01);
+}
+
+.notification-bell__item-title {
+  margin: 0 0 4px;
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--text);
+}
+
+.notification-bell__item-body {
+  margin: 0 0 6px;
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+.notification-bell__item-time {
+  font-size: 11px;
+  color: #999;
+}
+
+.notification-bell__empty {
+  padding: 20px 12px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 13px;
+}
+
 @media (max-width: 480px) {
   .location-input__use-current span {
     display: none;

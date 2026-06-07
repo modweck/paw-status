@@ -12,6 +12,14 @@ vi.mock('../auth/AuthProvider.jsx', () => ({
   useAuth: () => authState,
 }));
 
+vi.mock('./NotificationBell.jsx', () => ({
+  NotificationBell: () => <div>NotificationBell</div>,
+}));
+
+vi.mock('../lib/supabaseClient.js', () => ({
+  requireSupabaseClient: () => ({ id: 'supabase-client' }),
+}));
+
 describe('AppShell', () => {
   beforeEach(() => {
     authState = {
@@ -61,5 +69,30 @@ describe('AppShell', () => {
 
     expect(screen.getByRole('link', { name: /My Dog/i })).not.toHaveClass('is-locked');
     expect(screen.getByRole('link', { name: /Account/i })).not.toHaveClass('is-locked');
+  });
+
+  it('mounts NotificationBell when user is signed in', () => {
+    render(
+      <AppShell route="customer">
+        <div>Customer app</div>
+      </AppShell>,
+    );
+
+    expect(screen.getByText('NotificationBell')).toBeInTheDocument();
+  });
+
+  it('does not mount NotificationBell when user is not signed in', () => {
+    authState = {
+      user: null,
+      signOut: vi.fn(),
+    };
+
+    render(
+      <AppShell route="customer">
+        <div>Customer app</div>
+      </AppShell>,
+    );
+
+    expect(screen.queryByText('NotificationBell')).not.toBeInTheDocument();
   });
 });

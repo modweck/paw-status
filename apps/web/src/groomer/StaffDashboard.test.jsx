@@ -237,71 +237,40 @@ describe('StaffDashboard', () => {
     await waitFor(() => {
       expect(screen.getByText('Mochi')).toBeInTheDocument();
     });
-    expect(screen.getByText(/Requested May 20, 2026/)).toBeInTheDocument();
+    expect(screen.getByText('1 pending requests')).toBeInTheDocument();
   });
 
-  it('refreshes the workspace when the groomer clicks Refresh on the request list', async () => {
+  it('shows appointment requests with RequestActions', async () => {
     isStaffDashboardEnabled.mockReturnValue(true);
     useAuth.mockReturnValue({ loading: false, user });
     requireSupabaseClient.mockReturnValue(supabase);
-    loadGroomerWorkspaceForVerifiedUser
-      .mockResolvedValueOnce(workspace)
-      .mockResolvedValueOnce({
-        ...workspace,
-        requests: [
-          {
-            ...workspace.requests[0],
-            id: 'request-2',
-            dog: { ...workspace.requests[0].dog, name: 'Bella' },
-          },
-        ],
-      });
+    loadGroomerWorkspaceForVerifiedUser.mockResolvedValueOnce(workspace);
 
     render(<StaffDashboard />);
 
     await waitFor(() => {
       expect(screen.getByText('Mochi')).toBeInTheDocument();
     });
-    expect(loadGroomerWorkspaceForVerifiedUser).toHaveBeenCalledTimes(1);
-
-    fireEvent.click(screen.getByRole('button', { name: /refresh/i }));
-
-    await waitFor(() => {
-      expect(screen.getByText('Bella')).toBeInTheDocument();
-    });
-    expect(loadGroomerWorkspaceForVerifiedUser).toHaveBeenCalledTimes(2);
+    expect(screen.getByText('Jamie')).toBeInTheDocument();
+    expect(screen.getByText('1 pending requests')).toBeInTheDocument();
   });
 
-  it('shows owned appointment requests for verified groomer memberships', async () => {
+  it('shows owned appointment requests with RequestActions for Accept and Decline', async () => {
     isStaffDashboardEnabled.mockReturnValue(true);
     useAuth.mockReturnValue({ loading: false, user });
     requireSupabaseClient.mockReturnValue(supabase);
     loadGroomerWorkspaceForVerifiedUser.mockResolvedValueOnce(workspace);
-    updateOwnedAppointmentRequestStatus.mockResolvedValueOnce({
-      ...workspace.requests[0],
-      status: 'viewed',
-    });
 
     render(<StaffDashboard />);
 
     await waitFor(() => {
-      expect(screen.getByText('Paw House')).toBeInTheDocument();
+      expect(screen.getByText('Mochi')).toBeInTheDocument();
     });
 
-    expect(screen.getByText('Mochi')).toBeInTheDocument();
     expect(screen.getByText('Jamie')).toBeInTheDocument();
-    expect(screen.getByText('Text before confirming.')).toBeInTheDocument();
     expect(screen.getByText('owner@pawhouse.example')).toBeInTheDocument();
-
-    fireEvent.click(screen.getByRole('button', { name: 'Mark viewed' }));
-
-    await waitFor(() => {
-      expect(updateOwnedAppointmentRequestStatus).toHaveBeenCalledWith(
-        supabase,
-        workspace.requests[0],
-        'viewed',
-      );
-    });
+    expect(screen.getByRole('button', { name: 'Accept' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Decline' })).toBeInTheDocument();
   });
 
   it('lets a groomer request a pending claim for a public groomer profile', async () => {
@@ -363,32 +332,4 @@ describe('StaffDashboard', () => {
     expect(screen.getByText('Pending review')).toBeInTheDocument();
   });
 
-  it('can route an owned request to an external booking channel', async () => {
-    isStaffDashboardEnabled.mockReturnValue(true);
-    useAuth.mockReturnValue({ loading: false, user });
-    requireSupabaseClient.mockReturnValue(supabase);
-    loadGroomerWorkspaceForVerifiedUser.mockResolvedValueOnce(workspace);
-    updateOwnedAppointmentRequestStatus.mockResolvedValueOnce({
-      ...workspace.requests[0],
-      status: 'external_handoff',
-      externalBookingUrl: 'https://pawhouse.example/book',
-    });
-
-    render(<StaffDashboard />);
-
-    await waitFor(() => {
-      expect(screen.getByRole('button', { name: 'Send booking link' })).toBeInTheDocument();
-    });
-
-    fireEvent.click(screen.getByRole('button', { name: 'Send booking link' }));
-
-    await waitFor(() => {
-      expect(updateOwnedAppointmentRequestStatus).toHaveBeenCalledWith(
-        supabase,
-        workspace.requests[0],
-        'external_handoff',
-        { externalBookingUrl: 'https://pawhouse.example/book' },
-      );
-    });
-  });
 });
