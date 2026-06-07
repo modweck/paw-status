@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { BookingsListPanel } from './BookingsListPanel.jsx';
@@ -10,7 +10,16 @@ vi.mock('../api/bookingRequests.js', () => ({
 }));
 
 vi.mock('../lib/supabaseClient.js', () => ({
-  requireSupabaseClient: () => ({ from: () => null }),
+  requireSupabaseClient: () => ({
+    from: () => ({
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      in: vi.fn().mockReturnThis(),
+      order: vi.fn().mockReturnThis(),
+      single: vi.fn().mockResolvedValue({ data: null, error: null }),
+    }),
+    rpc: vi.fn().mockResolvedValue({ data: null, error: null }),
+  }),
 }));
 
 const customer = { id: 'customer-1', authUserId: 'auth-user-1' };
@@ -106,7 +115,9 @@ describe('BookingsListPanel', () => {
       expect(screen.getByText('Network down')).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByRole('button', { name: /refresh/i }));
+    const heading = screen.getByText('Your bookings').closest('.bookings-list-panel__heading');
+    const refreshButton = within(heading).getByRole('button', { name: /refresh/i });
+    fireEvent.click(refreshButton);
 
     await waitFor(() => {
       expect(screen.getByText('Confirmed')).toBeInTheDocument();

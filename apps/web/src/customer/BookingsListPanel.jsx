@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 
 import { loadCustomerBookingRequests } from '../api/bookingRequests.js';
 import { requireSupabaseClient } from '../lib/supabaseClient.js';
+import { WaitlistOffers } from './WaitlistOffers.jsx';
 
 // Customer-audience copy. Intentionally NOT reusing the groomer-audience
 // labels in apps/web/src/groomer/statusLabels.js: "Waiting on customer" and
@@ -119,6 +120,13 @@ export function BookingsListPanel({ customer, refreshKey = 0 }) {
   // `refreshKey` prop lets sibling components (e.g. BookingRequestPanel
   // after a successful submit) trigger the same re-fetch.
   const [refreshTick, setRefreshTick] = useState(0);
+  const [supabase] = useState(() => {
+    try {
+      return requireSupabaseClient();
+    } catch {
+      return null;
+    }
+  });
 
   useEffect(() => {
     if (!customer?.id) return undefined;
@@ -202,6 +210,8 @@ export function BookingsListPanel({ customer, refreshKey = 0 }) {
           You haven't requested any groomings yet. Pick a groomer above to get started.
         </p>
       ) : null}
+
+      {supabase ? <WaitlistOffers supabase={supabase} /> : null}
     </section>
   );
 }
