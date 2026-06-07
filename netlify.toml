@@ -44,6 +44,11 @@
   status = 200
 
 [[redirects]]
+  from = "/api/next-available"
+  to = "/.netlify/functions/next-available"
+  status = 200
+
+[[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200

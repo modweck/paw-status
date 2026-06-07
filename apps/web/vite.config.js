@@ -18,6 +18,7 @@ import {
   handleAvailabilityRequest,
   toPublicAvailabilityError,
 } from './server/availability.js';
+import { computeNextAvailable } from './server/nextAvailable.js';
 import {
   getGroomerVerificationAuditTrail,
   listPendingGroomerMembershipClaims,
@@ -248,6 +249,84 @@ function availabilityDevPlugin(env) {
   };
 }
 
+function nextAvailableDevPlugin(env) {
+  return {
+    name: 'paw-status-next-available-dev',
+    configureServer(server) {
+      server.middlewares.use(async (request, response, next) => {
+        if (request.url !== '/api/next-available') {
+          next();
+          return;
+        }
+
+        response.setHeader('Cache-Control', 'no-store');
+        response.setHeader('Content-Type', 'application/json');
+
+        if (request.method !== 'POST') {
+          response.statusCode = 405;
+          response.end(JSON.stringify({ error: 'Method Not Allowed' }));
+          return;
+        }
+
+        let body = {};
+        try {
+          const raw = await readRequestBody(request);
+          body = raw ? JSON.parse(raw) : {};
+        } catch {
+          response.statusCode = 400;
+          response.end(JSON.stringify({ error: 'Invalid JSON' }));
+          return;
+        }
+
+        const lat = body.lat !== undefined ? Number(body.lat) : null;
+        const lng = body.lng !== undefined ? Number(body.lng) : null;
+        const radiusM = body.radiusM !== undefined ? Number(body.radiusM) : null;
+        const serviceId = body.serviceId || '';
+        const topN = body.topN !== undefined ? Number(body.topN) : 10;
+
+        if (lat === null || isNaN(lat) || lng === null || isNaN(lng) || radiusM === null || isNaN(radiusM)) {
+          response.statusCode = 400;
+          response.end(JSON.stringify({ error: 'lat, lng, and radiusM are required numbers' }));
+          return;
+        }
+
+        if (!serviceId) {
+          response.statusCode = 400;
+          response.end(JSON.stringify({ error: 'serviceId is required' }));
+          return;
+        }
+
+        try {
+          const { createClient } = await import('@supabase/supabase-js');
+          const url = env?.SUPABASE_URL || env?.VITE_SUPABASE_URL;
+          const key = env?.SUPABASE_SERVICE_ROLE_KEY || env?.SUPABASE_SECRET_KEY;
+          if (!url || !key) {
+            throw new Error('Server Supabase environment is missing.');
+          }
+          const supabase = createClient(url, key, {
+            auth: { autoRefreshToken: false, persistSession: false },
+          });
+
+          const slots = await computeNextAvailable({
+            supabase,
+            lat,
+            lng,
+            radiusM,
+            serviceId,
+            topN,
+          });
+          response.statusCode = 200;
+          response.end(JSON.stringify({ slots }));
+        } catch (error) {
+          const message = (error && error.message) || 'Next-available check failed.';
+          response.statusCode = 500;
+          response.end(JSON.stringify({ error: message }));
+        }
+      });
+    },
+  };
+}
+
 const REVIEW_PATH_PATTERN = /^\/api\/admin\/groomer-membership-claims\/([^/]+)\/review$/;
 const AUDIT_EVENTS_PATH = '/api/admin/groomer-membership-claims/audit-events';
 
@@ -366,6 +445,7 @@ export default defineConfig(({ mode }) => {
       groomerPhotoDevPlugin(env),
       guestBookingDevPlugin(env),
       availabilityDevPlugin(env),
+      nextAvailableDevPlugin(env),
       adminGroomerClaimsDevPlugin(env),
       googlePlacesDevPlugin(env),
     ],
