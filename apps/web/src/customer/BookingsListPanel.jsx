@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 
 import { loadCustomerBookingRequests } from '../api/bookingRequests.js';
 import { requireSupabaseClient } from '../lib/supabaseClient.js';
+import { DepositModal } from './DepositModal.jsx';
 import { WaitlistOffers } from './WaitlistOffers.jsx';
 
 // Customer-audience copy. Intentionally NOT reusing the groomer-audience
@@ -76,39 +77,59 @@ function groomerLabel(request) {
   return name || salon || 'Groomer';
 }
 
-function BookingItem({ request }) {
+function BookingItem({ request, supabase, isDepositModalOpen, onOpenDepositModal, onCloseDepositModal }) {
   const status = formatCustomerStatus(request.status);
   const date = formatBookingDate(request.createdAt);
   const accessibleLabel = `${groomerLabel(request)} — ${status.label}`;
+  const isConfirmedWithoutPayment = request.status === 'confirmed' && !request.paymentIntents;
 
   return (
-    <article className="bookings-list__item" aria-label={accessibleLabel}>
-      <header className="bookings-list__item-header">
-        <div>
-          <h3>{groomerLabel(request)}</h3>
-          <p>
-            {request.dog?.name || 'Your dog'}
-            {request.service ? ` · ${request.service}` : ''}
-            {date ? ` · Requested ${date}` : ''}
-          </p>
-        </div>
-        <span className={`bookings-list__status bookings-list__status--${status.tone}`}>
-          {status.label}
-        </span>
-      </header>
-      {status.help ? <p className="bookings-list__help">{status.help}</p> : null}
-      {request.externalBookingUrl ? (
-        <a
-          className="bookings-list__external-link"
-          href={request.externalBookingUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <ExternalLink size={14} aria-hidden="true" />
-          Open booking link
-        </a>
+    <>
+      <article className="bookings-list__item" aria-label={accessibleLabel}>
+        <header className="bookings-list__item-header">
+          <div>
+            <h3>{groomerLabel(request)}</h3>
+            <p>
+              {request.dog?.name || 'Your dog'}
+              {request.service ? ` · ${request.service}` : ''}
+              {date ? ` · Requested ${date}` : ''}
+            </p>
+          </div>
+          <span className={`bookings-list__status bookings-list__status--${status.tone}`}>
+            {status.label}
+          </span>
+        </header>
+        {status.help ? <p className="bookings-list__help">{status.help}</p> : null}
+        {request.externalBookingUrl ? (
+          <a
+            className="bookings-list__external-link"
+            href={request.externalBookingUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <ExternalLink size={14} aria-hidden="true" />
+            Open booking link
+          </a>
+        ) : null}
+        {isConfirmedWithoutPayment ? (
+          <button
+            className="button--primary"
+            onClick={onOpenDepositModal}
+            type="button"
+          >
+            Pay deposit
+          </button>
+        ) : null}
+      </article>
+      {isDepositModalOpen && supabase ? (
+        <DepositModal
+          supabase={supabase}
+          appointmentId={request.id}
+          onPaid={onCloseDepositModal}
+          onClose={onCloseDepositModal}
+        />
       ) : null}
-    </article>
+    </>
   );
 }
 
@@ -120,6 +141,7 @@ export function BookingsListPanel({ customer, refreshKey = 0 }) {
   // `refreshKey` prop lets sibling components (e.g. BookingRequestPanel
   // after a successful submit) trigger the same re-fetch.
   const [refreshTick, setRefreshTick] = useState(0);
+  const [depositModalRequestId, setDepositModalRequestId] = useState(null);
   const [supabase] = useState(() => {
     try {
       return requireSupabaseClient();
@@ -202,7 +224,14 @@ export function BookingsListPanel({ customer, refreshKey = 0 }) {
       {requests.length ? (
         <div className="bookings-list">
           {requests.map((request) => (
-            <BookingItem key={request.id} request={request} />
+            <BookingItem
+              key={request.id}
+              request={request}
+              supabase={supabase}
+              isDepositModalOpen={depositModalRequestId === request.id}
+              onOpenDepositModal={() => setDepositModalRequestId(request.id)}
+              onCloseDepositModal={() => setDepositModalRequestId(null)}
+            />
           ))}
         </div>
       ) : status === 'ready' ? (

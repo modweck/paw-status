@@ -9,6 +9,10 @@ vi.mock('../api/bookingRequests.js', () => ({
   loadCustomerBookingRequests: (...args) => loadCustomerBookingRequests(...args),
 }));
 
+vi.mock('../api/payments.js', () => ({
+  createDepositIntent: vi.fn().mockResolvedValue({ externalRef: 'ref-123' }),
+}));
+
 vi.mock('../lib/supabaseClient.js', () => ({
   requireSupabaseClient: () => ({
     from: () => ({

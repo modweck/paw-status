@@ -11,6 +11,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { LoginPanel } from '../auth/LoginPanel.jsx';
 import { useAuth } from '../auth/AuthProvider.jsx';
+import { GbpConnectButton } from './GbpConnectButton.jsx';
 import { RequestActions } from './RequestActions.jsx';
 import { WaitlistInbox } from './WaitlistInbox.jsx';
 import { OnboardingWizard } from './onboarding/OnboardingWizard.jsx';
@@ -691,6 +692,30 @@ function GroomerWorkspace({ requestHandlingEnabled = true }) {
           ))}
           <BookingChannels channels={workspace.bookingChannels} />
           <CalendarConnections connections={workspace.calendarConnections} />
+          {workspace.verifiedMemberships.length ? (
+            <section className="signed-in-card groomer-panel">
+              <div className="login-panel__icon">
+                <CheckCircle2 size={18} />
+              </div>
+              <div>
+                <h2>Google Business Profile</h2>
+                <p>Connect your verified groomer profiles to Google</p>
+              </div>
+              <div className="groomer-integrations">
+                {workspace.verifiedMemberships.map((membership) => (
+                  <div key={`gbp-${membership.groomerId}`} className="integration-item">
+                    <div>
+                      <h3>{membership.groomer?.name || 'Groomer profile'}</h3>
+                    </div>
+                    <GbpConnectButton
+                      supabase={requireSupabaseClient()}
+                      groomerId={membership.groomerId}
+                    />
+                  </div>
+                ))}
+              </div>
+            </section>
+          ) : null}
         </>
       ) : null}
     </section>

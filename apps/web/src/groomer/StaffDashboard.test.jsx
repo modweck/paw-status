@@ -24,6 +24,22 @@ vi.mock('../auth/LoginPanel.jsx', () => ({
   LoginPanel: () => <div>Magic link sign in</div>,
 }));
 
+vi.mock('./GbpConnectButton.jsx', () => ({
+  GbpConnectButton: ({ groomerId }) => <div>Connect GBP for {groomerId}</div>,
+}));
+
+vi.mock('./WaitlistInbox.jsx', () => ({
+  WaitlistInbox: () => <div>Waitlist Inbox</div>,
+}));
+
+vi.mock('./onboarding/OnboardingWizard.jsx', () => ({
+  OnboardingWizard: () => <div>Onboarding Wizard</div>,
+}));
+
+vi.mock('../customer/SlotPicker.jsx', () => ({
+  SlotPicker: () => <div>Slot Picker</div>,
+}));
+
 vi.mock('../lib/supabaseClient.js', () => ({
   requireSupabaseClient: () => requireSupabaseClient(),
 }));
@@ -34,6 +50,11 @@ vi.mock('../api/groomerAccounts.js', () => ({
   requestGroomerMembership: (...args) => requestGroomerMembership(...args),
   searchClaimableGroomers: (...args) => searchClaimableGroomers(...args),
   updateOwnedAppointmentRequestStatus: (...args) => updateOwnedAppointmentRequestStatus(...args),
+}));
+
+vi.mock('../api/appointments.js', () => ({
+  confirmRequest: vi.fn().mockResolvedValue({}),
+  declineRequest: vi.fn().mockResolvedValue({}),
 }));
 
 const supabase = { id: 'supabase-client' };
