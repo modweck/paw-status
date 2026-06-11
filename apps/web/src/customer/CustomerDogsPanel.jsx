@@ -1,11 +1,7 @@
 import { CalendarClock, PawPrint } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
-import {
-  createDogForCustomer,
-  DOG_SIZE_OPTIONS,
-  loadDogsForCustomer,
-} from '../api/dogs.js';
+import { createDogForCustomer, DOG_SIZE_OPTIONS } from '../api/dogs.js';
 import { GROOMING_SERVICES, groupGroomingServices } from '../data/services.js';
 import { requireSupabaseClient } from '../lib/supabaseClient.js';
 
@@ -175,46 +171,15 @@ function DogList({ dogs }) {
 
 export function CustomerDogsPanel({
   customer,
+  dogs = [],
   groomers = [],
-  onDogsChange,
+  loading = false,
+  onDogCreated,
   selectedService = null,
 }) {
-  const [dogs, setDogs] = useState([]);
   const [form, setForm] = useState(() => createInitialDogForm(selectedService));
-  const [status, setStatus] = useState('loading');
+  const [status, setStatus] = useState('ready');
   const [error, setError] = useState('');
-
-  useEffect(() => {
-    onDogsChange?.(dogs);
-  }, [dogs, onDogsChange]);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    async function loadDogs() {
-      setError('');
-      setStatus('loading');
-
-      try {
-        const nextDogs = await loadDogsForCustomer(requireSupabaseClient(), customer);
-        if (!cancelled) {
-          setDogs(nextDogs);
-          setStatus('ready');
-        }
-      } catch (nextError) {
-        if (!cancelled) {
-          setError(nextError.message);
-          setStatus('error');
-        }
-      }
-    }
-
-    loadDogs();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [customer]);
 
   async function handleSubmit(event) {
     event.preventDefault();
@@ -229,7 +194,7 @@ export function CustomerDogsPanel({
         ...form,
         preferredGroomerName,
       });
-      setDogs((current) => [...current, dog]);
+      onDogCreated?.(dog);
       setForm(createInitialDogForm(selectedService));
       setStatus('ready');
     } catch (nextError) {
@@ -248,7 +213,7 @@ export function CustomerDogsPanel({
         <p>Save the details groomers need so booking requests can auto-populate the basics.</p>
       </div>
 
-      {status === 'loading' ? (
+      {loading ? (
         <p className="empty-state">Loading dog profiles...</p>
       ) : (
         <DogList dogs={dogs} />

@@ -13,7 +13,7 @@ vi.mock('./auth/AuthProvider.jsx', () => ({
 }));
 
 vi.mock('./customer/CustomerApp.jsx', () => ({
-  CustomerApp: ({ initialSection }) => <div>Customer section: {initialSection}</div>,
+  CustomerApp: ({ section }) => <div>Customer section: {section}</div>,
 }));
 
 vi.mock('./admin/AdminVerificationPanel.jsx', () => ({
@@ -21,7 +21,7 @@ vi.mock('./admin/AdminVerificationPanel.jsx', () => ({
 }));
 
 vi.mock('./groomer/StaffDashboard.jsx', () => ({
-  StaffDashboard: () => <div>Groomer workspace</div>,
+  StaffDashboard: ({ section }) => <div>Groomer workspace: {section}</div>,
 }));
 
 describe('app route detection', () => {
@@ -33,27 +33,33 @@ describe('app route detection', () => {
     window.history.pushState(null, '', '/');
   });
 
-  it('keeps groomer routes in the groomer workspace', () => {
-    expect(currentRoute('/groomer')).toBe('staff');
-    expect(currentRoute('/staff/requests')).toBe('staff');
+  it('maps groomer routes to staff persona sections', () => {
+    expect(currentRoute('/groomer')).toEqual({ persona: 'staff', section: 'requests' });
+    expect(currentRoute('/groomer/waitlist')).toEqual({ persona: 'staff', section: 'waitlist' });
+    expect(currentRoute('/groomer/setup')).toEqual({ persona: 'staff', section: 'setup' });
+    expect(currentRoute('/staff')).toEqual({ persona: 'staff', section: 'requests' });
+    expect(currentRoute('/staff/waitlist')).toEqual({ persona: 'staff', section: 'waitlist' });
   });
 
-  it('keeps admin verification routes in the admin workspace', () => {
-    expect(currentRoute('/admin')).toBe('admin');
-    expect(currentRoute('/admin/groomer-verification')).toBe('admin');
+  it('maps admin verification routes to the admin persona', () => {
+    expect(currentRoute('/admin')).toEqual({ persona: 'admin', section: 'verification' });
+    expect(currentRoute('/admin/groomer-verification')).toEqual({
+      persona: 'admin',
+      section: 'verification',
+    });
   });
 
-  it('routes customer bottom nav destinations to customer sections', () => {
-    expect(currentRoute('/')).toBe('customer');
-    expect(currentRoute('/dogs')).toBe('dogs');
-    expect(currentRoute('/bookings')).toBe('bookings');
-    expect(currentRoute('/account')).toBe('account');
+  it('maps customer bottom nav destinations to customer sections', () => {
+    expect(currentRoute('/')).toEqual({ persona: 'customer', section: 'explore' });
+    expect(currentRoute('/dogs')).toEqual({ persona: 'customer', section: 'dogs' });
+    expect(currentRoute('/bookings')).toEqual({ persona: 'customer', section: 'bookings' });
+    expect(currentRoute('/account')).toEqual({ persona: 'customer', section: 'account' });
   });
 
   it('updates customer sections without a full page reload when bottom nav is clicked', () => {
     render(<App />);
 
-    expect(screen.getByText('Customer section: customer')).toBeInTheDocument();
+    expect(screen.getByText('Customer section: explore')).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('link', { name: /My Dog/i }));
 
@@ -64,6 +70,14 @@ describe('app route detection', () => {
 
     expect(window.location.pathname).toBe('/account');
     expect(screen.getByText('Customer section: account')).toBeInTheDocument();
+  });
+
+  it('renders staff sections from staff sub-routes', () => {
+    window.history.pushState(null, '', '/groomer/waitlist');
+
+    render(<App />);
+
+    expect(screen.getByText('Groomer workspace: waitlist')).toBeInTheDocument();
   });
 
   it('renders the admin verification workspace for admin routes', () => {

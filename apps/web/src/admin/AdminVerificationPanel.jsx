@@ -62,6 +62,7 @@ function AdminSignIn() {
         </div>
         <LoginPanel
           compact
+          showGroomerLink={false}
           title="Admin login"
           description="Sign in with a trusted ShinyPawz admin email. Access still needs server-side admin authorization."
         />

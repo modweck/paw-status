@@ -4,7 +4,6 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { CustomerDogsPanel } from './CustomerDogsPanel.jsx';
 
 const createDogForCustomer = vi.fn();
-const loadDogsForCustomer = vi.fn();
 const requireSupabaseClient = vi.fn();
 
 vi.mock('../api/dogs.js', () => ({
@@ -16,7 +15,6 @@ vi.mock('../api/dogs.js', () => ({
     { value: 'xlarge', label: 'Extra large' },
   ],
   createDogForCustomer: (...args) => createDogForCustomer(...args),
-  loadDogsForCustomer: (...args) => loadDogsForCustomer(...args),
 }));
 
 vi.mock('../lib/supabaseClient.js', () => ({
@@ -33,49 +31,36 @@ const customer = {
 describe('CustomerDogsPanel', () => {
   afterEach(() => {
     createDogForCustomer.mockReset();
-    loadDogsForCustomer.mockReset();
     requireSupabaseClient.mockReset();
   });
 
-  it('loads dog profiles for the verified customer row', async () => {
-    const onDogsChange = vi.fn();
-    requireSupabaseClient.mockReturnValue(supabase);
-    loadDogsForCustomer.mockResolvedValueOnce([
-      {
-        id: 'dog-1',
-        customerId: customer.id,
-        name: 'Mochi',
-        breed: 'Cavapoo',
-        size: 'small',
-        birthdate: '2022-04-10',
-        weightLbs: 18,
-        coatType: 'Curly',
-        temperament: 'Nervous around dryers',
-        allergies: 'Chicken',
-        preferredServiceId: 'full-groom',
-        preferredGroomerId: 'groomer-1',
-        preferredGroomerName: 'Paw House',
-        lastGroomedAt: '2026-03-01',
-        groomingIntervalWeeks: 6,
-        notes: 'Nervous around dryers',
-      },
-    ]);
+  it('renders the dog profiles provided by the owning container', () => {
+    render(
+      <CustomerDogsPanel
+        customer={customer}
+        dogs={[
+          {
+            id: 'dog-1',
+            customerId: customer.id,
+            name: 'Mochi',
+            breed: 'Cavapoo',
+            size: 'small',
+            birthdate: '2022-04-10',
+            weightLbs: 18,
+            coatType: 'Curly',
+            temperament: 'Nervous around dryers',
+            allergies: 'Chicken',
+            preferredServiceId: 'full-groom',
+            preferredGroomerId: 'groomer-1',
+            preferredGroomerName: 'Paw House',
+            lastGroomedAt: '2026-03-01',
+            groomingIntervalWeeks: 6,
+            notes: 'Nervous around dryers',
+          },
+        ]}
+      />,
+    );
 
-    render(<CustomerDogsPanel customer={customer} onDogsChange={onDogsChange} />);
-
-    expect(screen.getByText('Loading dog profiles...')).toBeInTheDocument();
-
-    await waitFor(() => {
-      expect(loadDogsForCustomer).toHaveBeenCalledWith(supabase, customer);
-    });
-    await waitFor(() => {
-      expect(onDogsChange).toHaveBeenLastCalledWith([
-        expect.objectContaining({
-          id: 'dog-1',
-          customerId: customer.id,
-        }),
-      ]);
-    });
     expect(screen.getByText('Mochi')).toBeInTheDocument();
     expect(screen.getByText('Cavapoo')).toBeInTheDocument();
     const dogProfile = within(screen.getByLabelText('Mochi profile'));
@@ -88,10 +73,21 @@ describe('CustomerDogsPanel', () => {
     expect(screen.getByText('Usual cadence: every 6 weeks')).toBeInTheDocument();
   });
 
-  it('creates a dog profile tied to the verified customer row', async () => {
-    const onDogsChange = vi.fn();
+  it('shows the loading state while the container is still fetching dogs', () => {
+    render(<CustomerDogsPanel customer={customer} dogs={[]} loading />);
+
+    expect(screen.getByText('Loading dog profiles...')).toBeInTheDocument();
+  });
+
+  it('shows the empty state when the customer has no dogs yet', () => {
+    render(<CustomerDogsPanel customer={customer} dogs={[]} />);
+
+    expect(screen.getByText('No dog profiles yet.')).toBeInTheDocument();
+  });
+
+  it('creates a dog profile tied to the verified customer row and reports it upward', async () => {
+    const onDogCreated = vi.fn();
     requireSupabaseClient.mockReturnValue(supabase);
-    loadDogsForCustomer.mockResolvedValueOnce([]);
     createDogForCustomer.mockResolvedValueOnce({
       id: 'dog-1',
       customerId: customer.id,
@@ -100,32 +96,31 @@ describe('CustomerDogsPanel', () => {
       size: 'small',
       birthdate: '2022-04-10',
       weightLbs: 18,
-        coatType: 'Curly',
-        temperament: 'Nervous around dryers',
-        allergies: 'Chicken',
-        preferredServiceId: 'bath-brush',
-        preferredGroomerId: 'groomer-2',
-        preferredGroomerName: 'SoHo Pups',
-        lastGroomedAt: '2026-04-01',
-        groomingIntervalWeeks: 6,
-        notes: 'Nervous around dryers',
-      });
+      coatType: 'Curly',
+      temperament: 'Nervous around dryers',
+      allergies: 'Chicken',
+      preferredServiceId: 'bath-brush',
+      preferredGroomerId: 'groomer-2',
+      preferredGroomerName: 'SoHo Pups',
+      lastGroomedAt: '2026-04-01',
+      groomingIntervalWeeks: 6,
+      notes: 'Nervous around dryers',
+    });
 
     render(
       <CustomerDogsPanel
         customer={customer}
+        dogs={[]}
         groomers={[
           { id: 'groomer-1', name: 'Paw House' },
           { id: 'groomer-2', name: 'SoHo Pups' },
         ]}
-        onDogsChange={onDogsChange}
+        onDogCreated={onDogCreated}
         selectedService={{ id: 'bath-brush', name: 'Bath and brush' }}
       />,
     );
 
-    await waitFor(() => {
-      expect(screen.getByText('No dog profiles yet.')).toBeInTheDocument();
-    });
+    expect(screen.getByText('No dog profiles yet.')).toBeInTheDocument();
 
     fireEvent.change(screen.getByLabelText('Dog name'), {
       target: { value: 'Mochi' },
@@ -186,12 +181,11 @@ describe('CustomerDogsPanel', () => {
         notes: 'Nervous around dryers',
       });
     });
-    expect(screen.getByText('Mochi')).toBeInTheDocument();
-    expect(onDogsChange).toHaveBeenLastCalledWith([
+    expect(onDogCreated).toHaveBeenCalledWith(
       expect.objectContaining({
         id: 'dog-1',
         customerId: customer.id,
       }),
-    ]);
+    );
   });
 });

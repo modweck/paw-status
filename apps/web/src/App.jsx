@@ -5,20 +5,31 @@ import { CustomerApp } from './customer/CustomerApp.jsx';
 import { StaffDashboard } from './groomer/StaffDashboard.jsx';
 import { AppShell } from './layout/AppShell.jsx';
 
+const STAFF_SECTIONS = ['requests', 'waitlist', 'setup'];
+
+function staffSection(pathname, prefix) {
+  const segment = pathname.slice(prefix.length).split('/').filter(Boolean)[0] || '';
+  return STAFF_SECTIONS.includes(segment) ? segment : 'requests';
+}
+
 function currentRoute(pathname = window.location.pathname) {
   if (pathname.startsWith('/admin')) {
-    return 'admin';
+    return { persona: 'admin', section: 'verification' };
   }
 
-  if (pathname.startsWith('/groomer') || pathname.startsWith('/staff')) {
-    return 'staff';
+  if (pathname.startsWith('/groomer')) {
+    return { persona: 'staff', section: staffSection(pathname, '/groomer') };
   }
 
-  if (pathname.startsWith('/dogs')) return 'dogs';
-  if (pathname.startsWith('/bookings')) return 'bookings';
-  if (pathname.startsWith('/account')) return 'account';
+  if (pathname.startsWith('/staff')) {
+    return { persona: 'staff', section: staffSection(pathname, '/staff') };
+  }
 
-  return 'customer';
+  if (pathname.startsWith('/dogs')) return { persona: 'customer', section: 'dogs' };
+  if (pathname.startsWith('/bookings')) return { persona: 'customer', section: 'bookings' };
+  if (pathname.startsWith('/account')) return { persona: 'customer', section: 'account' };
+
+  return { persona: 'customer', section: 'explore' };
 }
 
 export function App() {
@@ -42,12 +53,12 @@ export function App() {
 
   return (
     <AppShell route={route} onNavigate={navigate}>
-      {route === 'admin' ? (
+      {route.persona === 'admin' ? (
         <AdminVerificationPanel />
-      ) : route === 'staff' ? (
-        <StaffDashboard />
+      ) : route.persona === 'staff' ? (
+        <StaffDashboard section={route.section} />
       ) : (
-        <CustomerApp initialSection={route} />
+        <CustomerApp onNavigate={navigate} section={route.section} />
       )}
     </AppShell>
   );

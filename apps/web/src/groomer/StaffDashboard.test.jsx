@@ -239,26 +239,56 @@ describe('StaffDashboard', () => {
     });
   });
 
-  it('renders the request created-at date in the packet when present', async () => {
+  it('shows only the request inbox on the requests section', async () => {
     isStaffDashboardEnabled.mockReturnValue(true);
     useAuth.mockReturnValue({ loading: false, user });
     requireSupabaseClient.mockReturnValue(supabase);
-    loadGroomerWorkspaceForVerifiedUser.mockResolvedValueOnce({
-      ...workspace,
-      requests: [
-        {
-          ...workspace.requests[0],
-          createdAt: '2026-05-20T12:00:00.000Z',
-        },
-      ],
-    });
+    loadGroomerWorkspaceForVerifiedUser.mockResolvedValueOnce(workspace);
 
-    render(<StaffDashboard />);
+    render(<StaffDashboard section="requests" />);
 
     await waitFor(() => {
       expect(screen.getByText('Mochi')).toBeInTheDocument();
     });
     expect(screen.getByText('1 pending requests')).toBeInTheDocument();
+    expect(screen.queryByText('Waitlist Inbox')).not.toBeInTheDocument();
+    expect(screen.queryByText('Booking channels')).not.toBeInTheDocument();
+    expect(screen.queryByText('Calendar connections')).not.toBeInTheDocument();
+    expect(screen.queryByText('Google Business Profile')).not.toBeInTheDocument();
+  });
+
+  it('shows only the waitlist inbox on the waitlist section', async () => {
+    isStaffDashboardEnabled.mockReturnValue(true);
+    useAuth.mockReturnValue({ loading: false, user });
+    requireSupabaseClient.mockReturnValue(supabase);
+    loadGroomerWorkspaceForVerifiedUser.mockResolvedValueOnce(workspace);
+
+    render(<StaffDashboard section="waitlist" />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Waitlist Inbox')).toBeInTheDocument();
+    });
+    expect(screen.queryByText('1 pending requests')).not.toBeInTheDocument();
+    expect(screen.queryByText('Booking channels')).not.toBeInTheDocument();
+  });
+
+  it('groups profiles, channels, calendar, and GBP under the setup section', async () => {
+    isStaffDashboardEnabled.mockReturnValue(true);
+    useAuth.mockReturnValue({ loading: false, user });
+    requireSupabaseClient.mockReturnValue(supabase);
+    loadGroomerWorkspaceForVerifiedUser.mockResolvedValueOnce(workspace);
+
+    render(<StaffDashboard section="setup" />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Groomer profiles')).toBeInTheDocument();
+    });
+    expect(screen.getByText('Booking channels')).toBeInTheDocument();
+    expect(screen.getByText('Calendar connections')).toBeInTheDocument();
+    expect(screen.getByText('Google Business Profile')).toBeInTheDocument();
+    expect(screen.getByText('Connect GBP for groomer-1')).toBeInTheDocument();
+    expect(screen.queryByText('1 pending requests')).not.toBeInTheDocument();
+    expect(screen.queryByText('Waitlist Inbox')).not.toBeInTheDocument();
   });
 
   it('shows appointment requests with RequestActions', async () => {

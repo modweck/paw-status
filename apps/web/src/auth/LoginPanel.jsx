@@ -3,7 +3,12 @@ import { useState } from 'react';
 
 import { useAuth } from './AuthProvider.jsx';
 
-export function LoginPanel({ compact = false, description = '', title = 'Sign in to book' }) {
+export function LoginPanel({
+  compact = false,
+  description = '',
+  showGroomerLink = true,
+  title = 'Sign in to book',
+}) {
   const { authError, authMessage, isConfigured, sendMagicLink, signInWithPassword } = useAuth();
   const [email, setEmail] = useState('');
   const [mode, setMode] = useState('magic-link');
@@ -91,9 +96,11 @@ export function LoginPanel({ compact = false, description = '', title = 'Sign in
       ) : null}
       {authError ? <p className="form-message form-message--error">{authError}</p> : null}
       {authMessage ? <p className="form-message">{authMessage}</p> : null}
-      <a href="/groomer" className="login-panel__secondary">
-        I'm a groomer — set up my account
-      </a>
+      {showGroomerLink ? (
+        <a href="/groomer" className="login-panel__secondary">
+          I'm a groomer — set up my account
+        </a>
+      ) : null}
     </form>
   );
 }

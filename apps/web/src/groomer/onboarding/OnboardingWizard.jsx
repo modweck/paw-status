@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   validateBusiness,
   validateLocation,
@@ -8,8 +8,11 @@ import {
 } from './validation.js';
 import { ServiceOfferingsEditor } from './ServiceOfferingsEditor.jsx';
 import { AvailabilityEditor } from './AvailabilityEditor.jsx';
+import { GbpConnectButton } from '../GbpConnectButton.jsx';
+import { resolvePlace, suggestAddresses } from '../../api/geocoding.js';
 import {
   createOwnedGroomer,
+  refreshGroomerServices,
   saveOffering,
   saveAvailabilityBlock,
   setWaitlistOptIn,
@@ -24,6 +27,138 @@ const STEPS = [
 ];
 
 /**
+ * Address picker for the Location step. The groomer types their street
+ * address, picks a suggestion, and the coordinates are resolved behind the
+ * scenes — same flow the customer search uses, instead of raw lat/lng inputs.
+ */
+function LocationStep({ location, onChange }) {
+  const [suggestions, setSuggestions] = useState([]);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    // A resolved location means the input matches what we already looked up;
+    // don't reopen suggestions for it.
+    if (!location.address.trim() || location.lat !== null) {
+      setSuggestions([]);
+      return undefined;
+    }
+
+    let cancelled = false;
+    // Same debounce rationale as the customer search: the geocoding
+    // providers rate-limit, so wait for a typing pause.
+    const timeoutId = setTimeout(() => {
+      Promise.resolve(suggestAddresses(location.address))
+        .then((next) => {
+          if (!cancelled) {
+            setSuggestions(Array.isArray(next) ? next : []);
+          }
+        })
+        .catch(() => {
+          if (!cancelled) {
+            setSuggestions([]);
+          }
+        });
+    }, 300);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timeoutId);
+    };
+  }, [location.address, location.lat]);
+
+  async function handleSelectSuggestion(suggestion) {
+    if (!suggestion?.placeId) return;
+
+    setSuggestions([]);
+    setError('');
+
+    try {
+      const details = await resolvePlace(suggestion.placeId);
+      if (!details) {
+        setError('Could not look up that address. Try another suggestion.');
+        return;
+      }
+
+      onChange({
+        address: details.displayName || suggestion.displayName,
+        lat: details.lat,
+        lng: details.lng,
+        placeId: suggestion.placeId,
+      });
+    } catch (caught) {
+      setError(caught?.message || 'Could not look up that address.');
+    }
+  }
+
+  return (
+    <div className="step-content">
+      <h2>Location</h2>
+      <p className="step-hint">
+        Search for your salon&apos;s street address so customers nearby can find you.
+      </p>
+      <div className="form-field">
+        <label htmlFor="location-address">Address *</label>
+        <input
+          id="location-address"
+          type="text"
+          autoComplete="street-address"
+          value={location.address}
+          onChange={(event) =>
+            onChange({
+              address: event.target.value,
+              lat: null,
+              lng: null,
+              placeId: null,
+            })
+          }
+          className="input-field"
+          required
+        />
+        {suggestions.length ? (
+          <div className="address-suggestions" role="listbox" aria-label="Address suggestions">
+            {suggestions.map((suggestion) => (
+              <button
+                key={suggestion.placeId || suggestion.displayName}
+                role="option"
+                type="button"
+                onClick={() => handleSelectSuggestion(suggestion)}
+              >
+                {suggestion.displayName}
+              </button>
+            ))}
+          </div>
+        ) : null}
+      </div>
+      {location.lat !== null ? (
+        <p className="form-message">Location set. Customers within range will see your salon.</p>
+      ) : null}
+      {error ? <p className="form-message form-message--error">{error}</p> : null}
+    </div>
+  );
+}
+
+/**
+ * Shown after the wizard writes everything successfully. The groomer is
+ * already live and verified at this point; GBP connect is the optional
+ * final boost before heading to the dashboard.
+ */
+function LiveStep({ groomerId, businessName, supabase, onComplete }) {
+  return (
+    <div className="wizard-live step-content">
+      <h2>{businessName} is live!</h2>
+      <p>
+        Your salon is verified and visible to nearby dog owners. Connect your Google Business
+        Profile to show your Google rating on your listing.
+      </p>
+      <GbpConnectButton supabase={supabase} groomerId={groomerId} />
+      <button className="primary-button" type="button" onClick={onComplete}>
+        Go to dashboard
+      </button>
+    </div>
+  );
+}
+
+/**
  * OnboardingWizard component for groomer onboarding.
  *
  * @param {Object} props
@@ -33,6 +168,8 @@ const STEPS = [
 export function OnboardingWizard({ supabase, onComplete }) {
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState('');
+  const [createdGroomerId, setCreatedGroomerId] = useState('');
 
   // Step 1: Business
   const [businessData, setBusinessData] = useState({
@@ -108,45 +245,66 @@ export function OnboardingWizard({ supabase, onComplete }) {
   };
 
   const handleFinish = async () => {
-    if (!isStepValid(5)) return;
+    if (!isStepValid(5) || isSubmitting) return;
 
     setIsSubmitting(true);
+    setSubmitError('');
+
     try {
-      // Create owned groomer
+      // create_owned_groomer atomically creates the business row plus a
+      // verified owner membership, so the dashboard unlocks immediately.
       const groomer = await createOwnedGroomer(supabase, {
-        groomerId: '', // This would be set by actual groomer ID in real implementation
-        bioText: null,
+        name: businessData.name,
+        salon: businessData.salon,
+        address: locationData.address,
+        lat: locationData.lat,
+        lng: locationData.lng,
       });
 
       const groomerId = groomer.id;
 
-      // Save service offerings
       for (const offering of servicesData.offerings) {
         await saveOffering(supabase, groomerId, {
-          serviceName: offering.service,
-          basePriceCents: offering.basePriceCents,
+          service: offering.service,
           durationMinutes: offering.durationMinutes,
+          basePriceCents: offering.basePriceCents,
         });
       }
 
-      // Save availability blocks
       for (const block of availabilityData.weeklyHours) {
         await saveAvailabilityBlock(supabase, groomerId, {
           dayOfWeek: block.dayOfWeek,
-          startTimeHHMM: block.openTime,
-          endTimeHHMM: block.closeTime,
+          openTime: block.openTime,
+          closeTime: block.closeTime,
         });
       }
 
-      // Set waitlist opt-in
       await setWaitlistOptIn(supabase, groomerId, waitlistData.acceptsWaitlist);
 
-      // Call completion callback
-      onComplete();
+      // Sync the denormalized groomers.services column so the new salon
+      // shows up in service-filtered customer search right away.
+      await refreshGroomerServices(supabase, groomerId);
+
+      setCreatedGroomerId(groomerId);
+    } catch (caught) {
+      setSubmitError(caught?.message || 'Could not finish onboarding. Try again.');
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  if (createdGroomerId) {
+    return (
+      <div className="onboarding-wizard">
+        <LiveStep
+          businessName={businessData.name}
+          groomerId={createdGroomerId}
+          supabase={supabase}
+          onComplete={onComplete}
+        />
+      </div>
+    );
+  }
 
   const currentStepObj = STEPS.find((s) => s.id === currentStep);
 
@@ -193,69 +351,7 @@ export function OnboardingWizard({ supabase, onComplete }) {
         )}
 
         {currentStep === 2 && (
-          <div className="step-content">
-            <h2>Location</h2>
-            <div className="form-field">
-              <label htmlFor="location-address">Address *</label>
-              <input
-                id="location-address"
-                type="text"
-                value={locationData.address}
-                onChange={(e) =>
-                  setLocationData({ ...locationData, address: e.target.value })
-                }
-                className="input-field"
-                required
-              />
-            </div>
-            <div className="form-field">
-              <label htmlFor="location-lat">Latitude</label>
-              <input
-                id="location-lat"
-                type="number"
-                step="0.0001"
-                value={locationData.lat ?? ''}
-                onChange={(e) =>
-                  setLocationData({
-                    ...locationData,
-                    lat: e.target.value ? parseFloat(e.target.value) : null,
-                  })
-                }
-                className="input-field"
-              />
-            </div>
-            <div className="form-field">
-              <label htmlFor="location-lng">Longitude</label>
-              <input
-                id="location-lng"
-                type="number"
-                step="0.0001"
-                value={locationData.lng ?? ''}
-                onChange={(e) =>
-                  setLocationData({
-                    ...locationData,
-                    lng: e.target.value ? parseFloat(e.target.value) : null,
-                  })
-                }
-                className="input-field"
-              />
-            </div>
-            <div className="form-field">
-              <label htmlFor="location-placeId">Place ID</label>
-              <input
-                id="location-placeId"
-                type="text"
-                value={locationData.placeId ?? ''}
-                onChange={(e) =>
-                  setLocationData({
-                    ...locationData,
-                    placeId: e.target.value || null,
-                  })
-                }
-                className="input-field"
-              />
-            </div>
-          </div>
+          <LocationStep location={locationData} onChange={setLocationData} />
         )}
 
         {currentStep === 3 && (
@@ -339,6 +435,9 @@ export function OnboardingWizard({ supabase, onComplete }) {
           </button>
         )}
       </div>
+      {submitError ? (
+        <p className="form-message form-message--error">{submitError}</p>
+      ) : null}
     </div>
   );
 }

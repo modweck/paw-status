@@ -2,59 +2,96 @@
  * Groomer onboarding API module.
  * Handles creation and management of groomer profiles, service offerings,
  * availability, time off, and waitlist preferences.
+ *
+ * Column names and RPC signatures follow the live schema:
+ * - create_owned_groomer / refresh_groomer_services:
+ *   supabase/migrations/20260607000001_add_groomer_onboarding_rpcs.sql
+ * - groomer_service_offerings (service, duration_minutes, base_price_cents),
+ *   groomer_availability (day_of_week, open_time, close_time),
+ *   groomer_time_off (start_at, end_at):
+ *   supabase/migrations/20260529000002 + 20260529000004 rename migration
  */
 
 /**
- * Create an owned groomer profile via the create_owned_groomer RPC.
- * Maps camelCase params to snake_case database columns.
+ * Create a self-owned groomer profile via the create_owned_groomer RPC.
+ * The RPC atomically creates the groomers row and a verified owner
+ * membership for the caller's groomer account, and returns the new
+ * groomer's uuid.
  * @param {object} supabase - Supabase client
  * @param {object} params - Creation parameters
- * @param {string} params.groomerId - Groomer ID to own
- * @param {string} [params.bioText] - Groomer bio/description
- * @returns {Promise<object>} Mapped groomer data
- * @throws {Error} On Supabase error
+ * @param {string} params.name - Business/groomer display name (required)
+ * @param {string} params.salon - Salon name (required)
+ * @param {string} [params.address] - Street address
+ * @param {number} [params.lat] - Latitude
+ * @param {number} [params.lng] - Longitude
+ * @param {string} [params.phone] - Contact phone
+ * @param {string} [params.website] - Website URL
+ * @returns {Promise<{id: string}>} The new groomer id
+ * @throws {Error} On validation or Supabase error
  */
 export async function createOwnedGroomer(supabase, params = {}) {
-  const rpcParams = {
-    groomer_id: params.groomerId,
-    bio_text: params.bioText || null,
-  };
+  if (!params.name || !String(params.name).trim()) {
+    throw new Error('Business name is required.');
+  }
 
-  const { data, error } = await supabase.rpc('create_owned_groomer', rpcParams);
+  if (!params.salon || !String(params.salon).trim()) {
+    throw new Error('Salon name is required.');
+  }
+
+  const { data, error } = await supabase.rpc('create_owned_groomer', {
+    p_name: params.name,
+    p_salon: params.salon,
+    p_address: params.address || null,
+    p_lat: Number.isFinite(params.lat) ? params.lat : null,
+    p_lng: Number.isFinite(params.lng) ? params.lng : null,
+    p_phone: params.phone || null,
+    p_website: params.website || null,
+  });
 
   if (error) {
     throw new Error(error.message);
   }
 
-  return mapGroomerData(data);
+  return { id: data };
+}
+
+/**
+ * Recompute groomers.services from the structured offerings so the new
+ * business shows up in service-filtered customer search.
+ * @param {object} supabase - Supabase client
+ * @param {string} groomerId - Groomer ID
+ * @returns {Promise<void>}
+ * @throws {Error} On Supabase error
+ */
+export async function refreshGroomerServices(supabase, groomerId) {
+  const { error } = await supabase.rpc('refresh_groomer_services', {
+    p_groomer_id: groomerId,
+  });
+
+  if (error) {
+    throw new Error(error.message);
+  }
 }
 
 /**
  * Save or update a service offering for a groomer.
- * Inserts or upserts into groomer_service_offerings table.
  * @param {object} supabase - Supabase client
  * @param {string} groomerId - Groomer ID
  * @param {object} offering - Service offering data
  * @param {string} [offering.id] - Offering ID (if updating)
- * @param {string} offering.serviceName - Service name
+ * @param {string} offering.service - Service name
+ * @param {number} offering.durationMinutes - Duration in minutes (NOT NULL in schema)
  * @param {number} offering.basePriceCents - Base price in cents
- * @param {number} [offering.durationMinutes] - Duration in minutes
- * @param {string} [offering.description] - Service description
  * @returns {Promise<object>} Mapped offering data
  * @throws {Error} On Supabase error
  */
 export async function saveOffering(supabase, groomerId, offering = {}) {
   const row = {
     groomer_id: groomerId,
-    service_name: offering.serviceName,
+    service: offering.service,
+    duration_minutes: offering.durationMinutes,
     base_price_cents: offering.basePriceCents,
-    duration_minutes: offering.durationMinutes || null,
-    description: offering.description || null,
   };
-
-  if (offering.id) {
-    row.id = offering.id;
-  }
 
   const query = offering.id
     ? supabase
@@ -80,14 +117,13 @@ export async function saveOffering(supabase, groomerId, offering = {}) {
 
 /**
  * Save or update an availability block for a groomer.
- * Inserts or upserts into groomer_availability table.
  * @param {object} supabase - Supabase client
  * @param {string} groomerId - Groomer ID
  * @param {object} block - Availability block data
  * @param {string} [block.id] - Block ID (if updating)
- * @param {string} block.dayOfWeek - Day of week (0-6, Sunday=0)
- * @param {string} block.startTimeHHMM - Start time (HH:MM format)
- * @param {string} block.endTimeHHMM - End time (HH:MM format)
+ * @param {number} block.dayOfWeek - Day of week (0-6, Sunday=0)
+ * @param {string} block.openTime - Opening time (HH:MM)
+ * @param {string} block.closeTime - Closing time (HH:MM)
  * @returns {Promise<object>} Mapped availability data
  * @throws {Error} On Supabase error
  */
@@ -95,13 +131,9 @@ export async function saveAvailabilityBlock(supabase, groomerId, block = {}) {
   const row = {
     groomer_id: groomerId,
     day_of_week: block.dayOfWeek,
-    start_time_hhmm: block.startTimeHHMM,
-    end_time_hhmm: block.endTimeHHMM,
+    open_time: block.openTime,
+    close_time: block.closeTime,
   };
-
-  if (block.id) {
-    row.id = block.id;
-  }
 
   const query = block.id
     ? supabase
@@ -145,22 +177,19 @@ export async function deleteAvailabilityBlock(supabase, blockId) {
 
 /**
  * Save a time-off entry for a groomer.
- * Inserts into groomer_time_off table.
  * @param {object} supabase - Supabase client
  * @param {string} groomerId - Groomer ID
  * @param {object} entry - Time-off entry data
- * @param {string} entry.startDate - Start date (YYYY-MM-DD format)
- * @param {string} entry.endDate - End date (YYYY-MM-DD format)
- * @param {string} [entry.reason] - Reason for time off
+ * @param {string} entry.startAt - Start timestamp (ISO 8601)
+ * @param {string} entry.endAt - End timestamp (ISO 8601)
  * @returns {Promise<object>} Mapped time-off data
  * @throws {Error} On Supabase error
  */
 export async function saveTimeOff(supabase, groomerId, entry = {}) {
   const row = {
     groomer_id: groomerId,
-    start_date: entry.startDate,
-    end_date: entry.endDate,
-    reason: entry.reason || null,
+    start_at: entry.startAt,
+    end_at: entry.endAt,
   };
 
   const { data, error } = await supabase
@@ -215,7 +244,6 @@ function mapGroomerData(row) {
     address: row.address || '',
     phone: row.phone || '',
     website: row.website || '',
-    bioText: row.bio_text || '',
     acceptsWaitlist: row.accepts_waitlist !== false,
   };
 }
@@ -231,10 +259,9 @@ function mapOfferingData(row) {
   return {
     id: row.id,
     groomerId: row.groomer_id,
-    serviceName: row.service_name || '',
-    basePriceCents: row.base_price_cents || 0,
+    service: row.service || '',
     durationMinutes: row.duration_minutes || null,
-    description: row.description || '',
+    basePriceCents: row.base_price_cents || 0,
   };
 }
 
@@ -250,8 +277,8 @@ function mapAvailabilityData(row) {
     id: row.id,
     groomerId: row.groomer_id,
     dayOfWeek: row.day_of_week,
-    startTimeHHMM: row.start_time_hhmm || '',
-    endTimeHHMM: row.end_time_hhmm || '',
+    openTime: row.open_time || '',
+    closeTime: row.close_time || '',
   };
 }
 
@@ -266,8 +293,7 @@ function mapTimeOffData(row) {
   return {
     id: row.id,
     groomerId: row.groomer_id,
-    startDate: row.start_date || '',
-    endDate: row.end_date || '',
-    reason: row.reason || '',
+    startAt: row.start_at || '',
+    endAt: row.end_at || '',
   };
 }

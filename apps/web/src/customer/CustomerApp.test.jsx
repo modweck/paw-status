@@ -50,8 +50,10 @@ vi.mock('./GuestBookingPanel.jsx', () => ({
 }));
 
 vi.mock('./CustomerOwnershipPanel.jsx', () => ({
-  CustomerOwnershipPanel: ({ selectedGroomer }) => (
-    <div>Booking panel for {selectedGroomer?.name || 'no groomer selected'}</div>
+  CustomerOwnershipPanel: ({ section, selectedGroomer }) => (
+    <div>
+      Ownership panel ({section}) for {selectedGroomer?.name || 'no groomer selected'}
+    </div>
   ),
 }));
 
@@ -238,9 +240,7 @@ describe('CustomerApp default groomer loading', () => {
       });
     });
     expect(geocodeAddress).not.toHaveBeenCalled();
-    expect(
-      screen.getByText('Guest booking panel for Museum Mile Grooming and small'),
-    ).toBeInTheDocument();
+    expect(screen.getAllByText('Museum Mile Grooming').length).toBeGreaterThan(0);
   });
 
   it('leaves location empty and waits for a customer-entered location when browser location is unavailable', async () => {
@@ -377,15 +377,42 @@ describe('CustomerApp default groomer loading', () => {
     });
 
     const popularSection = screen.getByLabelText('Popular near you');
-    const bookingSection = document.getElementById('bookings');
     expect(popularSection).toHaveTextContent('Top Paws');
     expect(popularSection).toHaveTextContent('Good Grooming');
-    expect(
-      bookingSection.compareDocumentPosition(popularSection) & Node.DOCUMENT_POSITION_FOLLOWING,
-    ).toBeTruthy();
+  });
+});
+
+describe('CustomerApp sections', () => {
+  beforeEach(() => {
+    authState = { user: null, loading: false };
+    getBrowserLocation.mockResolvedValue(null);
+    fetchNearbyGroomers.mockResolvedValue([]);
   });
 
-  it('keeps a signed-out groomer request selected through the sign-in gate', async () => {
+  afterEach(() => {
+    fetchNearbyGroomers.mockReset();
+    getBrowserLocation.mockReset();
+    reverseGeocodeLocation.mockReset();
+    claimGuestBookingRequest.mockReset();
+    if (typeof window !== 'undefined' && window.localStorage?.clear) {
+      window.localStorage.clear();
+    }
+  });
+
+  it('renders only the discovery surface on the explore section', async () => {
+    authState = { user: { id: 'auth-user-1', email: 'owner@example.com' }, loading: false };
+
+    render(<CustomerApp section="explore" />);
+
+    await screen.findByText('Enter a ZIP code or allow location to find groomers.');
+
+    expect(screen.getByLabelText('Location')).toBeInTheDocument();
+    expect(screen.queryByText(/Ownership panel/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Guest booking panel/)).not.toBeInTheDocument();
+  });
+
+  it('keeps a signed-out groomer request selected from explore into the bookings section', async () => {
+    const onNavigate = vi.fn();
     getBrowserLocation.mockResolvedValueOnce({
       lat: 40.72,
       lng: -73.99,
@@ -404,32 +431,63 @@ describe('CustomerApp default groomer loading', () => {
       },
     ]);
 
-    const { rerender } = render(<CustomerApp />);
+    const { rerender } = render(<CustomerApp onNavigate={onNavigate} section="explore" />);
 
     const startRequest = await screen.findByRole('button', { name: 'Book' });
     expect(startRequest).not.toBeDisabled();
     fireEvent.click(startRequest);
+
+    expect(onNavigate).toHaveBeenCalledWith('/bookings');
+
+    rerender(<CustomerApp onNavigate={onNavigate} section="bookings" />);
+
     expect(screen.getByText('Login panel')).toBeInTheDocument();
+    expect(
+      screen.getByText('Guest booking panel for Puppy Tale Lodge and no dog size'),
+    ).toBeInTheDocument();
 
     authState = { user: { id: 'auth-user-1', email: 'owner@example.com' }, loading: false };
-    rerender(<CustomerApp />);
+    rerender(<CustomerApp onNavigate={onNavigate} section="bookings" />);
 
-    expect(screen.getByText('Booking panel for Puppy Tale Lodge')).toBeInTheDocument();
+    expect(screen.getByText('Ownership panel (bookings) for Puppy Tale Lodge')).toBeInTheDocument();
   });
 
-  it('renders the Nearby groomers list before the booking gate on the bookings route', async () => {
-    getBrowserLocation.mockResolvedValueOnce(null);
-
-    render(<CustomerApp initialSection="bookings" />);
-
-    // Customer preference: groomer list is always the first thing they see,
-    // booking gate sits below it regardless of route.
-    const nearbyHeading = await screen.findByText('Nearby groomers');
-    const gateHint = screen.getByText(/Pick a groomer from the list below/i);
+  it('points signed-out visitors back to explore when no groomer is selected on bookings', async () => {
+    render(<CustomerApp section="bookings" />);
 
     expect(
-      nearbyHeading.compareDocumentPosition(gateHint) & Node.DOCUMENT_POSITION_FOLLOWING,
-    ).toBeTruthy();
+      await screen.findByText(/Pick a groomer in Explore to start a booking request/i),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /Explore groomers/i })).toHaveAttribute('href', '/');
+    expect(screen.queryByLabelText('Location')).not.toBeInTheDocument();
+  });
+
+  it('renders the dogs section through the ownership panel for signed-in customers', async () => {
+    authState = { user: { id: 'auth-user-1', email: 'owner@example.com' }, loading: false };
+
+    render(<CustomerApp section="dogs" />);
+
+    expect(await screen.findByText(/Ownership panel \(dogs\)/)).toBeInTheDocument();
+    expect(screen.queryByLabelText('Location')).not.toBeInTheDocument();
+  });
+
+  it('asks signed-out visitors to sign in on the dogs section', async () => {
+    render(<CustomerApp section="dogs" />);
+
+    expect(await screen.findByText('Login panel')).toBeInTheDocument();
+    expect(screen.queryByText(/Ownership panel/)).not.toBeInTheDocument();
+  });
+
+  it('renders the account section with a groomer workspace link', async () => {
+    authState = { user: { id: 'auth-user-1', email: 'owner@example.com' }, loading: false };
+
+    render(<CustomerApp section="account" />);
+
+    expect(await screen.findByText(/Ownership panel \(account\)/)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /groomer workspace/i })).toHaveAttribute(
+      'href',
+      '/groomer',
+    );
   });
 });
 

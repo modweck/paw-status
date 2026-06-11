@@ -1,207 +1,256 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { OnboardingWizard } from './OnboardingWizard.jsx';
 
 const createOwnedGroomer = vi.fn();
+const refreshGroomerServices = vi.fn();
 const saveOffering = vi.fn();
 const saveAvailabilityBlock = vi.fn();
 const setWaitlistOptIn = vi.fn();
+const suggestAddresses = vi.fn();
+const resolvePlace = vi.fn();
 
 vi.mock('../../api/groomerOnboarding.js', () => ({
   createOwnedGroomer: (...args) => createOwnedGroomer(...args),
+  refreshGroomerServices: (...args) => refreshGroomerServices(...args),
   saveOffering: (...args) => saveOffering(...args),
   saveAvailabilityBlock: (...args) => saveAvailabilityBlock(...args),
   setWaitlistOptIn: (...args) => setWaitlistOptIn(...args),
 }));
 
+vi.mock('../../api/geocoding.js', () => ({
+  suggestAddresses: (...args) => suggestAddresses(...args),
+  resolvePlace: (...args) => resolvePlace(...args),
+}));
+
+vi.mock('../GbpConnectButton.jsx', () => ({
+  GbpConnectButton: ({ groomerId }) => <div>GBP connect for {groomerId}</div>,
+}));
+
 const supabase = { id: 'supabase-client' };
 const onComplete = vi.fn();
 
-describe('OnboardingWizard', () => {
+function fillStepOne() {
+  fireEvent.change(screen.getByLabelText(/Business Name/), {
+    target: { value: 'Happy Paws' },
+  });
+  fireEvent.change(screen.getByLabelText(/Salon\/Grooming Location/), {
+    target: { value: 'Happy Paws Salon' },
+  });
+  fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+}
+
+async function fillStepTwo() {
+  suggestAddresses.mockResolvedValueOnce([
+    {
+      placeId: 'place-1',
+      displayName: '123 Main St, New York, NY 10001',
+    },
+  ]);
+  resolvePlace.mockResolvedValueOnce({
+    lat: 40.7484,
+    lng: -73.9857,
+    displayName: '123 Main St, New York, NY 10001, USA',
+  });
+
+  fireEvent.change(screen.getByLabelText(/Address/), {
+    target: { value: '123 Main' },
+  });
+
+  const suggestion = await screen.findByRole('option', {
+    name: '123 Main St, New York, NY 10001',
+  });
+  fireEvent.click(suggestion);
+
+  await waitFor(() => {
+    expect(screen.getByRole('button', { name: 'Next' })).not.toBeDisabled();
+  });
+  fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+}
+
+function fillStepThree() {
+  fireEvent.click(screen.getByRole('button', { name: '+ Add service' }));
+  fireEvent.change(screen.getByPlaceholderText('e.g., Bath & Haircut'), {
+    target: { value: 'Full groom' },
+  });
+  fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+}
+
+function fillStepFour() {
+  // The editor's defaults (Sunday 09:00-17:00) are already valid.
+  fireEvent.click(screen.getByRole('button', { name: '+ Add availability block' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+}
+
+describe('OnboardingWizard steps', () => {
   afterEach(() => {
     createOwnedGroomer.mockReset();
+    refreshGroomerServices.mockReset();
     saveOffering.mockReset();
     saveAvailabilityBlock.mockReset();
     setWaitlistOptIn.mockReset();
+    suggestAddresses.mockReset();
+    resolvePlace.mockReset();
     onComplete.mockReset();
   });
 
   it('renders step 1 (Business) on mount', () => {
     render(<OnboardingWizard supabase={supabase} onComplete={onComplete} />);
 
-    expect(screen.getByText('Business')).toBeInTheDocument();
     expect(screen.getByText('Business Information')).toBeInTheDocument();
     expect(screen.getByText('Step 1 of 5')).toBeInTheDocument();
   });
 
-  it('renders Business Name and Salon fields on step 1', () => {
-    render(<OnboardingWizard supabase={supabase} onComplete={onComplete} />);
-
-    expect(screen.getByLabelText(/Business Name/)).toBeInTheDocument();
-    expect(screen.getByLabelText(/Salon\/Grooming Location/)).toBeInTheDocument();
-  });
-
-  it('disables Next button when required Business fields are empty', () => {
+  it('disables Next until both Business fields are filled', () => {
     render(<OnboardingWizard supabase={supabase} onComplete={onComplete} />);
 
     const nextButton = screen.getByRole('button', { name: 'Next' });
     expect(nextButton).toBeDisabled();
-  });
 
-  it('keeps Next button disabled when only Business Name is filled', () => {
-    render(<OnboardingWizard supabase={supabase} onComplete={onComplete} />);
-
-    const nameInput = screen.getByLabelText(/Business Name/);
-    const nextButton = screen.getByRole('button', { name: 'Next' });
-
-    fireEvent.change(nameInput, { target: { value: 'Happy Paws' } });
-
+    fireEvent.change(screen.getByLabelText(/Business Name/), {
+      target: { value: 'Happy Paws' },
+    });
     expect(nextButton).toBeDisabled();
-  });
 
-  it('disables Next button when Business Name is empty but Salon is filled', () => {
-    render(<OnboardingWizard supabase={supabase} onComplete={onComplete} />);
-
-    const salonInput = screen.getByLabelText(/Salon\/Grooming Location/);
-    const nextButton = screen.getByRole('button', { name: 'Next' });
-
-    fireEvent.change(salonInput, { target: { value: 'Downtown' } });
-
-    expect(nextButton).toBeDisabled();
-  });
-
-  it('enables Next button when both Business Name and Salon are filled', () => {
-    render(<OnboardingWizard supabase={supabase} onComplete={onComplete} />);
-
-    const nameInput = screen.getByLabelText(/Business Name/);
-    const salonInput = screen.getByLabelText(/Salon\/Grooming Location/);
-    const nextButton = screen.getByRole('button', { name: 'Next' });
-
-    fireEvent.change(nameInput, { target: { value: 'Happy Paws' } });
-    fireEvent.change(salonInput, { target: { value: 'Downtown' } });
-
+    fireEvent.change(screen.getByLabelText(/Salon\/Grooming Location/), {
+      target: { value: 'Happy Paws Salon' },
+    });
     expect(nextButton).not.toBeDisabled();
   });
 
-  it('disables Next button when Business Name becomes empty after being filled', () => {
+  it('goes back to step 1 when clicking Previous on step 2', () => {
     render(<OnboardingWizard supabase={supabase} onComplete={onComplete} />);
 
-    const nameInput = screen.getByLabelText(/Business Name/);
-    const salonInput = screen.getByLabelText(/Salon\/Grooming Location/);
-    const nextButton = screen.getByRole('button', { name: 'Next' });
-
-    fireEvent.change(nameInput, { target: { value: 'Happy Paws' } });
-    fireEvent.change(salonInput, { target: { value: 'Downtown' } });
-    expect(nextButton).not.toBeDisabled();
-
-    fireEvent.change(nameInput, { target: { value: '' } });
-    expect(nextButton).toBeDisabled();
-  });
-
-  it('advances to step 2 when clicking enabled Next button', () => {
-    render(<OnboardingWizard supabase={supabase} onComplete={onComplete} />);
-
-    const nameInput = screen.getByLabelText(/Business Name/);
-    const salonInput = screen.getByLabelText(/Salon\/Grooming Location/);
-    const nextButton = screen.getByRole('button', { name: 'Next' });
-
-    fireEvent.change(nameInput, { target: { value: 'Happy Paws' } });
-    fireEvent.change(salonInput, { target: { value: 'Downtown' } });
-    fireEvent.click(nextButton);
-
+    fillStepOne();
     expect(screen.getByText('Step 2 of 5')).toBeInTheDocument();
-    expect(screen.getByLabelText(/Address/)).toBeInTheDocument();
-  });
 
-  it('shows Previous button on step 2', () => {
-    render(<OnboardingWizard supabase={supabase} onComplete={onComplete} />);
-
-    const nameInput = screen.getByLabelText(/Business Name/);
-    const salonInput = screen.getByLabelText(/Salon\/Grooming Location/);
-    const nextButton = screen.getByRole('button', { name: 'Next' });
-
-    fireEvent.change(nameInput, { target: { value: 'Happy Paws' } });
-    fireEvent.change(salonInput, { target: { value: 'Downtown' } });
-    fireEvent.click(nextButton);
-
-    const prevButton = screen.getByRole('button', { name: 'Previous' });
-    expect(prevButton).toBeInTheDocument();
-  });
-
-  it('goes back to step 1 when clicking Previous button', () => {
-    render(<OnboardingWizard supabase={supabase} onComplete={onComplete} />);
-
-    const nameInput = screen.getByLabelText(/Business Name/);
-    const salonInput = screen.getByLabelText(/Salon\/Grooming Location/);
-    const nextButton = screen.getByRole('button', { name: 'Next' });
-
-    fireEvent.change(nameInput, { target: { value: 'Happy Paws' } });
-    fireEvent.change(salonInput, { target: { value: 'Downtown' } });
-    fireEvent.click(nextButton);
-
-    const prevButton = screen.getByRole('button', { name: 'Previous' });
-    fireEvent.click(prevButton);
-
+    fireEvent.click(screen.getByRole('button', { name: 'Previous' }));
     expect(screen.getByText('Business Information')).toBeInTheDocument();
-    expect(screen.getByText('Step 1 of 5')).toBeInTheDocument();
   });
 
-  it('renders Location fields on step 2', () => {
+  it('resolves the salon location from an address suggestion instead of raw coordinates', async () => {
     render(<OnboardingWizard supabase={supabase} onComplete={onComplete} />);
 
-    const nameInput = screen.getByLabelText(/Business Name/);
-    const salonInput = screen.getByLabelText(/Salon\/Grooming Location/);
-    const nextButton = screen.getByRole('button', { name: 'Next' });
+    fillStepOne();
 
-    fireEvent.change(nameInput, { target: { value: 'Happy Paws' } });
-    fireEvent.change(salonInput, { target: { value: 'Downtown' } });
-    fireEvent.click(nextButton);
+    // Raw lat/lng/placeId inputs are gone — address search is the only path.
+    expect(screen.queryByLabelText(/Latitude/)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/Longitude/)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/Place ID/)).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Next' })).toBeDisabled();
 
-    expect(screen.getByLabelText(/Address/)).toBeInTheDocument();
-    expect(screen.getByLabelText(/Latitude/)).toBeInTheDocument();
-    expect(screen.getByLabelText(/Longitude/)).toBeInTheDocument();
+    suggestAddresses.mockResolvedValueOnce([
+      {
+        placeId: 'place-1',
+        displayName: '123 Main St, New York, NY 10001',
+      },
+    ]);
+    resolvePlace.mockResolvedValueOnce({
+      lat: 40.7484,
+      lng: -73.9857,
+      displayName: '123 Main St, New York, NY 10001, USA',
+    });
+
+    fireEvent.change(screen.getByLabelText(/Address/), {
+      target: { value: '123 Main' },
+    });
+
+    const suggestion = await screen.findByRole('option', {
+      name: '123 Main St, New York, NY 10001',
+    });
+    fireEvent.click(suggestion);
+
+    await waitFor(() => {
+      expect(screen.getByLabelText(/Address/)).toHaveValue(
+        '123 Main St, New York, NY 10001, USA',
+      );
+    });
+    expect(resolvePlace).toHaveBeenCalledWith('place-1');
+    expect(screen.getByRole('button', { name: 'Next' })).not.toBeDisabled();
+  });
+});
+
+describe('OnboardingWizard finish flow', () => {
+  afterEach(() => {
+    createOwnedGroomer.mockReset();
+    refreshGroomerServices.mockReset();
+    saveOffering.mockReset();
+    saveAvailabilityBlock.mockReset();
+    setWaitlistOptIn.mockReset();
+    suggestAddresses.mockReset();
+    resolvePlace.mockReset();
+    onComplete.mockReset();
   });
 
-  it('disables Next on step 2 when address is empty', () => {
+  async function completeWizard() {
     render(<OnboardingWizard supabase={supabase} onComplete={onComplete} />);
+    fillStepOne();
+    await fillStepTwo();
+    fillStepThree();
+    fillStepFour();
+    fireEvent.click(screen.getByRole('button', { name: 'Finish' }));
+  }
 
-    // Advance to step 2
-    const nameInput = screen.getByLabelText(/Business Name/);
-    const salonInput = screen.getByLabelText(/Salon\/Grooming Location/);
-    let nextButton = screen.getByRole('button', { name: 'Next' });
+  it('creates the owned groomer with the collected business and location data', async () => {
+    createOwnedGroomer.mockResolvedValueOnce({ id: 'new-groomer-1' });
+    saveOffering.mockResolvedValue({ id: 'offering-1' });
+    saveAvailabilityBlock.mockResolvedValue({ id: 'block-1' });
+    setWaitlistOptIn.mockResolvedValue({ id: 'new-groomer-1', acceptsWaitlist: true });
+    refreshGroomerServices.mockResolvedValue();
 
-    fireEvent.change(nameInput, { target: { value: 'Happy Paws' } });
-    fireEvent.change(salonInput, { target: { value: 'Downtown' } });
-    fireEvent.click(nextButton);
+    await completeWizard();
 
-    // On step 2, Next should be disabled
-    nextButton = screen.getByRole('button', { name: 'Next' });
-    expect(nextButton).toBeDisabled();
+    await waitFor(() => {
+      expect(createOwnedGroomer).toHaveBeenCalledWith(supabase, {
+        name: 'Happy Paws',
+        salon: 'Happy Paws Salon',
+        address: '123 Main St, New York, NY 10001, USA',
+        lat: 40.7484,
+        lng: -73.9857,
+      });
+    });
+    expect(saveOffering).toHaveBeenCalledWith(supabase, 'new-groomer-1', {
+      service: 'Full groom',
+      durationMinutes: 60,
+      basePriceCents: 5000,
+    });
+    expect(saveAvailabilityBlock).toHaveBeenCalledWith(supabase, 'new-groomer-1', {
+      dayOfWeek: 0,
+      openTime: '09:00',
+      closeTime: '17:00',
+    });
+    expect(setWaitlistOptIn).toHaveBeenCalledWith(supabase, 'new-groomer-1', true);
+    expect(refreshGroomerServices).toHaveBeenCalledWith(supabase, 'new-groomer-1');
   });
 
-  it('enables Next on step 2 when address and coordinates are filled', () => {
-    render(<OnboardingWizard supabase={supabase} onComplete={onComplete} />);
+  it('shows the live state with GBP connect after finishing, then completes on dashboard click', async () => {
+    createOwnedGroomer.mockResolvedValueOnce({ id: 'new-groomer-1' });
+    saveOffering.mockResolvedValue({ id: 'offering-1' });
+    saveAvailabilityBlock.mockResolvedValue({ id: 'block-1' });
+    setWaitlistOptIn.mockResolvedValue({ id: 'new-groomer-1', acceptsWaitlist: true });
+    refreshGroomerServices.mockResolvedValue();
 
-    // Advance to step 2
-    const nameInput = screen.getByLabelText(/Business Name/);
-    const salonInput = screen.getByLabelText(/Salon\/Grooming Location/);
-    let nextButton = screen.getByRole('button', { name: 'Next' });
+    await completeWizard();
 
-    fireEvent.change(nameInput, { target: { value: 'Happy Paws' } });
-    fireEvent.change(salonInput, { target: { value: 'Downtown' } });
-    fireEvent.click(nextButton);
+    expect(await screen.findByText(/is live/i)).toBeInTheDocument();
+    expect(screen.getByText('GBP connect for new-groomer-1')).toBeInTheDocument();
+    expect(onComplete).not.toHaveBeenCalled();
 
-    // Fill location fields
-    const addressInput = screen.getByLabelText(/Address/);
-    const latInput = screen.getByLabelText(/Latitude/);
-    const lngInput = screen.getByLabelText(/Longitude/);
+    fireEvent.click(screen.getByRole('button', { name: /Go to dashboard/i }));
+    expect(onComplete).toHaveBeenCalled();
+  });
 
-    fireEvent.change(addressInput, { target: { value: '123 Main St' } });
-    fireEvent.change(latInput, { target: { value: '40.7128' } });
-    fireEvent.change(lngInput, { target: { value: '-74.006' } });
+  it('surfaces an error and stays on the wizard when creation fails', async () => {
+    createOwnedGroomer.mockRejectedValueOnce(new Error('caller must have a groomer_accounts row'));
 
-    nextButton = screen.getByRole('button', { name: 'Next' });
-    expect(nextButton).not.toBeDisabled();
+    await completeWizard();
+
+    expect(
+      await screen.findByText('caller must have a groomer_accounts row'),
+    ).toBeInTheDocument();
+    expect(onComplete).not.toHaveBeenCalled();
+    expect(saveOffering).not.toHaveBeenCalled();
+    expect(screen.getByRole('button', { name: 'Finish' })).toBeInTheDocument();
   });
 });

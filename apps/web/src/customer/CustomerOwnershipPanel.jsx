@@ -1,4 +1,4 @@
-import { CalendarPlus, Heart, KeyRound, UserRound } from 'lucide-react';
+import { Heart, KeyRound, UserRound } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 
 import {
@@ -6,6 +6,7 @@ import {
   loadCustomerForVerifiedUser,
   updateCustomerForVerifiedUser,
 } from '../api/customers.js';
+import { loadDogsForCustomer } from '../api/dogs.js';
 import { requireSupabaseClient } from '../lib/supabaseClient.js';
 import { BookingRequestPanel } from './BookingRequestPanel.jsx';
 import { BookingsListPanel } from './BookingsListPanel.jsx';
@@ -151,40 +152,25 @@ function YourGroomerCard({ groomer, onRebook }) {
   );
 }
 
-function WaitlistCard() {
-  return (
-    <section className="signed-in-card waitlist-card">
-      <div className="login-panel__icon">
-        <CalendarPlus size={18} />
-      </div>
-      <div>
-        <h2>Get Earlier Appointments</h2>
-        <p>Join the cancellation waitlist display is ready; matching logic is not connected yet.</p>
-      </div>
-      <button className="primary-action" type="button" disabled>
-        Join waitlist
-      </button>
-    </section>
-  );
-}
-
 export function CustomerOwnershipPanel({
   favoriteGroomer = null,
   groomers = [],
   onRebookGroomer,
+  section = 'account',
   selectedGroomer = null,
   selectedService = null,
 }) {
   const [customer, setCustomer] = useState(null);
   const [dogs, setDogs] = useState([]);
+  const [dogsLoading, setDogsLoading] = useState(true);
   const [form, setForm] = useState({ name: '', phone: '' });
   const [status, setStatus] = useState('loading');
   const [error, setError] = useState('');
   // Bump after a new booking request to make BookingsListPanel re-fetch
   // without it having to subscribe to anything from BookingRequestPanel.
   const [bookingsRefreshKey, setBookingsRefreshKey] = useState(0);
-  const handleDogsChange = useCallback((nextDogs) => {
-    setDogs(nextDogs);
+  const handleDogCreated = useCallback((dog) => {
+    setDogs((current) => [...current, dog]);
   }, []);
   const handleBookingRequestCreated = useCallback(() => {
     setBookingsRefreshKey((tick) => tick + 1);
@@ -229,6 +215,38 @@ export function CustomerOwnershipPanel({
     };
   }, []);
 
+  // Dogs are owned here, not by the dogs panel, because two sections need
+  // them: My Dog renders them and the booking request form picks from them.
+  useEffect(() => {
+    if (!customer) return undefined;
+
+    let cancelled = false;
+
+    async function loadDogs() {
+      setDogsLoading(true);
+
+      try {
+        const nextDogs = await loadDogsForCustomer(requireSupabaseClient(), customer);
+        if (!cancelled) {
+          setDogs(nextDogs);
+        }
+      } catch {
+        // Dog load failures surface inside the panels that need dogs; the
+        // profile itself is still usable without them.
+      } finally {
+        if (!cancelled) {
+          setDogsLoading(false);
+        }
+      }
+    }
+
+    loadDogs();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [customer]);
+
   async function handleSubmit(event) {
     event.preventDefault();
     if (status === 'saving') return;
@@ -248,64 +266,75 @@ export function CustomerOwnershipPanel({
 
   if (status === 'loading') {
     return (
-      <section className="signed-in-card customer-profile" id="account">
+      <section className="signed-in-card customer-profile">
         <div className="login-panel__icon">
           <UserRound size={18} />
         </div>
         <div>
           <h2>Loading customer profile...</h2>
-          <p>Checking your signed-in account against your ShinyPawz customer row.</p>
+          <p>Fetching your saved details.</p>
         </div>
       </section>
     );
   }
 
   if (status === 'ready' && customer) {
-    return (
-      <>
-        <section className="signed-in-card customer-profile" id="account">
-          <div className="login-panel__icon">
-            <UserRound size={18} />
-          </div>
-          <div>
-            <h2>Customer profile ready</h2>
-            <p>This profile is tied to your verified Supabase account.</p>
-          </div>
-          <ProfileSummary customer={customer} />
-          <AccountSecurityPrompt customer={customer} onCustomerChange={setCustomer} />
-        </section>
+    if (section === 'dogs') {
+      return (
         <CustomerDogsPanel
-          customer={customer}
-          groomers={groomers}
-          onDogsChange={handleDogsChange}
-          selectedService={selectedService}
-        />
-        <YourGroomerCard
-          groomer={favoriteGroomer || selectedGroomer || groomers[0] || null}
-          onRebook={onRebookGroomer}
-        />
-        <WaitlistCard />
-        <BookingRequestPanel
           customer={customer}
           dogs={dogs}
           groomers={groomers}
-          onRequestCreated={handleBookingRequestCreated}
-          selectedGroomer={selectedGroomer}
+          loading={dogsLoading}
+          onDogCreated={handleDogCreated}
           selectedService={selectedService}
         />
-        <BookingsListPanel customer={customer} refreshKey={bookingsRefreshKey} />
-      </>
+      );
+    }
+
+    if (section === 'bookings') {
+      return (
+        <>
+          <YourGroomerCard
+            groomer={favoriteGroomer || selectedGroomer || groomers[0] || null}
+            onRebook={onRebookGroomer}
+          />
+          <BookingRequestPanel
+            customer={customer}
+            dogs={dogs}
+            groomers={groomers}
+            onRequestCreated={handleBookingRequestCreated}
+            selectedGroomer={selectedGroomer}
+            selectedService={selectedService}
+          />
+          <BookingsListPanel customer={customer} refreshKey={bookingsRefreshKey} />
+        </>
+      );
+    }
+
+    return (
+      <section className="signed-in-card customer-profile">
+        <div className="login-panel__icon">
+          <UserRound size={18} />
+        </div>
+        <div>
+          <h2>Customer profile ready</h2>
+          <p>Your contact details are saved for faster booking requests.</p>
+        </div>
+        <ProfileSummary customer={customer} />
+        <AccountSecurityPrompt customer={customer} onCustomerChange={setCustomer} />
+      </section>
     );
   }
 
   return (
-    <form className="signed-in-card customer-profile" id="account" onSubmit={handleSubmit}>
+    <form className="signed-in-card customer-profile" onSubmit={handleSubmit}>
       <div className="login-panel__icon">
         <UserRound size={18} />
       </div>
       <div>
         <h2>Create your customer profile</h2>
-        <p>This row is tied to your verified Supabase account before dog or booking data is created.</p>
+        <p>Save your name and phone once so groomers can reach you about requests.</p>
       </div>
       <label>
         <span>Name</span>

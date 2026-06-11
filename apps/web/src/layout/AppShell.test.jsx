@@ -20,7 +20,11 @@ vi.mock('../lib/supabaseClient.js', () => ({
   requireSupabaseClient: () => ({ id: 'supabase-client' }),
 }));
 
-describe('AppShell', () => {
+const customerRoute = { persona: 'customer', section: 'explore' };
+const staffRoute = { persona: 'staff', section: 'requests' };
+const adminRoute = { persona: 'admin', section: 'verification' };
+
+describe('AppShell customer nav', () => {
   beforeEach(() => {
     authState = {
       user: { email: 'owner@example.com' },
@@ -28,18 +32,18 @@ describe('AppShell', () => {
     };
   });
 
-  it('keeps customer dog and account destinations in the bottom nav', () => {
+  it('shows only customer destinations in the customer bottom nav', () => {
     render(
-      <AppShell route="customer">
+      <AppShell route={customerRoute}>
         <div>Customer app</div>
       </AppShell>,
     );
 
     expect(screen.getByRole('link', { name: /Explore/i })).toHaveAttribute('href', '/');
     expect(screen.getByRole('link', { name: /My Dog/i })).toHaveAttribute('href', '/dogs');
-    expect(screen.getByRole('link', { name: /Account/i })).toHaveAttribute('href', '/account');
     expect(screen.getByRole('link', { name: /Bookings/i })).toHaveAttribute('href', '/bookings');
-    expect(screen.getByRole('link', { name: /Groomer/i })).toHaveAttribute('href', '/groomer');
+    expect(screen.getByRole('link', { name: /Account/i })).toHaveAttribute('href', '/account');
+    expect(screen.queryByRole('link', { name: /Groomer/i })).not.toBeInTheDocument();
   });
 
   it('routes signed-out dog and account nav taps to the sign-in gate', () => {
@@ -49,7 +53,7 @@ describe('AppShell', () => {
     };
 
     render(
-      <AppShell route="customer">
+      <AppShell route={customerRoute}>
         <div>Customer app</div>
       </AppShell>,
     );
@@ -62,7 +66,7 @@ describe('AppShell', () => {
 
   it('shows dog and account nav items as available when signed in', () => {
     render(
-      <AppShell route="customer">
+      <AppShell route={customerRoute}>
         <div>Customer app</div>
       </AppShell>,
     );
@@ -71,9 +75,20 @@ describe('AppShell', () => {
     expect(screen.getByRole('link', { name: /Account/i })).not.toHaveClass('is-locked');
   });
 
+  it('marks the active customer section from the route', () => {
+    render(
+      <AppShell route={{ persona: 'customer', section: 'bookings' }}>
+        <div>Customer app</div>
+      </AppShell>,
+    );
+
+    expect(screen.getByRole('link', { name: /Bookings/i })).toHaveClass('is-active');
+    expect(screen.getByRole('link', { name: /Explore/i })).not.toHaveClass('is-active');
+  });
+
   it('mounts NotificationBell when user is signed in', () => {
     render(
-      <AppShell route="customer">
+      <AppShell route={customerRoute}>
         <div>Customer app</div>
       </AppShell>,
     );
@@ -88,11 +103,76 @@ describe('AppShell', () => {
     };
 
     render(
-      <AppShell route="customer">
+      <AppShell route={customerRoute}>
         <div>Customer app</div>
       </AppShell>,
     );
 
     expect(screen.queryByText('NotificationBell')).not.toBeInTheDocument();
+  });
+});
+
+describe('AppShell staff nav', () => {
+  beforeEach(() => {
+    authState = {
+      user: { email: 'groomer@example.com' },
+      signOut: vi.fn(),
+    };
+  });
+
+  it('shows staff workspace destinations instead of the customer nav', () => {
+    render(
+      <AppShell route={staffRoute}>
+        <div>Staff app</div>
+      </AppShell>,
+    );
+
+    expect(screen.getByRole('link', { name: /Requests/i })).toHaveAttribute('href', '/groomer');
+    expect(screen.getByRole('link', { name: /Waitlist/i })).toHaveAttribute(
+      'href',
+      '/groomer/waitlist',
+    );
+    expect(screen.getByRole('link', { name: /Setup/i })).toHaveAttribute('href', '/groomer/setup');
+    expect(screen.queryByRole('link', { name: /My Dog/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /Explore/i })).not.toBeInTheDocument();
+  });
+
+  it('marks the active staff section from the route', () => {
+    render(
+      <AppShell route={{ persona: 'staff', section: 'waitlist' }}>
+        <div>Staff app</div>
+      </AppShell>,
+    );
+
+    expect(screen.getByRole('link', { name: /Waitlist/i })).toHaveClass('is-active');
+    expect(screen.getByRole('link', { name: /Requests/i })).not.toHaveClass('is-active');
+  });
+
+  it('labels the workspace so groomers know they left the customer app', () => {
+    render(
+      <AppShell route={staffRoute}>
+        <div>Staff app</div>
+      </AppShell>,
+    );
+
+    expect(screen.getByText(/Groomer workspace/i)).toBeInTheDocument();
+  });
+});
+
+describe('AppShell admin', () => {
+  it('renders no bottom nav for the admin workspace', () => {
+    authState = {
+      user: { email: 'admin@example.com' },
+      signOut: vi.fn(),
+    };
+
+    render(
+      <AppShell route={adminRoute}>
+        <div>Admin app</div>
+      </AppShell>,
+    );
+
+    expect(screen.queryByRole('navigation', { name: /Primary/i })).not.toBeInTheDocument();
+    expect(screen.getByText('Admin')).toBeInTheDocument();
   });
 });

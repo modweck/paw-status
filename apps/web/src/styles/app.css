@@ -89,6 +89,18 @@ a {
   color: var(--accent);
 }
 
+.topbar__workspace {
+  border: 1px solid var(--accent);
+  border-radius: 999px;
+  padding: 4px 10px;
+  color: var(--accent);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
 .topbar__session {
   display: none;
   align-items: center;
@@ -1340,7 +1352,10 @@ button:disabled {
   bottom: 0;
   left: 0;
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  /* Item count differs by persona (4 customer tabs, 3 staff tabs), so the
+   * columns track however many items the shell renders. */
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
   width: 100vw;
   max-width: 430px;
   margin: 0 auto;
@@ -1423,5 +1438,207 @@ button:disabled {
 
   .groomer-card__actions {
     grid-template-columns: 1fr;
+  }
+}
+
+/* --------------------------------------------------------------------------
+ * Groomer onboarding wizard
+ * The wizard components use their own class vocabulary (wizard-*, form-field,
+ * input-field, editor-block, primary/secondary-button); style them with the
+ * same tokens and card language as the rest of the app.
+ * ------------------------------------------------------------------------ */
+
+.onboarding-wizard {
+  display: grid;
+  gap: 16px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 18px 16px 20px;
+}
+
+.wizard-header h1 {
+  margin: 0;
+  font-family: 'DM Serif Display', serif;
+  font-size: 24px;
+}
+
+.step-indicator {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.step-content {
+  display: grid;
+  gap: 12px;
+}
+
+.step-content h2 {
+  margin: 0;
+  font-size: 17px;
+}
+
+.step-hint {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.form-field {
+  display: grid;
+  gap: 6px;
+  position: relative;
+}
+
+.form-field label {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.input-field {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface-muted);
+  padding: 11px 12px;
+  font: inherit;
+  color: var(--text);
+}
+
+.input-field:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.editor-blocks {
+  display: grid;
+  gap: 10px;
+}
+
+.editor-empty-message {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.editor-block {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr auto;
+  align-items: end;
+  gap: 8px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface-muted);
+  padding: 10px;
+}
+
+.block-field {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.block-field label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.remove-button {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--danger);
+  padding: 9px;
+  cursor: pointer;
+}
+
+.add-button,
+.secondary-action {
+  border: 1px dashed var(--line);
+  border-radius: 12px;
+  background: transparent;
+  color: var(--accent-strong);
+  padding: 11px 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.wizard-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.wizard-actions .primary-button {
+  margin-left: auto;
+}
+
+.primary-button {
+  border: 0;
+  border-radius: 14px;
+  background: var(--accent);
+  color: #fff;
+  padding: 13px 18px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.primary-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.secondary-button {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface);
+  color: var(--text);
+  padding: 13px 18px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.wizard-live {
+  text-align: center;
+  display: grid;
+  gap: 14px;
+  justify-items: center;
+  padding: 8px 0;
+}
+
+.wizard-live h2 {
+  font-family: 'DM Serif Display', serif;
+  font-size: 22px;
+}
+
+.wizard-live p {
+  margin: 0;
+  color: var(--muted);
+  max-width: 34ch;
+}
+
+.gbp-verified-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--success);
+  border-radius: 999px;
+  color: var(--success);
+  background: rgba(22, 131, 79, 0.08);
+  padding: 9px 14px;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+@media (max-width: 480px) {
+  .editor-block {
+    grid-template-columns: 1fr 1fr;
   }
 }

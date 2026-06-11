@@ -67,4 +67,20 @@ describe('LoginPanel', () => {
     expect(screen.getByText('Admin login')).toBeInTheDocument();
     expect(screen.getByText('Restricted admin access.')).toBeInTheDocument();
   });
+
+  it('shows the groomer setup link by default for customer-facing sign-in', () => {
+    render(<LoginPanel />);
+
+    expect(
+      screen.getByRole('link', { name: "I'm a groomer — set up my account" }),
+    ).toHaveAttribute('href', '/groomer');
+  });
+
+  it('hides the groomer setup link when rendered inside the groomer area', () => {
+    render(<LoginPanel showGroomerLink={false} />);
+
+    expect(
+      screen.queryByRole('link', { name: "I'm a groomer — set up my account" }),
+    ).not.toBeInTheDocument();
+  });
 });

@@ -1,8 +1,9 @@
-import { describe, expect, it, vi, beforeEach } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import {
   createOwnedGroomer,
   deleteAvailabilityBlock,
+  refreshGroomerServices,
   saveAvailabilityBlock,
   saveOffering,
   saveTimeOff,
@@ -19,7 +20,7 @@ function makeSingleClient(data = null, error = null) {
   const eq = vi.fn(() => ({ select }));
   const update = vi.fn(() => ({ eq, select }));
   const insert = vi.fn(() => ({ select }));
-  const from = vi.fn((table) => ({ insert, update, eq, select }));
+  const from = vi.fn(() => ({ insert, update, eq, select }));
 
   return {
     from,
@@ -54,340 +55,296 @@ function makeDeleteClient(error = null) {
 }
 
 describe('createOwnedGroomer', () => {
-  it('calls create_owned_groomer RPC with snake_case params and maps result', async () => {
-    const client = makeRpcClient({
-      id: 'groomer-1',
-      name: 'Jill',
-      salon: 'Happy Tails',
-      address: '123 Main St',
-      phone: '555-1234',
-      website: 'https://happytails.com',
-      bio_text: 'Expert dog groomer',
-      accepts_waitlist: true,
-    });
+  // The create_owned_groomer RPC takes p_* params and returns the new
+  // groomer's uuid, not a row. See
+  // supabase/migrations/20260607000001_add_groomer_onboarding_rpcs.sql.
+  it('calls create_owned_groomer with the p_* RPC params and returns the new id', async () => {
+    const client = makeRpcClient('groomer-uuid-1');
 
     const result = await createOwnedGroomer(client, {
-      groomerId: 'groomer-1',
-      bioText: 'Expert dog groomer',
+      name: 'Jill',
+      salon: 'Happy Tails',
+      address: '123 Main St, New York, NY',
+      lat: 40.768,
+      lng: -73.958,
+      phone: '555-1234',
+      website: 'https://happytails.example',
     });
 
     expect(client.spies.rpc).toHaveBeenCalledWith('create_owned_groomer', {
-      groomer_id: 'groomer-1',
-      bio_text: 'Expert dog groomer',
+      p_name: 'Jill',
+      p_salon: 'Happy Tails',
+      p_address: '123 Main St, New York, NY',
+      p_lat: 40.768,
+      p_lng: -73.958,
+      p_phone: '555-1234',
+      p_website: 'https://happytails.example',
+    });
+    expect(result).toEqual({ id: 'groomer-uuid-1' });
+  });
+
+  it('passes nulls for missing optional fields', async () => {
+    const client = makeRpcClient('groomer-uuid-2');
+
+    await createOwnedGroomer(client, {
+      name: 'Alice',
+      salon: 'Alice Grooming',
     });
 
-    expect(result).toEqual({
-      id: 'groomer-1',
-      name: 'Jill',
-      salon: 'Happy Tails',
-      address: '123 Main St',
-      phone: '555-1234',
-      website: 'https://happytails.com',
-      bioText: 'Expert dog groomer',
-      acceptsWaitlist: true,
+    expect(client.spies.rpc).toHaveBeenCalledWith('create_owned_groomer', {
+      p_name: 'Alice',
+      p_salon: 'Alice Grooming',
+      p_address: null,
+      p_lat: null,
+      p_lng: null,
+      p_phone: null,
+      p_website: null,
     });
   });
 
-  it('throws when RPC returns an error', async () => {
+  it('throws before calling the RPC when name or salon is missing', async () => {
+    const client = makeRpcClient('unused');
+
+    await expect(createOwnedGroomer(client, { salon: 'No Name' })).rejects.toThrow(
+      /business name/i,
+    );
+    await expect(createOwnedGroomer(client, { name: 'No Salon' })).rejects.toThrow(/salon/i);
+    expect(client.spies.rpc).not.toHaveBeenCalled();
+  });
+
+  it('throws when the RPC returns an error', async () => {
     const client = makeRpcClient(null, { message: 'rpc failed' });
 
-    await expect(createOwnedGroomer(client, { groomerId: 'g-1' })).rejects.toThrow('rpc failed');
+    await expect(
+      createOwnedGroomer(client, { name: 'Jill', salon: 'Happy Tails' }),
+    ).rejects.toThrow('rpc failed');
+  });
+});
+
+describe('refreshGroomerServices', () => {
+  it('calls refresh_groomer_services with the groomer id', async () => {
+    const client = makeRpcClient(null);
+
+    await refreshGroomerServices(client, 'groomer-1');
+
+    expect(client.spies.rpc).toHaveBeenCalledWith('refresh_groomer_services', {
+      p_groomer_id: 'groomer-1',
+    });
   });
 
-  it('handles missing optional bioText param', async () => {
-    const client = makeRpcClient({
-      id: 'g-1',
-      name: 'Alice',
-      bio_text: null,
-      accepts_waitlist: false,
-    });
+  it('throws when the RPC returns an error', async () => {
+    const client = makeRpcClient(null, { message: 'refresh failed' });
 
-    const result = await createOwnedGroomer(client, {
-      groomerId: 'g-1',
-    });
-
-    expect(client.spies.rpc).toHaveBeenCalledWith('create_owned_groomer', {
-      groomer_id: 'g-1',
-      bio_text: null,
-    });
-
-    expect(result.bioText).toBe('');
-    expect(result.acceptsWaitlist).toBe(false);
+    await expect(refreshGroomerServices(client, 'groomer-1')).rejects.toThrow('refresh failed');
   });
 });
 
 describe('saveOffering', () => {
-  it('inserts a new offering with snake_case params and maps result', async () => {
+  // groomer_service_offerings columns are service / duration_minutes /
+  // base_price_cents (see 20260529000002 + the 20260529000004 rename).
+  it('inserts a new offering against the real column names and maps the row', async () => {
     const client = makeSingleClient({
-      id: 'offer-1',
+      id: 'offering-1',
       groomer_id: 'groomer-1',
-      service_name: 'Full Groom',
-      base_price_cents: 10000,
-      duration_minutes: 120,
-      description: 'Complete grooming',
+      service: 'Full groom',
+      duration_minutes: 90,
+      base_price_cents: 8500,
     });
 
     const result = await saveOffering(client, 'groomer-1', {
-      serviceName: 'Full Groom',
-      basePriceCents: 10000,
-      durationMinutes: 120,
-      description: 'Complete grooming',
+      service: 'Full groom',
+      durationMinutes: 90,
+      basePriceCents: 8500,
     });
 
     expect(client.spies.from).toHaveBeenCalledWith('groomer_service_offerings');
     expect(client.spies.insert).toHaveBeenCalledWith({
       groomer_id: 'groomer-1',
-      service_name: 'Full Groom',
-      base_price_cents: 10000,
-      duration_minutes: 120,
-      description: 'Complete grooming',
+      service: 'Full groom',
+      duration_minutes: 90,
+      base_price_cents: 8500,
     });
-
     expect(result).toEqual({
-      id: 'offer-1',
+      id: 'offering-1',
       groomerId: 'groomer-1',
-      serviceName: 'Full Groom',
-      basePriceCents: 10000,
-      durationMinutes: 120,
-      description: 'Complete grooming',
+      service: 'Full groom',
+      durationMinutes: 90,
+      basePriceCents: 8500,
     });
   });
 
-  it('updates an existing offering when id is provided', async () => {
+  it('updates an existing offering by id', async () => {
     const client = makeSingleClient({
-      id: 'offer-1',
+      id: 'offering-1',
       groomer_id: 'groomer-1',
-      service_name: 'Bath Only',
-      base_price_cents: 5000,
+      service: 'Bath and brush',
       duration_minutes: 45,
-      description: null,
+      base_price_cents: 4500,
     });
 
-    const result = await saveOffering(client, 'groomer-1', {
-      id: 'offer-1',
-      serviceName: 'Bath Only',
-      basePriceCents: 5000,
+    await saveOffering(client, 'groomer-1', {
+      id: 'offering-1',
+      service: 'Bath and brush',
       durationMinutes: 45,
+      basePriceCents: 4500,
     });
 
     expect(client.spies.update).toHaveBeenCalledWith({
-      id: 'offer-1',
       groomer_id: 'groomer-1',
-      service_name: 'Bath Only',
-      base_price_cents: 5000,
+      service: 'Bath and brush',
       duration_minutes: 45,
-      description: null,
+      base_price_cents: 4500,
     });
-    expect(client.spies.eq).toHaveBeenCalledWith('id', 'offer-1');
-
-    expect(result.serviceName).toBe('Bath Only');
-    expect(result.description).toBe('');
+    expect(client.spies.eq).toHaveBeenCalledWith('id', 'offering-1');
   });
 
-  it('maps null/undefined optional fields', async () => {
-    const client = makeSingleClient({
-      id: 'offer-2',
-      groomer_id: 'g-1',
-      service_name: 'Nail Trim',
-      base_price_cents: 2000,
-      duration_minutes: null,
-      description: null,
-    });
-
-    const result = await saveOffering(client, 'g-1', {
-      serviceName: 'Nail Trim',
-      basePriceCents: 2000,
-    });
-
-    expect(result.durationMinutes).toBeNull();
-    expect(result.description).toBe('');
-  });
-
-  it('throws when insert returns an error', async () => {
-    const client = makeSingleClient(null, { message: 'unique constraint' });
+  it('throws when the insert fails', async () => {
+    const client = makeSingleClient(null, { message: 'insert failed' });
 
     await expect(
-      saveOffering(client, 'g-1', {
-        serviceName: 'Duplicate',
-        basePriceCents: 5000,
+      saveOffering(client, 'groomer-1', {
+        service: 'Full groom',
+        durationMinutes: 90,
+        basePriceCents: 8500,
       }),
-    ).rejects.toThrow('unique constraint');
+    ).rejects.toThrow('insert failed');
   });
 });
 
 describe('saveAvailabilityBlock', () => {
-  it('inserts a new availability block with snake_case params', async () => {
+  // groomer_availability columns are day_of_week / open_time / close_time
+  // (renamed from groomer_weekly_hours in 20260529000004).
+  it('inserts a block against the real column names and maps the row', async () => {
     const client = makeSingleClient({
-      id: 'avail-1',
+      id: 'block-1',
       groomer_id: 'groomer-1',
-      day_of_week: 1,
-      start_time_hhmm: '09:00',
-      end_time_hhmm: '17:00',
+      day_of_week: 2,
+      open_time: '09:00:00',
+      close_time: '17:00:00',
     });
 
     const result = await saveAvailabilityBlock(client, 'groomer-1', {
-      dayOfWeek: 1,
-      startTimeHHMM: '09:00',
-      endTimeHHMM: '17:00',
+      dayOfWeek: 2,
+      openTime: '09:00',
+      closeTime: '17:00',
     });
 
     expect(client.spies.from).toHaveBeenCalledWith('groomer_availability');
     expect(client.spies.insert).toHaveBeenCalledWith({
       groomer_id: 'groomer-1',
-      day_of_week: 1,
-      start_time_hhmm: '09:00',
-      end_time_hhmm: '17:00',
+      day_of_week: 2,
+      open_time: '09:00',
+      close_time: '17:00',
     });
-
     expect(result).toEqual({
-      id: 'avail-1',
+      id: 'block-1',
       groomerId: 'groomer-1',
-      dayOfWeek: 1,
-      startTimeHHMM: '09:00',
-      endTimeHHMM: '17:00',
+      dayOfWeek: 2,
+      openTime: '09:00:00',
+      closeTime: '17:00:00',
     });
   });
 
-  it('updates an existing availability block when id is provided', async () => {
+  it('updates an existing block by id', async () => {
     const client = makeSingleClient({
-      id: 'avail-1',
+      id: 'block-1',
       groomer_id: 'groomer-1',
-      day_of_week: 3,
-      start_time_hhmm: '10:00',
-      end_time_hhmm: '18:00',
+      day_of_week: 2,
+      open_time: '10:00:00',
+      close_time: '18:00:00',
     });
 
-    const result = await saveAvailabilityBlock(client, 'groomer-1', {
-      id: 'avail-1',
-      dayOfWeek: 3,
-      startTimeHHMM: '10:00',
-      endTimeHHMM: '18:00',
+    await saveAvailabilityBlock(client, 'groomer-1', {
+      id: 'block-1',
+      dayOfWeek: 2,
+      openTime: '10:00',
+      closeTime: '18:00',
     });
 
     expect(client.spies.update).toHaveBeenCalledWith({
-      id: 'avail-1',
       groomer_id: 'groomer-1',
-      day_of_week: 3,
-      start_time_hhmm: '10:00',
-      end_time_hhmm: '18:00',
+      day_of_week: 2,
+      open_time: '10:00',
+      close_time: '18:00',
     });
-    expect(client.spies.eq).toHaveBeenCalledWith('id', 'avail-1');
-
-    expect(result.dayOfWeek).toBe(3);
+    expect(client.spies.eq).toHaveBeenCalledWith('id', 'block-1');
   });
 
-  it('throws when insert returns an error', async () => {
-    const client = makeSingleClient(null, { message: 'invalid day_of_week' });
+  it('throws when the insert fails', async () => {
+    const client = makeSingleClient(null, { message: 'availability failed' });
 
     await expect(
-      saveAvailabilityBlock(client, 'g-1', {
-        dayOfWeek: 7,
-        startTimeHHMM: '09:00',
-        endTimeHHMM: '17:00',
+      saveAvailabilityBlock(client, 'groomer-1', {
+        dayOfWeek: 1,
+        openTime: '09:00',
+        closeTime: '17:00',
       }),
-    ).rejects.toThrow('invalid day_of_week');
+    ).rejects.toThrow('availability failed');
   });
 });
 
 describe('deleteAvailabilityBlock', () => {
-  it('deletes an availability block by id', async () => {
-    const client = makeDeleteClient(null);
+  it('deletes the block by id', async () => {
+    const client = makeDeleteClient();
 
-    await deleteAvailabilityBlock(client, 'avail-1');
+    await deleteAvailabilityBlock(client, 'block-1');
 
     expect(client.spies.from).toHaveBeenCalledWith('groomer_availability');
-    expect(client.spies.delete).toHaveBeenCalled();
-    expect(client.spies.eq).toHaveBeenCalledWith('id', 'avail-1');
+    expect(client.spies.eq).toHaveBeenCalledWith('id', 'block-1');
   });
 
-  it('throws when delete returns an error', async () => {
-    const client = makeDeleteClient({ message: 'record not found' });
+  it('throws when the delete fails', async () => {
+    const client = makeDeleteClient({ message: 'delete failed' });
 
-    await expect(deleteAvailabilityBlock(client, 'avail-999')).rejects.toThrow(
-      'record not found',
-    );
+    await expect(deleteAvailabilityBlock(client, 'block-1')).rejects.toThrow('delete failed');
   });
 });
 
 describe('saveTimeOff', () => {
-  it('inserts a time-off entry with snake_case params and maps result', async () => {
+  // groomer_time_off columns are start_at / end_at timestamptz.
+  it('inserts a time-off entry against the real column names', async () => {
     const client = makeSingleClient({
       id: 'timeoff-1',
       groomer_id: 'groomer-1',
-      start_date: '2026-06-15',
-      end_date: '2026-06-20',
-      reason: 'Vacation',
+      start_at: '2026-07-01T00:00:00Z',
+      end_at: '2026-07-08T00:00:00Z',
     });
 
     const result = await saveTimeOff(client, 'groomer-1', {
-      startDate: '2026-06-15',
-      endDate: '2026-06-20',
-      reason: 'Vacation',
+      startAt: '2026-07-01T00:00:00Z',
+      endAt: '2026-07-08T00:00:00Z',
     });
 
     expect(client.spies.from).toHaveBeenCalledWith('groomer_time_off');
     expect(client.spies.insert).toHaveBeenCalledWith({
       groomer_id: 'groomer-1',
-      start_date: '2026-06-15',
-      end_date: '2026-06-20',
-      reason: 'Vacation',
+      start_at: '2026-07-01T00:00:00Z',
+      end_at: '2026-07-08T00:00:00Z',
     });
-
     expect(result).toEqual({
       id: 'timeoff-1',
       groomerId: 'groomer-1',
-      startDate: '2026-06-15',
-      endDate: '2026-06-20',
-      reason: 'Vacation',
+      startAt: '2026-07-01T00:00:00Z',
+      endAt: '2026-07-08T00:00:00Z',
     });
   });
 
-  it('allows null reason when not provided', async () => {
-    const client = makeSingleClient({
-      id: 'timeoff-2',
-      groomer_id: 'groomer-1',
-      start_date: '2026-07-01',
-      end_date: '2026-07-02',
-      reason: null,
-    });
-
-    const result = await saveTimeOff(client, 'groomer-1', {
-      startDate: '2026-07-01',
-      endDate: '2026-07-02',
-    });
-
-    expect(client.spies.insert).toHaveBeenCalledWith({
-      groomer_id: 'groomer-1',
-      start_date: '2026-07-01',
-      end_date: '2026-07-02',
-      reason: null,
-    });
-
-    expect(result.reason).toBe('');
-  });
-
-  it('throws when insert returns an error', async () => {
-    const client = makeSingleClient(null, { message: 'invalid date range' });
+  it('throws when the insert fails', async () => {
+    const client = makeSingleClient(null, { message: 'time off failed' });
 
     await expect(
-      saveTimeOff(client, 'g-1', {
-        startDate: '2026-07-02',
-        endDate: '2026-07-01',
+      saveTimeOff(client, 'groomer-1', {
+        startAt: '2026-07-01T00:00:00Z',
+        endAt: '2026-07-08T00:00:00Z',
       }),
-    ).rejects.toThrow('invalid date range');
+    ).rejects.toThrow('time off failed');
   });
 });
 
 describe('setWaitlistOptIn', () => {
-  it('updates accepts_waitlist to true and maps result', async () => {
+  it('updates groomers.accepts_waitlist for the groomer', async () => {
     const client = makeSingleClient({
       id: 'groomer-1',
-      name: 'Alice',
-      salon: 'Grooming Central',
-      address: '456 Oak St',
-      phone: '555-5678',
-      website: 'https://groomingcentral.com',
-      bio_text: 'Experienced groomer',
       accepts_waitlist: true,
     });
 
@@ -396,42 +353,12 @@ describe('setWaitlistOptIn', () => {
     expect(client.spies.from).toHaveBeenCalledWith('groomers');
     expect(client.spies.update).toHaveBeenCalledWith({ accepts_waitlist: true });
     expect(client.spies.eq).toHaveBeenCalledWith('id', 'groomer-1');
-
-    expect(result).toEqual({
-      id: 'groomer-1',
-      name: 'Alice',
-      salon: 'Grooming Central',
-      address: '456 Oak St',
-      phone: '555-5678',
-      website: 'https://groomingcentral.com',
-      bioText: 'Experienced groomer',
-      acceptsWaitlist: true,
-    });
+    expect(result.acceptsWaitlist).toBe(true);
   });
 
-  it('updates accepts_waitlist to false', async () => {
-    const client = makeSingleClient({
-      id: 'groomer-2',
-      name: 'Bob',
-      salon: null,
-      address: null,
-      phone: null,
-      website: null,
-      bio_text: null,
-      accepts_waitlist: false,
-    });
+  it('throws when the update fails', async () => {
+    const client = makeSingleClient(null, { message: 'update failed' });
 
-    const result = await setWaitlistOptIn(client, 'groomer-2', false);
-
-    expect(client.spies.update).toHaveBeenCalledWith({ accepts_waitlist: false });
-    expect(result.acceptsWaitlist).toBe(false);
-  });
-
-  it('throws when update returns an error', async () => {
-    const client = makeSingleClient(null, { message: 'groomer not found' });
-
-    await expect(setWaitlistOptIn(client, 'g-999', true)).rejects.toThrow(
-      'groomer not found',
-    );
+    await expect(setWaitlistOptIn(client, 'groomer-1', false)).rejects.toThrow('update failed');
   });
 });

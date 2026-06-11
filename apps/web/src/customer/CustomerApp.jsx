@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Heart, LocateFixed, Star } from 'lucide-react';
+import { Heart, LocateFixed, Scissors, Star } from 'lucide-react';
 
 import { LoginPanel } from '../auth/LoginPanel.jsx';
 import { getBrowserLocation } from '../api/browserLocation.js';
@@ -154,7 +154,7 @@ function PopularNearYou({ groomers, onSelectFavorite, signedIn }) {
   );
 }
 
-export function CustomerApp({ initialSection = 'customer' }) {
+export function CustomerApp({ onNavigate, section = 'explore' }) {
   const { session, user, loading } = useAuth();
   const [address, setAddress] = useState('');
   const [addressSuggestions, setAddressSuggestions] = useState([]);
@@ -185,23 +185,20 @@ export function CustomerApp({ initialSection = 'customer' }) {
   );
   const loadingResults = searching;
 
-  useEffect(() => {
-    if (!['dogs', 'bookings', 'account'].includes(initialSection)) return;
-
-    const scrollToSection = () => {
-      document.getElementById(initialSection)?.scrollIntoView?.({
-        behavior: 'smooth',
-        block: 'start',
-      });
-    };
-
-    if (window.requestAnimationFrame) {
-      window.requestAnimationFrame(scrollToSection);
+  function navigateTo(href) {
+    if (onNavigate) {
+      onNavigate(href);
       return;
     }
 
-    scrollToSection();
-  }, [initialSection, loading, user]);
+    window.history.pushState(null, '', href);
+    window.dispatchEvent(new Event('popstate'));
+  }
+
+  function handleSectionLinkClick(event, href) {
+    event.preventDefault();
+    navigateTo(href);
+  }
 
   useEffect(() => {
     setFavoriteGroomerId(loadFavoriteGroomerId(user));
@@ -490,55 +487,129 @@ export function CustomerApp({ initialSection = 'customer' }) {
 
   function startBookingForGroomer(nextGroomer) {
     setSelectedGroomer(nextGroomer);
-    window.history.replaceState(null, '', '/bookings');
-    window.dispatchEvent(new Event('popstate'));
-    document.getElementById('bookings')?.scrollIntoView?.({
-      behavior: 'smooth',
-      block: 'start',
-    });
+    navigateTo('/bookings');
   }
 
-  const bookingGate = (
-    <section className="booking-gate" id="bookings">
-      {loading ? (
-        <p>Loading session...</p>
-      ) : user ? (
-        <CustomerOwnershipPanel
-          favoriteGroomer={favoriteGroomer}
-          groomers={groomers}
-          onRebookGroomer={startBookingForGroomer}
-          selectedGroomer={selectedGroomer}
-          selectedService={selectedService}
-        />
-      ) : selectedGroomer ? (
-        // Only render the guest booking form after the customer has actually
-        // picked a groomer from the list. Showing it on first paint makes the
-        // page feel like a long wall of fields with no context for what they
-        // are booking.
-        //
-        // LoginPanel sits ABOVE the guest form so the friction-free path
-        // (sign in and have your details remembered) is the first thing the
-        // customer sees. The guest form is the fallback.
-        <>
-          <LoginPanel
-            compact
-            title="Sign in and save your info"
-            description="Add your email to save your booking details to an account. Skip this and book as a guest below if you'd rather not."
-          />
-          <GuestBookingPanel
+  const guestClaimBanner = guestClaimNotice ? (
+    <div
+      aria-live={guestClaimNotice.tone === 'error' ? 'assertive' : 'polite'}
+      className={`guest-claim-notice guest-claim-notice--${guestClaimNotice.tone}`}
+      role={guestClaimNotice.tone === 'error' ? 'alert' : 'status'}
+    >
+      <p>{guestClaimNotice.message}</p>
+      <button
+        type="button"
+        aria-label="Dismiss"
+        onClick={() => setGuestClaimNotice(null)}
+      >
+        Dismiss
+      </button>
+    </div>
+  ) : null;
+
+  if (loading) {
+    return (
+      <section className="customer-screen">
+        <p className="empty-state">Loading session...</p>
+      </section>
+    );
+  }
+
+  if (section === 'bookings') {
+    return (
+      <section className="customer-screen" id="bookings">
+        {guestClaimBanner}
+        {user ? (
+          <CustomerOwnershipPanel
+            favoriteGroomer={favoriteGroomer}
             groomers={groomers}
-            selectedDogSize={dogSize}
+            onRebookGroomer={startBookingForGroomer}
+            section="bookings"
             selectedGroomer={selectedGroomer}
             selectedService={selectedService}
           />
-        </>
-      ) : (
-        <p className="booking-gate__hint empty-state">
-          Pick a groomer from the list below to start a booking request.
-        </p>
-      )}
-    </section>
-  );
+        ) : selectedGroomer ? (
+          // LoginPanel sits ABOVE the guest form so the friction-free path
+          // (sign in and have your details remembered) is the first thing the
+          // customer sees. The guest form is the fallback.
+          <>
+            <LoginPanel
+              compact
+              title="Sign in and save your info"
+              description="Add your email to save your booking details to an account. Skip this and book as a guest below if you'd rather not."
+            />
+            <GuestBookingPanel
+              groomers={groomers}
+              selectedDogSize={dogSize}
+              selectedGroomer={selectedGroomer}
+              selectedService={selectedService}
+            />
+          </>
+        ) : (
+          <p className="booking-gate__hint empty-state">
+            Pick a groomer in Explore to start a booking request.{' '}
+            <a href="/" onClick={(event) => handleSectionLinkClick(event, '/')}>
+              Explore groomers
+            </a>
+          </p>
+        )}
+      </section>
+    );
+  }
+
+  if (section === 'dogs') {
+    return (
+      <section className="customer-screen" id="dogs">
+        {guestClaimBanner}
+        {user ? (
+          <CustomerOwnershipPanel
+            groomers={groomers}
+            section="dogs"
+            selectedService={selectedService}
+          />
+        ) : (
+          <LoginPanel
+            title="Sign in to save your dog"
+            description="Dog profiles are tied to your account so booking requests can auto-fill the details."
+          />
+        )}
+      </section>
+    );
+  }
+
+  if (section === 'account') {
+    return (
+      <section className="customer-screen" id="account">
+        {guestClaimBanner}
+        {user ? (
+          <>
+            <CustomerOwnershipPanel section="account" />
+            <section className="signed-in-card groomer-workspace-link">
+              <div className="login-panel__icon">
+                <Scissors size={18} />
+              </div>
+              <div>
+                <h2>Are you a groomer?</h2>
+                <p>Claim your business profile and handle booking requests.</p>
+              </div>
+              <a
+                className="primary-action"
+                href="/groomer"
+                onClick={(event) => handleSectionLinkClick(event, '/groomer')}
+              >
+                Open the groomer workspace
+              </a>
+            </section>
+          </>
+        ) : (
+          <LoginPanel
+            title="Sign in to your account"
+            description="Manage your contact details and sign-in options."
+          />
+        )}
+      </section>
+    );
+  }
 
   return (
     <section className="customer-screen">
@@ -549,22 +620,7 @@ export function CustomerApp({ initialSection = 'customer' }) {
         </div>
       </div>
 
-      {guestClaimNotice ? (
-        <div
-          aria-live={guestClaimNotice.tone === 'error' ? 'assertive' : 'polite'}
-          className={`guest-claim-notice guest-claim-notice--${guestClaimNotice.tone}`}
-          role={guestClaimNotice.tone === 'error' ? 'alert' : 'status'}
-        >
-          <p>{guestClaimNotice.message}</p>
-          <button
-            type="button"
-            aria-label="Dismiss"
-            onClick={() => setGuestClaimNotice(null)}
-          >
-            Dismiss
-          </button>
-        </div>
-      ) : null}
+      {guestClaimBanner}
 
       <form className="search-panel" onSubmit={handleSearch}>
         <label>
@@ -695,8 +751,6 @@ export function CustomerApp({ initialSection = 'customer' }) {
           )}
         </div>
       </section>
-
-      {bookingGate}
 
       <PopularNearYou
         groomers={groomers}
